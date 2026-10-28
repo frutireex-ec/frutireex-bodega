@@ -1,1 +1,24 @@
 
+# Cada vez que se sube un archivo a rex/aprendizaje, Rex se entrena solo y actualiza rex/cerebro.json
+name: Entrenar a Rex
+on:
+  push:
+    paths: ["rex/aprendizaje/**"]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  entrenar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: python3 rex/entrenar.py
+      - name: Guardar el cerebro
+        run: |
+          git config user.name "Rex (entrenamiento automático)"
+          git config user.email "rex@users.noreply.github.com"
+          git add rex/cerebro.json rex/PENDIENTES.md
+          git diff --cached --quiet || git commit -m "Rex aprendió: cerebro actualizado"
+          git push
