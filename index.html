@@ -6871,6 +6871,16 @@ body:has(.modal:not([hidden])) .rex-dock{display:none}
     const RELLENO_INI = new Set(["oye", "hey", "ey", "ok", "okey", "hola", "ola", "eh", "a", "ver", "ya", "este", "y", "el", "la", "o", "ah", "hay", "ay", "bueno", "buenas"]);
     const DESPIERTA = new Set(["rex", "reex", "reks", "recs", "rek", "rx", "rexs", "rhex", "wrecks", "frutirex", "frutireex", "fruti", "jarvis", "yarvis", "llarvis", "asistente", "rexito", "rexi", "rexy", "rexie", "recsito", "rexsito", "rejito", "reksito", "trex", "t-rex"]);
     const DESPIERTA_INI = new Set(["res", "rez", "reh", "rec", "red", "reich"]);   // palabras comunes: solo cuentan al comienzo
+    /* Cuando lo llaman solo con «Rex» / «Oye Rex»: contesta en voz alta y queda escuchando la orden */
+    function saludoRex(corto) {
+      const t = (st.config.saludoRex || "").trim();
+      return t || "Sí, aquí estoy. ¿En qué te puedo ayudar?";
+    }
+    function saludar(r, ponerLimite, vigente, corto) {
+      if (st.config.hablar === false) return;
+      ponerLimite(16000);   // mientras saluda no se corta la escucha
+      hablar(saludoRex(corto), () => { if (vigente() && modo === "orden") ponerLimite(9000); });
+    }
     function palabraManos() { return (st.config.palabraManos || "Rex").trim() || "Rex"; }
     function despierta(txt) {
       const crudo = String(txt || "").trim().split(/\s+/);
@@ -7002,7 +7012,7 @@ body:has(.modal:not([hidden])) .rex-dock{display:none}
           if (!hit) { if (hayFinal && !interino) { logVoz("manos libres: se ignora (no empezó con «" + palabraManos() + "»)", buf.trim(), l); buf = ""; alts = []; } return; }
           if (!(hayFinal && !interino)) return;   // espera a que termine la frase
           fallos = 0; manosError = null;
-          if (!hit.resto || /^(ayudame|oye|escucha|por favor|porfa)$/.test(V.normalizar(hit.resto))) { logVoz("manos libres: «" + palabraManos() + "» (escucha la orden)", "", l); callarVoz(); Sonido.escucha(); Rex.despierto = Date.now(); pintarRex(); r._modo("orden", { manos: true }); return; }
+          if (!hit.resto || /^(ayudame|oye|escucha|por favor|porfa)$/.test(V.normalizar(hit.resto))) { logVoz("manos libres: «" + palabraManos() + "» (escucha la orden)", "", l); callarVoz(); Sonido.escucha(); Rex.despierto = Date.now(); pintarRex(); r._modo("orden", { manos: true }); saludar(r, ponerLimite, vigente); return; }
           logVoz("manos libres: orden", hit.resto, l); Sonido.ok(); desdeManos = true;
           const a2 = alts.map(a => { const h = despierta(a.t); return h && h.resto ? { t: h.resto, c: a.c } : null; }).filter(Boolean);
           void conQue; procesarOrden(hit.resto, a2.length ? a2 : [{ t: hit.resto, c: 0.85 }]);
@@ -7015,7 +7025,7 @@ body:has(.modal:not([hidden])) .rex-dock{display:none}
             if (espera && espera.l === l) espera = null;
             if (pend[l]) pend[l].escuchando = false;
             desdeManos = true;
-            if (!h.resto) { logVoz("«" + palabraManos() + "» en medio de una pregunta: escucha la orden nueva", "", l); callarVoz(); Sonido.escucha(); r._modo("orden", { manos: true }); return; }
+            if (!h.resto) { logVoz("«" + palabraManos() + "» en medio de una pregunta: escucha la orden nueva", "", l); callarVoz(); Sonido.escucha(); r._modo("orden", { manos: true }); saludar(r, ponerLimite, vigente, true); return; }
             logVoz("orden nueva (empezó con «" + palabraManos() + "»), la pregunta queda en pantalla", h.resto, l); Sonido.ok();
             procesarOrden(h.resto, [{ t: h.resto, c: 0.85 }]); return;
           }
@@ -7509,6 +7519,7 @@ body:has(.modal:not([hidden])) .rex-dock{display:none}
       '<button class="b prim" data-probar-voz>Escuchar la voz</button></div>' +
       (vs.length ? "" : '<p class="nota-voz">Este navegador todavía no cargó voces en español. En Microsoft Edge están las voces naturales de Ecuador (Andrea y Luis).</p>') +
       '<div class="fila-b" style="gap:18px;margin-top:12px"><label class="campo">Palabra para manos libres<input type="text" data-cfg-txt="palabraManos" value="' + esc(c.palabraManos || "Rex") + '" style="width:140px" autocomplete="off"></label>' +
+      '<label class="campo">Lo que contesta Rex cuando lo llaman<input type="text" data-cfg-txt="saludoRex" value="' + esc(c.saludoRex || "Sí, aquí estoy. ¿En qué te puedo ayudar?") + '" style="width:320px" autocomplete="off"></label>' +
       '<label><input type="checkbox" data-cfg="avisosVoz"' + (c.avisosVoz !== false ? " checked" : "") + "> Avisar en voz alta en cada lugar (pedidos, envíos que vienen y cómo llegaron)</label>" +
       '<label><input type="checkbox" data-cfg="modoRapido"' + (c.modoRapido !== false ? " checked" : "") + "> Modo rápido: una orden clara dicha por voz se registra al instante (sin «¿sí o no?»); si se dice «no» o «cancela» enseguida, se deshace</label>" +
       '<label><input type="checkbox" data-cfg="preguntarResponsable"' + (c.preguntarResponsable !== false ? " checked" : "") + "> Después de cada movimiento, preguntar «¿Quién es el responsable?» (el nombre queda en Movimientos y en el Excel)</label>" +
