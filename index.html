@@ -986,6 +986,10 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
 @keyframes rexLlama{0%,100%{box-shadow:0 0 0 0 rgba(255,122,26,.7)}50%{box-shadow:0 0 0 8px rgba(255,122,26,0)}}
 @media (prefers-reduced-motion:reduce){body.rex-despierto .rex-dock .rex-boton,.rex-activar{animation:none!important}}
 .rex-nueva{position:fixed;z-index:90;top:10px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;padding:8px 14px;background:var(--blanco);border:2.5px solid var(--hondo);border-radius:999px;box-shadow:0 5px 0 var(--hondo);font-weight:700;max-width:calc(100% - 20px)}
+/* latido: Rex detectó que hablas (se ve aunque no se escriba nada en pantalla) */
+.rex-dock.voz .rex-luz{background:#fff;box-shadow:0 0 0 4px rgba(206,232,93,.9),0 0 12px 5px rgba(206,232,93,.9);transform:scale(1.25)}
+.rex-dock.voz .rex-boton{outline:3px solid rgba(206,232,93,.9);outline-offset:2px}
+.rex-siri.voz .rs-cara{box-shadow:0 0 0 5px rgba(206,232,93,.85)}
 
 </style>
 </head>
@@ -1464,6 +1468,7 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
     [/\bfundas? (de )?basura( pequenas?| chicas?| pequenos?)?\b/g, "fundabasurapequena"],
     [/\bfundas? (de |para )?(los )?tenedor(es)?\b|\bfundas? pega y despega\b/g, "fundatenedor"],
     [/\bfundas? (de )?(la )?(delivery |deliveri )?godzilla\b|\bfundas? (de )?(delivery|deliveri|delibery)\b/g, "fundagodzilla"],
+    [/\bcrema (de|para) batir\b|\bcrema batida\b/g, "chantilly"], [/\bchocolate de la olla\b/g, "chocolate derretido"], [/\bfundas? para llevar\b/g, "fundagodzilla"],
     [/\bo rey o\b/g, "oreo"], [/\bmas melos\b/g, "masmelos"], [/\bta jin\b/g, "tajin"], [/\bchan till?y\b/g, "chantilly"],
     [/\breexita chill\b|\brexita chill\b|\breexita\b|\brexita\b/g, "chill"], [/\bgodzila\b|\bgodzilla rex\b|\bgodzilla reex\b/g, "godzilla"],
     [/\brecipientes? grandes?\b/g, "tarro"], [/\bpor favor\b/g, " "], [/\bok google\b/g, " "]
@@ -1598,7 +1603,7 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
   /* Respuesta corta a una pregunta del asistente, dicha como sea: «sí», «de una», «hágale», «ajá», «claro»,
      «no», «nel», «mejor no», «novedad», «hay un problema»…  Devuelve { r: "si"|"no"|"novedad", resto, limpio } o null.
      limpio = no dijo nada más que la respuesta (si dijo «sí, pero una caja abierta», resto = «pero una caja abierta»). */
-  const FRASES_SI = [/\bta bien\b/g, /\bas[ií] ?mismo\b/g, /\bya pues\b/g, /\bclaro que s[ií]\b/g, /\bde una\b/g, /\bpor supuesto\b/g, /\basi es\b/g, /\besta bien\b/g, /\btodo bien\b/g, /\bde ley\b/g, /\bclaro que si\b/g, /\bahi va\b/g,
+  const FRASES_SI = [/\btal cual\b/g, /\bta bien\b/g, /\bas[ií] ?mismo\b/g, /\bya pues\b/g, /\bclaro que s[ií]\b/g, /\bde una\b/g, /\bpor supuesto\b/g, /\basi es\b/g, /\besta bien\b/g, /\btodo bien\b/g, /\bde ley\b/g, /\bclaro que si\b/g, /\bahi va\b/g,
     /\bsi senor(a)?\b/g, /\b(si )?llego (todo|completo|bien)\b/g, /\btodo (llego|completo|ok)\b/g, /\bsi llego\b/g, /\bya llego\b/g, /\bcomo no\b/g, /\bno hay problema\b/g,
     /\bsin (ninguna |ningun |ningún )?(novedad|novedades|problema|problemas|inconveniente|inconvenientes|observacion|observaciones|falta|faltantes)\b/g, /\btodo en orden\b/g, /\btodo correcto\b/g, /\bnada que reportar\b/g, /\bno (falta|falto|faltan|faltaron) nada\b/g, /\bno hay (ninguna )?novedad(es)?\b/g, /\bningun(a)? novedad\b/g,
     /\bsi verdad\b/g, /\bhagamoslo\b/g, /\bhagamos(lo)? (de una|ya|nomas)\b/g, /\bvamos (con todo|dale|nomas)\b/g, /\b(muevelo|mueve|mover|mandalo|manda|envialo|despachalo|despacha) de una\b/g, /\bsi (mover|muevelo|mandalo|envialo|despachalo|despacha|registralo|anotalo|pedir|pidelo|pidela|pide|pidan|enviar|envia|envialo|mandar|despachar|preparar|preparalo|preparala|prepara|recibir|recibelo|registrar|hacer|hazlo|correcto|confirmar|confirmo|guardar|guardalo|comprar|compralo|llevar|llevalo)\b/g,
@@ -1606,7 +1611,7 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
     /\bcon gusto\b/g, /\bsi por favor\b/g, /\bsi se puede\b/g, /\bya mismo\b/g, /\bde una vez\b/g, /\bpor favor si\b/g, /\bsi sí\b/g, /\bsi si\b/g, /\bclaro claro\b/g, /\bok dale\b/g, /\bbueno dale\b/g, /\bdale dale\b/g,
     /\bde acuerdo\b/g, /\bestoy de acuerdo\b/g, /\bokey dokey\b/g, /\bde lujo\b/g, /\btienes razon\b/g, /\bjusto eso\b/g, /\bpor supuesto que si\b/g, /\bsi confirmado\b/g, /\bsi confirmo\b/g, /\bsi de una\b/g, /\bsi senor\b/g, /\bsi mismo\b/g, /\bsi creo\b/g,
     /\bsi esta bien\b/g, /\btodo esta bien\b/g, /\btodo ok\b/g, /\bexactamente\b/g, /\bafirmativo\b/g, /\bpositivo\b/g, /\bque si\b/g];
-  const FRASES_NO = [/\bmejor no\b/g, /\btodavia no\b/g, /\baun no\b/g, /\bpara nada\b/g, /\bno llego( todo| completo)?\b/g, /\b(llego|esta|vino) incompleto\b/g, /\bno esta completo\b/g, /\bni modo\b/g,
+  const FRASES_NO = [/\bni hablar\b/g, /\bmejor no\b/g, /\btodavia no\b/g, /\baun no\b/g, /\bpara nada\b/g, /\bno llego( todo| completo)?\b/g, /\b(llego|esta|vino) incompleto\b/g, /\bno esta completo\b/g, /\bni modo\b/g,
     /\bno (lo |la |los |las )?(muevas|mandes|envies|registres|despaches|hagas|muevan|manden|envien|registren|despachen|anotes|mueva|mande)\b/g, /\bno (mover|mandar|enviar|despachar|registrar|anotar)\b/g, /\bmas tarde\b/g, /\bahorita no\b/g, /\bahora no\b/g, /\bpor ahora no\b/g, /\bno por ahora\b/g,
     /\bno es (eso|correcto|asi|ese|esa|lo que (pedi|dije|pedimos|dijimos))\b/g, /\bno era (eso|asi|ese|esa)\b/g, /\bte equivocaste\b/g, /\bse equivoco\b/g, /\bnada que ver\b/g, /\bno (corresponde|coincide|cuadra|concuerda)\b/g,
     /\bno (autorizo|apruebo|acepto|aprobado|autorizado|aceptado|confirmo|confirmado|creo|se puede|esta bien|esta correcto|es verdad|era|va)\b/g, /\beso no\b/g, /\bno lo (hagas|hagan|haga)\b/g, /\besta mal\b/g, /\bme equivoque\b/g, /\bde ninguna manera\b/g, /\bni loco\b/g, /\bno quiero\b/g, /\bno gracias\b/g, /\bno no\b/g, /\bespera(te)? un (rato|momento|ratito|segundo)\b/g, /\bno todavia\b/g];
@@ -1617,11 +1622,11 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
     // el dictado a veces escribe «sí» como «c», «ci» o «sì»; y confirmaciones con el verbo: «mándalo», «muévelo»…
     "c", "ci", "mandalo", "mandala", "muevelo", "muevela", "envialo", "enviala", "registralo", "registrala", "anotalo", "anotala", "pasalo", "llevalo", "confirmalo", "dalo", "damelo", "listos",
     "seguro", "despacha", "despachalo", "despachala", "completo", "completa", "acepto", "aceptado", "aprobado", "apruebo", "autorizado", "autorizo", "justo", "buenisimo", "buenazo", "lujo", "correctisimo", "perfectamente", "dokey", "andale", "mandale", "muevan", "registren", "envien", "procedé",
-    "hagamoslo", "hagamos", "vamos", "vamonos", "venga", "obvio", "efectivamente", "verdad", "cierto", "sisi", "sisisi", "genial", "excelente", "super", "bacan", "chevere", "positivo", "okidoki", "okk", "okey", "dalee", "daleee", "ajá", "exactamente", "mueve", "muevalo", "despachen", "envie", "mandelo", "llevelo"]);
+    "hagamoslo", "hagamos", "vamos", "vamonos", "venga", "obvio", "efectivamente", "verdad", "cierto", "sisi", "sisisi", "genial", "excelente", "super", "bacan", "chevere", "positivo", "okidoki", "okk", "okey", "dalee", "daleee", "ajá", "exactamente", "mueve", "muevalo", "despachen", "envie", "mandelo", "llevelo", "obviamente", "totalmente", "definitivamente", "absolutamente", "procedelo", "procedalo", "procedan", "mhm", "mjm", "uhum", "uju", "ujum", "favor", "porfa", "porfis", "porfavor", "hecho", "sipi", "sipis", "claroo", "claroque", "okeyy", "daleq"]);
   const NO_INI = new Set(["no", "nop", "nel", "negativo", "cancela", "cancelar", "cancelo", "cancelalo", "olvidalo", "olvida", "para", "espera", "nada", "tampoco", "incompleto", "falta", "faltan", "falto", "faltaron", "xnox",
     "dejalo", "dejala", "deja", "detente", "rechazado", "rechazo", "rechaza", "falso", "mentira", "imposible", "equivocaste", "incorrecta", "mal", "alto", "stop", "anula", "anulalo", "borra", "borralo", "ninguno", "ninguna", "nunca", "jamas", "error", "incorrecto", "equivocado", "equivocada", "nones", "nanay", "despues", "luego", "noo", "nooo", "nop", "nopi", "nain"]);
   const NOV_INI = new Set(["novedad", "novedades", "observacion", "observaciones", "problema", "problemas", "defecto", "inconveniente", "detalle", "xnovx"]);
-  const RELLENO_RESP = new Set(["senor", "senora", "jefe", "pana", "bro", "mano", "loco", "pues", "che", "ve", "oye", "rex", "gracias", "por", "favor", "porfa", "porfis", "porfavor", "nomas", "mas",
+  const RELLENO_RESP = new Set(["obviamente", "totalmente", "definitivamente", "absolutamente", "senor", "senora", "jefe", "pana", "bro", "mano", "loco", "pues", "che", "ve", "oye", "rex", "gracias", "por", "favor", "porfa", "porfis", "porfavor", "nomas", "mas",
     "ya", "todo", "bien", "completo", "llego", "llegaron", "mismo", "asi", "que", "de", "una", "un", "eso", "es", "esta", "ahi", "va", "claro", "listo", "dale", "ok", "si", "no", "aja",
     "mover", "moverlo", "moverla", "moverlos", "muevelo", "muevela", "mueve", "movelo", "envia", "envialo", "enviar", "manda", "mandalo", "mandar", "registra", "registralo", "registrala", "registrar", "anota", "anotalo", "hazlo", "hagale", "pasa", "pasalo", "adelante", "senor", "perfecto", "correcto", "gracias",
     "lleva", "llevalo", "confirmo", "confirma", "ahora", "nada", "cancela", "cancelar", "mejor", "todavia", "aun", "tampoco", "espera", "dejalo", "deja", "el", "la", "lo", "le", "hay", "existe", "una", "tengo",
@@ -1745,7 +1750,9 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
     }
 
     // intención
-    for (const [nom, re] of VERBOS) { if (re.test(t)) { R.intent = nom; break; } }
+    // «necesito llevar», «hay que mover», «tengo que pasar», «puedes mandar»: es un movimiento, no un pedido
+    if (/\b(necesito|necesitamos|quiero|queremos|debo|debemos|tengo que|tenemos que|hay que|tienes que|tiene que|tienen que|vamos a|voy a|me toca|nos toca|toca|puedes|puedo|podemos|podrias|podria)\s*,?\s+(llevar|mover|pasar|mandar|enviar|sacar|trasladar|despachar|bajar|subir|devolver|regresar|retirar)\b/.test(t)) R.intent = "traslado";
+    else for (const [nom, re] of VERBOS) { if (re.test(t)) { R.intent = nom; break; } }
     if (R.intent === "recepcion" && /proveedor|compr/.test(t)) R.intent = "entrada";
     R.proveedor = /proveedor|compr/.test(t);
     // lugares explícitos
@@ -1797,6 +1804,19 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
 
     // ---------- leer cantidades y productos ----------
     const T = resto.split(" ").filter(Boolean);
+    // «fundas pequeñas», «funda mediana»: la palabra es una unidad (funda) y a la vez el comienzo del nombre de un producto
+    const prodConUnidad = (i) => {
+      const u = unidadEn(T, i); if (!u || u.tipo !== "empaque") return false;
+      for (let k = Math.min(4, T.length - i); k >= 2; k--) {
+        const frase = T.slice(i, i + k); if (frase.some(w => esNumTok(w) || STOP.has(w) || w === "de")) continue;
+        const c = buscarProducto(frase.join(" "), cat);
+        if (c.length && c[0].score >= 0.9 && (!c[1] || c[0].score - c[1].score >= 0.05)) {
+          const pr = prods[c[0].p]; const nombres = [pr.n].concat(pr.sin || []).map(x => normalizar(String(x)));
+          if (nombres.some(n => n.startsWith(frase.join(" ")))) return true;
+        }
+      }
+      return false;
+    };
     const brutos = []; let cur = null, todo = false;
     const cerrar = () => { if (cur && (cur.ptoks.length || cur.q != null || cur.unidad)) brutos.push(cur); cur = null; };
     const nuevo = () => ({ q: null, unidad: null, ptoks: [], todo });
@@ -1813,7 +1833,7 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
         cur.q = nm.v; cur.todo = false; todo = false; i += nm.n;
         if (T[i] === "de" && unidadEn(T, i + 1)) i++;
         else if (T[i] === "de") cur.elidida = true; // «uno de grageas», «dos de pequeños»: la unidad es la de antes
-        const u = unidadEn(T, i);
+        const u = prodConUnidad(i) ? null : unidadEn(T, i);
         if (u) {
           cur.unidad = u; i += u.n;
           if (T[i] === "y" && (T[i + 1] === "medio" || T[i + 1] === "media")) { cur.q += 0.5; i += 2; }
@@ -1821,7 +1841,7 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
         }
         continue;
       }
-      const u = unidadEn(T, i);
+      const u = prodConUnidad(i) ? null : unidadEn(T, i);
       if (u) {
         if (cur && cur.unidad == null && !cur.ptoks.length) { cur.unidad = u; i += u.n; continue; }
         if (cur && (cur.ptoks.length || cur.unidad)) cerrar();
@@ -1897,6 +1917,8 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
       }
       // cantidad → unidad base
       const p = it.p ? prods[it.p] : null;
+      // «cinco unidades de chantilly»: si el producto viene en «unidad», es ese empaque
+      if (p && pz.unidad && pz.unidad.tipo === "unidad" && pz.unidad.base === "u" && p.u !== "u" && (p.e || []).some(x => x[0] === "unidad")) pz.unidad = { tipo: "empaque", emp: "unidad", txt: pz.unidad.txt, n: 1 };
       if (p) {
         const prepDe = (cat && cat.preps ? cat.preps : CAT.PREPARACIONES)[it.p];
         if (R.intent === "produccion" && p.prep && prepDe && pz.q != null && pz.unidad && pz.unidad.tipo === "unidad" && pz.unidad.base === p.u && prepDe.sale > 0) {
@@ -1981,6 +2003,7 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
     const L0 = ctx.lugar || "L";
     if (R.intent === "traslado") {
       const devolver = /\b(devolver|devuelve|devuelvo|devolvi|devolvemos|regresar|regresa|regreso|regrese|regresamos)\b/.test(t);
+      if (!aX && enX && enX !== (deX || L0)) aX = enX;   // «pon cuatro cajas de la bodega en producción»: es el destino
       if (deX && aX && deX === aX) { R.issues.push({ code: "direccion", msg: "El origen y el destino son el mismo lugar." }); R.conf -= 0.5; }
       const its = R.items.filter(x => x.p && prods[x.p]).map(x => prods[x.p]);
       if (deX && aX) { R.de = deX; R.a = aX; }
@@ -2145,7 +2168,44 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
     return { cant, obs: obs ? String(frase).trim() : "", cambios, entendido: entendido || obs, completo: !cambios.length };
   }
 
-  const API = { normalizar, fon, lev, numeroEn, buscarProducto, interpretar: interpretarConCorreccion, interpretarSimple: interpretar, interpretarMejor, siNo, analizarLlegada, ponerAprendido, claveFrase, olvidarIndice: () => { INDICE = null; INDICE_DE = null; } };
+  /* ===== Seguimientos de la orden anterior =====
+     «lo mismo de durazno», «y también tres de leche», «otro igual», «uno más», «de nuevo»: se completan con la orden de antes
+     (mismo tipo de movimiento, mismo origen y destino) y se devuelve una frase completa que el intérprete ya entiende.
+     ultima = { intent, de, a, items: [{ p, cant, unidadTxt }] }; ctx.nombreDe(id) da el nombre del producto. null = no es un seguimiento. */
+  const LUGN = { B: "bodega", P: "producción", L: "local" };
+  function seguir(frase, ultima, ctx) {
+    ctx = ctx || {};
+    if (!ultima || !ultima.items || !ultima.items.length || !["traslado", "pedido", "merma", "entrada", "conteo"].includes(ultima.intent)) return null;
+    const n = normalizar(frase).replace(/[^a-z0-9ñ ]/g, " ").replace(/\s+/g, " ").trim();
+    if (!n || n.split(" ").length > 12) return null;
+    const nom = ctx.nombreDe || (id => id), ult = ultima.items[0];
+    const armar = items => {
+      const it = items.map(x => ((x.cant != null ? x.cant + " " + (x.unidadTxt || "") : "") + " de " + nom(x.p)).replace(/\s+/g, " ").trim().replace(/^de /, "")).join(" y ");
+      const L = x => LUGN[x] || "";
+      if (ultima.intent === "traslado") return "mueve " + it + " de " + L(ultima.de) + " a " + L(ultima.a);
+      if (ultima.intent === "pedido") return "necesito " + it;
+      if (ultima.intent === "merma") return "se dañaron " + it;
+      if (ultima.intent === "entrada") return "ingresaron " + it;
+      return "hay " + it;
+    };
+    // repetir la orden entera
+    if (/^(y )?(otro|otra) igual$|^(lo mismo|igual|lo mismo otra vez|de nuevo|otra vez|una vez mas|repite (la orden|el movimiento|el pedido|eso|lo anterior|lo mismo)|repitelo|repitela|haz lo mismo|hazlo de nuevo)$/.test(n)) return armar(ultima.items);
+    // una más
+    if (/^(y )?(uno|una|otro|otra|un) mas$/.test(n)) return armar([{ p: ult.p, cant: 1, unidadTxt: ult.unidadTxt }]);
+    let m = n.match(/^(?:y )?(?:tambien |ademas |aparte )?(?:lo mismo|igual|otro igual|otra igual|el mismo|la misma)(?: pero)?(?: de| con| para| en)? (.+)$/), resto = m && m[1], mismo = !!m;
+    if (!resto) { m = n.match(/^(?:y tambien|y ademas|tambien|ademas|aparte|y) (.+)$/); resto = m && m[1]; }
+    if (!resto) return null;
+    // lo que sigue tiene que ser solo productos y cantidades (sin verbo ni lugar): si trae su propia orden, no es un seguimiento
+    const R = interpretar(resto, { lugar: ctx.lugar || "B", cat: ctx.cat });
+    if (!(R.issues || []).some(i => i.code === "verbo_supuesto") || !(R.items || []).some(x => x.p)) return null;
+    const items = R.items.filter(x => x.p).map(x => {
+      const dijoCant = x.cant != null;
+      return { p: x.p, cant: dijoCant ? x.cant : ult.cant, unidadTxt: dijoCant ? (x.unidadTxt || x.emp || x.unidad || ult.unidadTxt) : (ult.unidadTxt || x.emp || x.unidad) };
+    });
+    return armar(items);
+  }
+
+  const API = { normalizar, fon, lev, numeroEn, buscarProducto, interpretar: interpretarConCorreccion, interpretarSimple: interpretar, interpretarMejor, seguir, siNo, analizarLlegada, ponerAprendido, claveFrase, olvidarIndice: () => { INDICE = null; INDICE_DE = null; } };
   root.FRX_VOZ = API;
   if (typeof module !== "undefined" && module.exports) module.exports = API;
 })(typeof window !== "undefined" ? window : globalThis);
@@ -5425,7 +5485,7 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
     const nombres = txt.split(",").map(x => x.trim().replace(/\s*\([^)]*\)\s*$/, "")).filter(Boolean);
     return Array.from(new Set(nombres.concat(C.PERSONAS)));
   }
-  /* Nombres con sus apodos: «Gabriela (Gaby)» se reconoce como Gabriela o Gaby */
+  /* Nombres con sus apodos: «Nombre (Apodo)» se reconoce con el nombre o con el apodo */
   function personasDet() {
     const txt = st && st.config && st.config.personal != null ? st.config.personal : "Supervisor";
     return txt.split(",").map(x => x.trim()).filter(Boolean).map(x => {
@@ -5459,7 +5519,7 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
   let tToast = null;
   function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("ver"); clearTimeout(tToast); tToast = setTimeout(() => t.classList.remove("ver"), 3800); }
   // Rex: el asistente (sesion/act: la ventana tipo Siri; dijo: lo último que dijo; oyendo: lo último que oyó)
-  const BUILD = { id: "b77c2b15", fecha: "2026-10-28 12:44" };
+  const BUILD = { id: "e48deae9", fecha: "2026-10-28 17:25" };
   const Rex = { lugar: "B", ultimo: null, despierto: 0, sesion: 0, act: 0, dijo: "", tDijo: 0, oyendo: "", tOyendo: 0 };
   /* ---------- la voz del asistente ----------
      Se elige la voz más natural que tenga el navegador (en Edge: «Andrea» de Ecuador, natural; en Chrome: «Google español»),
@@ -5489,6 +5549,8 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
        · a veces la voz queda en pausa.
      Por eso: se espera un momento después de cortar, se guarda el objeto, se destraba la voz, y si no empezó se
      reintenta una vez. Si aun así no habla, el texto sale en la ventana de Rex y se avisa por qué. */
+  // «Pantalla silenciosa»: Rex solo escucha, habla y actúa. Lo que oyó se escribe en pantalla solo si se pide (Ajustes).
+  const mostrarTx = () => st.config.mostrarTranscripcion === true;
   const guardaVoces = new Set();
   let tCortoTTS = 0;
   const TTS = { bloqueada: false, sinVoz: false, ultimoError: "", intentos: 0, hablo: 0 };
@@ -5572,6 +5634,8 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
   /* Pregunta en voz alta y deja el micrófono abierto para el «sí» o el «no» (sin tocar nada) */
   /* Pregunta «¿sí o no?». Por defecto NO se lee en voz alta: suena un tono y el micrófono ya está escuchando,
      y se queda abierto hasta que haya respuesta (o se toque Sí/No). Leer la pregunta completa es una opción en Ajustes. */
+  // en voz alta no hace falta «Di sí o no»: ya se sabe que se espera la respuesta (y Rex no se confunde con su propio eco)
+  const sinDiSiNo = t => String(t || "").replace(/\s*Di s[ií] o no\.?\s*$/i, "");
   function preguntar(l, plan, texto) {
     const escuchar = () => {
       if (pend[l] !== plan || !st.config.escucharRespuesta || !Oido.disponible || modalOk) return;
@@ -5580,8 +5644,8 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
     };
     // en una conversación con Rex («Oye Rex, …») la pregunta se dice en voz alta, como Siri: quien habla puede no estar
     // mirando la pantalla. Se escucha la respuesta apenas Rex termina (lo que se dice encima se tomaría como eco).
-    if (!st.config.leerPregunta && !plan.hablarPregunta && plan.via === "voz" && Rex.sesion && st.config.leerPreguntaVoz !== false) { hablar(texto, escuchar); return; }
-    if (st.config.leerPregunta || (plan.hablarPregunta && st.config.avisosVoz !== false)) hablar(texto, escuchar, plan.hablarPregunta ? { cola: true, anuncio: true, lugar: l, vigente: () => pend[l] === plan } : null);
+    if (!st.config.leerPregunta && !plan.hablarPregunta && plan.via === "voz" && Rex.sesion && st.config.leerPreguntaVoz !== false) { hablar(sinDiSiNo(texto), escuchar); return; }
+    if (st.config.leerPregunta || (plan.hablarPregunta && st.config.avisosVoz !== false)) hablar(sinDiSiNo(texto), escuchar, plan.hablarPregunta ? { cola: true, anuncio: true, lugar: l, vigente: () => pend[l] === plan } : null);
     else { cortarRespuesta(l); escuchar(); }
   }
   // corta lo que el asistente estaba respondiendo (los avisos para otro lugar no se cortan)
@@ -6137,7 +6201,7 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
     if (plan.bloqueo) h += '<img class="t-reex" src="' + IMG.brazos + '" alt="" width="64" height="88">';
     h += '<p class="t-titulo">' + (plan.bloqueo ? (plan.sinStock ? "Sin inventario" : "Repite la orden") : plan.soloInfo ? "Respuesta" : plan.ajustado ? "Solo hay esto. " + preguntaTit : plan.auto && st.config.autoConfirmarSeg > 0 ? "Entendido" : (tituloAumento || preguntaTit)) + (plan.escuchando ? ' <span class="oyendo"><i></i><i></i><i></i>te escucho</span>' : "") + "</p>";
     if (plan.anuncio) { const pe0 = st.pedidos.find(x => x.id === plan.anuncio); if (pe0) h += '<p class="anuncio-t a-' + pe0.de + '">Pedido ' + esc(LUG[pe0.de].de) + " · " + E.horaSeg(pe0.t) + "</p>"; }
-    else if (plan.frase) h += '<p class="dicho">' + (plan.via === "voz" ? "Escuché" : plan.via === "toque" ? "Tocaste" : "Escribiste") + ": «" + esc(plan.frase) + "»" + (R && R.conf != null && plan.via !== "toque" ? " · seguridad " + Math.round(R.conf * 100) + "%" : "") + "</p>";
+    else if (plan.frase && (mostrarTx() || plan.via !== "voz")) h += '<p class="dicho">' + (plan.via === "voz" ? "Escuché" : plan.via === "toque" ? "Tocaste" : "Escribiste") + ": «" + esc(plan.frase) + "»" + (R && R.conf != null && plan.via !== "toque" ? " · seguridad " + Math.round(R.conf * 100) + "%" : "") + "</p>";
     if (plan.traducida) h += '<p class="det ia-t">Lo entendí como: «' + esc(plan.traducida) + "»</p>";
     if (plan.previo) h += '<p class="previo">' + esc(plan.previo) + "</p>";
     if (plan.dudaFrase) h += '<p class="det duda">No entendí «' + esc(plan.dudaFrase) + '». Di «sí» o «no», o toca un botón (así aprendo esa frase).</p>';
@@ -6179,7 +6243,7 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
     const m = r.mov && st.movs.find(x => x.id === r.mov);
     const resp = r.resp || (m && m.responsable) || null;
     box.innerHTML = '<div class="franja ' + (r.ok ? "ok" : "no") + (r.sale ? " sale" : "") + '" role="status" data-cerrar-res title="Toca para cerrar"><span class="f-ico" aria-hidden="true">' + (r.ok ? "✓" : "!") + '</span><div class="f-txt"><b>' + esc(r.titulo) + "</b><span>" + esc(r.txt) + (resp ? " · Responsable: " + esc(resp) : "") + "</span>" +
-      (r.frase ? "<small>" + (r.via === "voz" ? "Escuché" : r.via === "toque" ? "Tocaste" : "Escribiste") + ": «" + esc(r.frase) + "»</small>" : "") + "</div>" +
+      (r.frase && (mostrarTx() || r.via !== "voz") ? "<small>" + (r.via === "voz" ? "Escuché" : r.via === "toque" ? "Tocaste" : "Escribiste") + ": «" + esc(r.frase) + "»</small>" : "") + "</div>" +
       (m && !m.deshecho && m.lugar === l ? '<button class="f-des" data-quitar="' + m.id + '">' + (A.requierePin(st, m) ? LOCK : "") + "Deshacer</button>" : "") + "</div>";
   }
   function fraseNoHay(plan) {
@@ -6254,12 +6318,12 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
     { const sn = V.siNo(txt); if (sn && (sn.r === "si" || sn.r === "no")) return null; }
     const lista = personasDet();
     for (const x of lista) for (const k of x.claves) { if (pal.join(" ") === k || pal[0] === k || (k.split(" ").length > 1 && t.startsWith(k))) return x.nombre; }
-    // dictado aproximado: «Gabi» → Gaby, «Tomas» → Tomás
+    // dictado aproximado: un nombre mal escrito por el dictado se acerca al más parecido de la lista
     let mejor = null, md = 9;
     for (const x of lista) for (const k of x.claves) { const a = pal[0], d = V.lev(a, k.split(" ")[0]); const lim = k.length >= 6 ? 2 : k.length >= 4 ? 1 : 0; if (d <= lim && d < md) { md = d; mejor = x.nombre; } if (a.length >= 4 && k.startsWith(a) && 2 < md) { md = 2; mejor = x.nombre; } }
     if (mejor) return mejor;
     // un nombre nuevo (una o dos palabras, sin números ni productos): se aprende
-    if (pal.length <= 2 && pal.every(w => /^[a-zñ]{3,}$/.test(w)) && !/^(no|nada|nadie|ninguno|cancela|saltar|despues|luego|no se|claro|listo|bueno|perfecto|correcto|gracias|hola|ya|dale|okey|vale|que|como|cuanto|donde|aqui|alla|todo|todos|bien|mal)$/.test(t) && !/\b(rex|jarvis|llego|lleg|falta|hay|tanda|caja|balde|kilo|lata)/.test(t)) {
+    if (pal.length <= 2 && pal.every(w => /^[a-zñ]{3,}$/.test(w)) && !/^(no|nada|nadie|ninguno|cancela|saltar|despues|luego|no se|claro|listo|bueno|perfecto|correcto|gracias|hola|ya|dale|okey|vale|que|como|cuanto|donde|aqui|alla|todo|todos|bien|mal)$/.test(t) && !pal.some(w => /^(uno|una|unos|unas|mas|menos|otro|otra|otros|otras|igual|mismo|misma|tambien|ademas|tambien|lleva|llevar|mueve|mover|pon|poner|dame|oye|rex|reex|jarvis|por|favor|de|del|la|las|el|los|en|con|para|y|o|pero|si|sino|esto|eso|esa|ese|aca|ahi|ayuda|ayudame|repite|otra|vez|nuevo|nueva|gracias|porfa|cantidad|cajas|caja|baldes|balde|kilos|kilo|litros|litro|libras|libra|unidades|unidad|frutilla|durazno|leche|crema)$/.test(w)) && !/\b(rex|jarvis|llego|lleg|falta|hay|tanda|caja|balde|kilo|lata)/.test(t)) {
       const R = V.interpretar(txt, { lugar: l, cat: st.cat }); if ((R.items || []).some(x => x.p) || R.listo) return null;
       return String(txt).trim().replace(/^(el|la) responsable (es|fue)\s+|^(lo hizo|fue|es|soy)\s+/i, "").split(/\s+/).slice(0, 2).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
     }
@@ -6297,6 +6361,7 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
   function responsableDicho(l, txt, via) {
     if (deshacerRapido(l, txt, via)) return;
     const n = nombreDe(txt, l);
+    if (!n && via === "voz" && (esOrdenClara(txt, l) || seguimiento(txt, l))) { logVoz("era una orden nueva (no un nombre)", txt, l); respons[l] = null; renderTarjeta(l); ordenTexto(l, txt, via); return; }
     if (!n && intentarIA(l, txt, via, "nombre")) return;
     if (!n) { hablar("No entendí el nombre. Dilo otra vez, o toca un nombre.", () => escucharResponsable(l)); respons[l].duda = txt; renderTarjeta(l); return; }
     asignarResponsable(l, n, via);
@@ -6497,7 +6562,7 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
     const sinVoz = on && !err && (!vozActiva() || TTS.bloqueada); d.classList.toggle("sinvoz", sinVoz);
     const ba = $("[data-rex-activar]", d); if (ba) ba.hidden = !sinVoz;
     const oido = Oido.oido && Date.now() - Oido.tOido < 12000 ? Oido.oido : (Rex.ultimo && Date.now() - Rex.ultimo.t < 12000 ? Rex.ultimo.txt : "");
-    const oi = $("[data-rex-oi]", d); oi.textContent = oido ? "Oí: «" + oido.slice(0, 90) + "»" : ""; oi.hidden = !oido;
+    const oi = $("[data-rex-oi]", d); oi.textContent = oido && mostrarTx() ? "Oí: «" + oido.slice(0, 90) + "»" : ""; oi.hidden = !(oido && mostrarTx());
     $$("[data-rex-l]", d).forEach(b => b.setAttribute("aria-pressed", String(b.dataset.rexL === (Oido.manos || Rex.lugar))));
     const o = lugarConPregunta(null), q = $("[data-rex-q]", d);
     // se achica cuando no pasa nada (como Siri): queda la carita con su luz
@@ -6538,7 +6603,7 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
     const est = hablando ? "Rex" : modo === "orden" ? "Te escucho…" : modo === "respuesta" ? "Te escucho: ¿sí o no?" : modo === "motivo" ? "Te escucho" : "Listo";
     const oi = Rex.tOyendo >= Rex.sesion - 1500 ? Rex.oyendo : "", dice = Rex.tDijo >= Rex.sesion - 200 ? Rex.dijo : "";
     const fija = (sel, txt) => { const e = $(sel, w); if (e.textContent !== txt) e.textContent = txt; e.hidden = !txt; };
-    fija("[data-rs-est]", est); fija("[data-rs-oi]", oi ? "«" + oi.slice(0, 140) + "»" : ""); fija("[data-rs-dice]", dice);
+    fija("[data-rs-est]", est); fija("[data-rs-oi]", oi && mostrarTx() ? "«" + oi.slice(0, 140) + "»" : ""); fija("[data-rs-dice]", dice);
     fija("[data-rs-pista]", !hablando && Rex.pista ? Rex.pista : "");
     const nota = !dice ? "" : TTS.sinVoz ? "Rex no pudo hablar: revisa el volumen del equipo o abre la página en Microsoft Edge." : (TTS.bloqueada || !vozActiva()) ? "Toca la pantalla una vez para que Rex te conteste en voz alta." : "";
     fija("[data-rs-nota]", nota);
@@ -6745,7 +6810,7 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
   function decirCharla(texto, esAviso) {
     const id = charla && charla.tr; if (!id) return;
     charla.dicho = texto; renderEnvio();
-    hablar(paraVoz(texto), () => {
+    hablar(sinDiSiNo(paraVoz(texto)), () => {
       if (!charla || charla.tr !== id || !st.config.escucharRespuesta || !Oido.disponible || modalOk) return;
       Oido.esperarRespuesta(charla.l, () => !!(charla && charla.tr === id && !modalOk), { noRobar: !!esAviso });
     }, esAviso ? { cola: true, anuncio: true, lugar: charla.l, vigente: trPendiente(id) } : null);
@@ -6849,7 +6914,17 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
     renderDisp(l); if (habia && !callado) hablar("Cancelado. No se registró nada.");
   }
 
+  /* «Lo mismo de durazno», «y también tres de leche», «otro igual», «uno más»: se completan con la orden anterior (hasta 2 min antes) */
+  // «uno más», «otro igual», «lo mismo», «de nuevo», «y también…»: marcas de que se repite o se suma a la orden anterior
+  const marcaSeguir = x => !!Rex.ultimaOrden && Date.now() - Rex.ultimaOrden.t < 120000 && /(^|\s)(uno mas|una mas|otro mas|otra mas|otro igual|otra igual|lo mismo|la misma|de nuevo|y tambien|ademas)(\s|$)/.test(V.normalizar(String(x || "")).replace(/[,.;:!¡?¿]/g, " ")) && !/\b(lleg\w*|falt\w*|recib\w*|vino|vinieron)\b/.test(V.normalizar(String(x || "")));
+  const seguimiento = (texto, l) => {
+    try { if (!Rex.ultimaOrden || Date.now() - Rex.ultimaOrden.t > 120000 || (pend[l] && !pend[l].bloqueo && !pend[l].soloInfo) || (charla && charla.l === l && trCharla()) || motivo[l]) return null; return V.seguir(texto, Rex.ultimaOrden, { lugar: l, cat: st.cat, nombreDe: nombre }); } catch (e) { return null; }
+  };
   function ordenTexto(l, texto, via, alts, extra) {
+    if (via === "voz" && !(extra && extra.ia)) {
+      const seg = seguimiento(texto, l);
+      if (seg) { logVoz("seguimiento de la orden anterior", "«" + texto + "» → «" + seg + "»", l); if (marcaSeguir(texto)) st._ultimaFirma = null; /* pidió «uno más»: no es un movimiento repetido por error */ texto = seg; alts = [{ t: seg, c: (alts && alts[0] && Number(alts[0].c)) || 0.85 }]; }
+    }
     const ctx = { lugar: l, cat: st.cat, ultimoProducto: st._ultimoProducto };
     // frases que el asistente con IA ya tradujo antes: se entienden al instante, sin internet
     const ya = st.reescritas && st.reescritas[V.claveFrase(texto)];
@@ -6858,6 +6933,9 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
     const fr = alts && alts.length > 1 ? R.crudo : texto;
     // qué tan seguro estaba el reconocimiento de voz (0 a 1; 0 = no lo informó): con ruido de fondo baja
     try { const c0 = alts && alts[0] && Number(alts[0].c); R.srConf = c0 > 0 ? c0 : 0; } catch (e) {}
+    // para los seguimientos: la última orden clara que se dijo con la voz
+    if (via === "voz" && R.listo && ["traslado", "pedido", "merma", "entrada", "conteo"].includes(R.intent) && (R.items || []).length && R.items.every(x => x.p))
+      Rex.ultimaOrden = { t: Date.now(), intent: R.intent, de: R.de, a: R.a, items: R.items.map(x => ({ p: x.p, cant: x.cant, unidadTxt: x.unidadTxt || x.emp || x.unidad })) };
     procesar(l, R, fr, via, extra);
   }
 
@@ -7002,7 +7080,12 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
     return "<ol>" + vozLog.slice().reverse().slice(0, 40).map(x => "<li><span>" + E.horaSeg(x.t) + "</span> <b>" + esc(x.ev) + "</b>" + (x.l ? " · " + esc(LUG[x.l] ? LUG[x.l].corto : x.l) : "") + (x.txt ? " — " + esc(x.txt) : "") + "</li>").join("") + "</ol>";
   }
   function vozLogTexto() {
-    return "Frutireex · diagnóstico de voz\nDirección: " + location.protocol + "//" + location.host + location.pathname + "\nNavegador: " + navigator.userAgent + "\n" +
+    const d = Oido.diag, hace = t => t ? Math.round((Date.now() - t) / 1000) + " s" : "nunca";
+    const cab = "Versión: " + BUILD.id + " (" + BUILD.fecha + ")\nDictado del navegador: " + (Oido.disponible ? "sí" : "NO") + " · en línea: " + (navigator.onLine ? "sí" : "NO") + " · manos libres: " + (Oido.manos ? LUG[Oido.manos].nombre : "apagado") + (Oido.manosError ? " (" + Oido.manosError + ")" : "") + " · escucha abierta: " + (Oido.abierto ? "sí, modo " + Oido.modo : "no") + "\n" +
+      "Escuchas abiertas: " + d.inicios + " · cerradas: " + d.fines + " · errores: " + (JSON.stringify(d.errores) === "{}" ? "ninguno" : JSON.stringify(d.errores)) + " · reciclajes: " + d.reciclados + "\n" +
+      "Último audio captado: hace " + hace(d.tAudio) + " · último sonido: hace " + hace(d.tSonido) + " · última voz: hace " + hace(d.tVoz) + " · último texto: hace " + hace(d.tTexto) + "\n" +
+      "Voz de Rex: " + (ultimaVoz || "—") + " · bloqueada: " + (TTS.bloqueada ? "sí" : "no") + " · sin voz: " + (TTS.sinVoz ? "sí" : "no") + "\nÚltimos eventos del dictado:\n  " + (d.ev.slice(-30).join("\n  ") || "—") + "\n";
+    return "Frutireex · diagnóstico de voz\nDirección: " + location.protocol + "//" + location.host + location.pathname + "\nNavegador: " + navigator.userAgent + "\n" + cab +
       vozLog.map(x => E.fechaDe(x.t) + " " + E.horaSeg(x.t) + " | " + x.ev + (x.l ? " | " + x.l : "") + (x.txt ? " | " + x.txt : "")).join("\n");
   }
 
@@ -7035,6 +7118,8 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
 
   function aceptaRespuesta(l, txt) {
     const sn = V.siNo(txt);
+    // «uno más», «y también una caja de leche» dentro de la conversación: es un seguimiento de la orden, no lo que llegó
+    if (!(sn && sn.limpio) && Rex.sesion && marcaSeguir(txt)) return false;
     if (charla && charla.l === l && !pend[l]) {
       if (sn) return true;
       const tr = trCharla(); if (!tr) return false;
@@ -7067,9 +7152,12 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
     let espera = null;        // { l, sigue(), hasta, tipo: "respuesta"|"motivo", alMotivo }: si la escucha se corta, se vuelve a abrir sola
     let manos = null, manosError = null, fallos = 0, pausaHasta = 0, oidoManos = "", tOido = 0;
     let mudoTxt = null, mudoFin = 0;   // lo que está diciendo el asistente (y hasta cuándo se ignora su eco)
+    // lo que le pasó al dictado del navegador (se copia en «Copiar diagnóstico»)
+    const diag = { inicios: 0, fines: 0, errores: {}, tAudio: 0, tSonido: 0, tVoz: 0, tTexto: 0, tReinicio: 0, reciclados: 0, ev: [] };
+    const dev = e => { diag.ev.push(new Date().toTimeString().slice(0, 8) + " " + e); if (diag.ev.length > 60) diag.ev.shift(); };
     try { const g = localStorage.getItem(CLAVE + "-manos"); if (LUGS.includes(g)) manos = g; } catch (e) {}
     const esperaViva = l => !!(espera && espera.l === l && espera.sigue() && Date.now() < espera.hasta);
-    function escucha(l, html) { const e = $('.disp[data-l="' + l + '"] [data-escucha]'); if (e) e.innerHTML = html; }
+    function escucha(l, html) { const e = $('.disp[data-l="' + l + '"] [data-escucha]'); if (!e) return; if (!mostrarTx()) html = String(html).replace(/<b>«[^»]*»<\/b>([^<]*)/g, (m, y) => "<b>" + (y.trim() || "Listo.") + "</b>"); e.innerHTML = html; }
     function boton(l, on) {
       const b = $('.disp[data-l="' + l + '"] [data-mic]'); if (b) b.classList.toggle("on", on);
       $$(".envio-card").forEach(c => c.classList.toggle("oye", !!(on && charla && charla.l === l)));
@@ -7089,6 +7177,66 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
       return a.filter(w => b.has(w)).length / a.length >= 0.75;
     }
     let ultimoDicho = "";
+
+    // ----- hablar ENCIMA de Rex: una persona contesta sin esperar a que termine la pregunta -----
+    const tokNorm = x => (V.normalizar ? V.normalizar(x) : String(x || "").toLowerCase()).replace(/[^a-z0-9ñ]/g, "");
+    const claveTxt = x => String(x || "").trim().split(/\s+/).map(tokNorm).filter(Boolean);
+    let ultAtendido = null;   // { t, txt }: lo último que ya se contestó (el navegador cierra la misma frase un poco después)
+    const mismaFrase = (a, b) => { const x = claveTxt(a), y = claveTxt(b); return !!(x.length && y.length && x[0] === y[0]); };
+    /* Lo que queda de lo dicho al quitar del comienzo lo que repite la voz de Rex (su eco). «Sí» y «no» nunca se quitan. */
+    const dichosRex = [];   // lo último que dijo Rex (su eco puede llegar después de que empiece a decir otra cosa)
+    const recienteRex = () => { const t = Date.now(); return dichosRex.filter(d => !d.fin || t - d.fin < 3500).map(d => d.txt).join(" "); };   // solo lo que dice o acaba de decir: si lo repites 5 s después, eres tú
+    /* Posiciones de w (palabras) que repiten 4 o más palabras seguidas de lo que dijo Rex: es su eco, no tú.
+       Menos de 4 podría ser una orden que repite sus palabras («caja de leche»). */
+    function ecoLargo(w, k, desde) {
+      const RR = claveTxt((mudoTxt != null ? mudoTxt + " " : "") + recienteRex());
+      const idx = []; k.forEach((x, n) => { if (n >= desde && x) idx.push(n); });
+      const eco = new Set();
+      for (let t = 0; t < idx.length;) {
+        let m = 0; for (let q = 0; q < RR.length; q++) { let c = 0; while (t + c < idx.length && q + c < RR.length && k[idx[t + c]] === RR[q + c]) c++; if (c > m) m = c; }
+        if (m >= 4) { for (let d = 0; d < m; d++) eco.add(idx[t + d]); t += m; } else t++;
+      }
+      return eco;
+    }
+    const limpiaPuntos = x => x.replace(/^[,.:;¿?¡!\s]+/, "").replace(/\s+[¿?¡!,.;:]+(?=\s|$)/g, "");
+    /* El dictado final con el eco de Rex pegado antes, en medio o después: se queda con lo tuyo */
+    function sinEcoLargo(txt) {
+      const w = String(txt || "").trim().split(/\s+/), k = w.map(tokNorm), eco = ecoLargo(w, k, 0);
+      return eco.size ? limpiaPuntos(w.filter((x, n) => !eco.has(n)).join(" ")) : String(txt || "");
+    }
+    function parteTuya(txt) {
+      const base = mudoTxt != null ? mudoTxt : ultimoDicho;
+      const R = claveTxt(base), rex = new Set(R);
+      const w = String(txt || "").trim().split(/\s+/), k = w.map(tokNorm); let i = 0;
+      // ¿esas palabras seguidas están, en ese orden, en lo que dijo Rex? (un «no» dentro de su frase es eco, no una respuesta)
+      const enRex = arr => { for (let q = 0; q + arr.length <= R.length; q++) { let ok = true; for (let d = 0; d < arr.length; d++) if (R[q + d] !== arr[d]) { ok = false; break; } if (ok) return true; } return false; };
+      const sigueEco = j => { const a = [0, 1, 2].map(d => w[j + d] != null ? k[j + d] : ""); return a.every(Boolean) && enRex(a); };
+      while (i < w.length) { const x = k[i]; if (x && ((/^(si|no)$/.test(x) && !sigueEco(i)) || !rex.has(x))) break; i++; }
+      // «…a producción? de una»: el «de» de tu «sí» también está en lo que dijo Rex, pero con él es una respuesta clara
+      while (i > 0 && i < w.length && !sigueEco(i - 1)) { const sn = V.siNo(w.slice(i - 1).join(" ")); if (sn && sn.limpio) i--; else break; }
+      // el eco también puede llegar después de lo tuyo o en medio («ok» y luego lo que dice Rex)
+      const eco = ecoLargo(w, k, i);
+      return limpiaPuntos(w.filter((x, n) => n >= i && !eco.has(n)).join(" "));
+    }
+    /* ¿Lo que se oyó mientras Rex hablaba es una persona que contesta? Solo cuenta lo que no puede ser su eco:
+       un «sí/no» claro a una pregunta abierta, un nombre (responsable) o una orden clara dentro de la conversación. */
+    function interrumpe(tuyo, conf, final, l) {
+      if (!tuyo || (final && conf > 0 && conf < 0.3)) return null;
+      if (ultAtendido && Date.now() - ultAtendido.t < 2000 && mismaFrase(tuyo, ultAtendido.txt)) return null;
+      const sn = V.siNo(tuyo), esSN = !!(sn && sn.limpio), esSiNo = !!(sn && (sn.r === "si" || sn.r === "no"));
+      // dónde espera un «sí/no»: primero el lugar del micrófono, si no, el lugar con la pregunta más reciente
+      const abre = x => (pend[x] && !pend[x].bloqueo && !pend[x].soloInfo) || (charla && charla.l === x && trCharla());
+      let oSN = abre(l) ? l : null;
+      if (!oSN) { let t = -1; LUGS.forEach(x => { if (abre(x)) { const tl = Math.max(pend[x] && pend[x].tPend || 0, charla && charla.l === x ? (charla.t || 1) : 0); if (tl > t) { t = tl; oSN = x; } } }); }
+      if (esSN && oSN) return { k: "sí/no", o: oSN };
+      // modo rápido: «no» mientras pregunta el responsable deshace lo recién hecho
+      if (esSN && sn.r === "no" && respons[l] && respons[l].rapido) return { k: "sí/no", o: l };
+      // nombre del responsable
+      const oR = respons[l] ? l : LUGS.find(x => respons[x]);
+      if (final && oR && !esSiNo && (tuyo.split(/\s+/).length <= 3 || (tuyo.split(/\s+/).length <= 5 && /^(eh |este |pues |bueno |ya )?((el|la) responsable (es|fue)|soy|yo soy|fue|lo (hizo|hice))\s/.test(V.normalizar(tuyo)))) && nombreDe(tuyo, oR)) return { k: "nombre", o: oR };
+      if (final && manos && Rex.sesion && !despiertaEn(tuyo) && (esOrdenClara(tuyo, manos) || seguimiento(tuyo, manos) || charlaRex(tuyo, manos, { sinWake: true }))) return { k: "orden", o: manos };
+      return null;
+    }
 
     // ----- palabra para despertar (manos libres) -----
     const RELLENO_INI = new Set(["oye", "hey", "ey", "ok", "okey", "hola", "ola", "eh", "a", "ver", "ya", "este", "y", "el", "la", "o", "ah", "hay", "ay", "bueno", "buenas"]);
@@ -7110,8 +7258,12 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
     // «Oye Rex» al comienzo (despierta) o en cualquier parte de la frase (con radio o charla antes, no se pierde)
     function despiertaEn(txt) {
       const h = despierta(txt); if (h) return h;
-      const m = String(txt || "").match(/(?:^|[\s,.;:!¡¿?])(?:oye|oiga|oigan|hey|ey|ok|okey)[\s,]+(?:rex|reex|rexito|rexy|reks|recs|rey|res|rez|rets|regs|frutirex|frutireex|jarvis|yarvis)\b[,.:;\s]*(.*)$/i);
-      return m ? { resto: m[1].trim(), medio: true } : null;
+      // «oye Rex» en cualquier parte de la frase (con radio o charla antes, no se pierde)
+      const cr = String(txt || "").trim().split(/\s+/), w = cr.map(x => (V.normalizar ? V.normalizar(x) : x.toLowerCase()).replace(/[^a-z0-9ñ]/g, ""));
+      for (let k = 0; k < w.length - 1; k++) {
+        if (esOye(w[k]) && (suenaRex(w[k + 1]) || DESPIERTA.has(w[k + 1]))) return { resto: cr.slice(k + 2).join(" ").replace(/^[,.:;\s]+/, "").trim(), medio: true };
+      }
+      return null;
     }
     /* Cuando lo llaman solo con «Rex» / «Oye Rex»: contesta en voz alta y queda escuchando la orden */
     function saludoRex(corto) {
@@ -7126,6 +7278,9 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
       hablar(saludoRex(corto), () => { Rex.act = Date.now(); if (vigente() && modo === "orden") ponerLimite(5000); });
     }
     function palabraManos() { return (st.config.palabraManos || "Rex").trim() || "Rex"; }
+    // «oye» tal como lo escribe el dictado (oye, oie, hoy, oi, hey…) y «Rex» tal como suena (rex, rec, reks, rets, regs, rey…)
+    const esOye = w => OYE_PAL.has(w) || /^(h?o+[iy]e?s?|o+ie|ohe|hoye|joye|olle|ei|hei|ay|eh|okay)$/.test(w);
+    const suenaRex = w => DESPIERTA_OYE.has(w) || /^re[ei]?[ckxgqszt]{1,2}s?$/.test(w) || /^rey[ae]?$/.test(w) || /^r[eé]x[a-z]{0,3}$/.test(w);
     function despierta(txt) {
       const crudo = String(txt || "").trim().split(/\s+/);
       const w = crudo.map(x => (V.normalizar ? V.normalizar(x) : x.toLowerCase()).replace(/[^a-z0-9ñ]/g, ""));
@@ -7134,23 +7289,33 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
         if (k > 0 && !w.slice(0, k).every(x => RELLENO_INI.has(x) || !x)) break;
         let n = 0;
         if (propia.length && propia.every((p, j) => w[k + j] === p)) n = propia.length;
-        else if (DESPIERTA.has(w[k]) || (k === 0 && DESPIERTA_INI.has(w[k])) || (k > 0 && OYE_PAL.has(w[k - 1]) && DESPIERTA_OYE.has(w[k]))) n = 1;
+        else if (DESPIERTA.has(w[k]) || (k === 0 && DESPIERTA_INI.has(w[k])) || (k > 0 && esOye(w[k - 1]) && suenaRex(w[k]))) n = 1;
         else if (w[k] === "fruti" && /^(rex|reex|res)$/.test(w[k + 1] || "")) n = 2;
         if (n) return { resto: crudo.slice(k + n).join(" ").replace(/^[,.:;\s]+/, "").trim() };
       }
       return null;
     }
 
-    function crear(l) {
+    function crear(l0) {
+      let l = l0;   // el lugar de la pregunta que se está atendiendo (cambia sin cerrar el micrófono)
       const r = new SR(); r.lang = idiomas[idioma]; r.interimResults = true; r.maxAlternatives = 5; r.continuous = true;
-      let buf = "", alts = [], interino = "", cerrado = false, tResp = null, tFin = null, tSuelta = null, tPre = null, limite = null, desdeManos = false;
+      r.onaudiostart = () => { diag.tAudio = Date.now(); dev("el micrófono empezó a captar"); };
+      r.onsoundstart = () => { diag.tSonido = Date.now(); };
+      r.onspeechstart = () => { diag.tVoz = Date.now(); Rex.voz = Date.now(); };
+      r.onnomatch = () => dev("el navegador oyó voz pero no pudo escribirla");
+      let buf = "", alts = [], interino = "", cerrado = false, tResp = null, tFin = null, tSuelta = null, tPre = null, tBarge = null, limite = null, desdeManos = false;
       const vigente = () => rec === r && !cerrado;
       const ponerLimite = ms => { clearTimeout(limite); limite = ms ? setTimeout(() => { if (vigente()) vencio(); }, ms) : null; };
-      const limpiar = () => { buf = ""; alts = []; interino = ""; clearTimeout(tResp); clearTimeout(tFin); clearTimeout(tSuelta); clearTimeout(tPre); };
+      const limpiar = () => { buf = ""; alts = []; interino = ""; clearTimeout(tResp); clearTimeout(tFin); clearTimeout(tSuelta); clearTimeout(tPre); clearTimeout(tBarge); };
       const terminar = () => { cerrado = true; clearTimeout(limite); limpiar(); if (rec === r) { abierto = false; rec = null; boton(l, false); pintarManos(); } };
+      // manos libres: una pregunta de otro lugar usa este mismo micrófono abierto (cerrarlo y reabrirlo pierde las primeras palabras)
+      r._lugar = x => { if (!vigente() || x === l) return; boton(l, false); l = x; lugar = x; dev("la escucha atiende a " + LUG[x].nombre + " (sin reabrir el micrófono)"); };
+      // terminada una respuesta: manos libres sigue escuchando en este mismo micrófono; sin manos libres se cierra
+      const volverAManos = () => { if (!vigente()) return; if (manos) { if (l !== manos) r._lugar(manos); modo = "vigilia"; } else { terminar(); try { r.abort(); } catch (e) {} } };
       // cambia de modo sin apagar el micrófono
       r._modo = (m, o) => {
         if (!vigente()) return;
+        if (manos && l !== manos && (m === "vigilia" || (m === "orden" && o && o.manos))) r._lugar(manos);
         o = o || {}; modo = m; limpiar(); desdeManos = !!o.manos;
         ponerLimite({ orden: o.manos ? 8000 : 20000, respuesta: 12000, motivo: 12000, vigilia: 0 }[m]);
         if (m === "respuesta") { Sonido.escucha(); escucha(l, txtEspera(l)); logVoz("sigue escuchando: espera la respuesta (sin apagar el micrófono)", "", l); }
@@ -7163,7 +7328,7 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
       const despues = () => {
         if (!vigente()) return;
         if (modo === "respuesta" || modo === "motivo") { if (esperaViva(l) && espera.tipo === modo) return; }
-        if (manos === l) r._modo("vigilia");
+        if (manos) r._modo("vigilia");
         else { terminar(); try { r.abort(); } catch (e) {} }
       };
       const vencio = () => {
@@ -7177,11 +7342,12 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
         if (!vigente()) return;
         if (espera && espera.l === l && espera.tipo === "respuesta") espera = null;
         logVoz("respuesta entendida", txt + " (" + (Date.now() - tInicio) + " ms desde que se abrió)", l);
+        ultAtendido = { t: Date.now(), txt };
         limpiar(); if (pend[l]) pend[l].escuchando = false;
         tick(); escucha(l, "<b>«" + esc(txt) + "»</b>Listo."); Sonido.ok();
-        if (manos !== l) { terminar(); try { r.abort(); } catch (e) {} } else modo = "vigilia";
-        ordenTexto(l, txt, "voz", [{ t: txt, c: 0.9 }]);
-        if (manos === l && rec === r && modo === "vigilia") r._modo("vigilia");
+        const lq = l; volverAManos();
+        ordenTexto(lq, txt, "voz", [{ t: txt, c: 0.9 }]);
+        if (manos && rec === r && modo === "vigilia") r._modo("vigilia");
       };
       // Rex contesta una frase de conversación («ayúdame con un movimiento en bodega», «gracias»…) y sigue escuchando
       const conversar = (txt, ch) => {
@@ -7229,19 +7395,37 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
         callarVoz(); Sonido.escucha(); Rex.despierto = Date.now(); Rex.tWake = Date.now(); pintarRex();
         r._modo("orden", { manos: true }); saludar(r, ponerLimite, vigente);
       };
+      // Dentro de la conversación («oye Rex» hace pocos segundos) una orden nueva o un «uno más» no es la respuesta a la pregunta abierta
+      // (por ejemplo la llegada en otro lugar): se toma como orden desde el lugar donde se está hablando.
+      const ordenEnSesion = (t, a) => {
+        const lm = manos;
+        if (!lm || !Rex.sesion || mudoTxt != null) return false;
+        const sn0 = V.siNo(t); if (sn0 && sn0.limpio) return false;
+        if (!(esOrdenClara(t, lm) || marcaSeguir(t) || seguimiento(t, lm))) return false;
+        logVoz("sigue la conversación: orden nueva con una pregunta abierta", t, l);
+        if (espera && espera.l === l && espera.tipo === "respuesta") espera = null;
+        if (pend[l]) pend[l].escuchando = false;
+        ultAtendido = { t: Date.now(), txt: t }; limpiar(); desdeManos = true; Sonido.ok(); Rex.act = Date.now();
+        volverAManos();
+        tick(); escucha(manos, mostrarTx() ? "<b>«" + esc(t) + "»</b>Listo." : "<b>Listo.</b>");
+        ordenTexto(lm, t, "voz", a && a.length ? a : [{ t, c: 0.8 }]);
+        if (manos && rec === r && modo === "vigilia") r._modo("vigilia");
+        return true;
+      };
       // lo dicho mientras se espera una respuesta
       const evaluarRespuesta = () => {
         const t = buf.trim(); if (!t || !vigente()) return;
         if (aceptaRespuesta(l, t)) {
           if (espera && espera.l === l && espera.tipo === "respuesta") espera = null;
-          const a = alts; limpiar(); if (pend[l]) pend[l].escuchando = false;
-          if (manos !== l) { terminar(); try { r.abort(); } catch (e) {} } else modo = "vigilia";
-          tick(); escucha(l, "<b>«" + esc(t) + "»</b>Listo.");
-          ordenTexto(l, t, "voz", a.length ? a : [{ t, c: 0.8 }]);
-          if (manos === l && rec === r && modo === "vigilia") r._modo("vigilia");
+          const a = alts; ultAtendido = { t: Date.now(), txt: t }; limpiar(); if (pend[l]) pend[l].escuchando = false;
+          const lq = l; volverAManos();
+          tick(); escucha(lq, "<b>«" + esc(t) + "»</b>Listo.");
+          ordenTexto(lq, t, "voz", a.length ? a : [{ t, c: 0.8 }]);
+          if (manos && rec === r && modo === "vigilia") r._modo("vigilia");
         } else {
           const otro = LUGS.find(o => o !== l && ((respons[o] && nombreDe(t, o)) || (motivo[o] && t.split(/\s+/).length <= 8) || (charla && charla.l === o && trCharla() && V.analizarLlegada(t, trCharla().items, { lugar: o, cat: st.cat }).entendido)));
           if (otro) { logVoz("era la respuesta para " + LUG[otro].nombre, t, l); buf = ""; alts = []; ordenTexto(otro, t, "voz", [{ t, c: 0.85 }]); return; }
+          if (ordenEnSesion(t, alts)) return;
           logVoz("no era una respuesta: se ignora", t, l); recordarDudoso(l, t); buf = ""; alts = []; escucha(l, txtEspera(l));
         }
       };
@@ -7252,12 +7436,46 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
         if (e && e.alMotivo) e.alMotivo(t);
         else if (respons[l]) responsableDicho(l, t, "voz");
         else if (motivo[l]) registrarMotivo(l, t, "voz");
-        if (vigente() && modo === "motivo-hecho") { if (manos === l) r._modo("vigilia"); else { terminar(); try { r.abort(); } catch (x) {} } }
+        if (vigente() && modo === "motivo-hecho") { if (manos) r._modo("vigilia"); else { terminar(); try { r.abort(); } catch (x) {} } }
       };
 
+      // alguien contestó encima de Rex: se calla y la respuesta se registra al instante
+      const atenderBarge = (o, t) => {
+        if (!vigente()) return;
+        ultAtendido = { t: Date.now(), txt: t }; Rex.act = Date.now();
+        callarVoz(); limpiar();
+        if (espera && espera.l === o && espera.tipo === "respuesta") espera = null;
+        if (pend[o]) pend[o].escuchando = false;
+        logVoz("contestó encima de Rex (se calló y lo tomó)", t, l);
+        tick(); escucha(l, "<b>«" + esc(t) + "»</b>Listo."); Sonido.ok();
+        volverAManos();
+        ordenTexto(o, t, "voz", [{ t, c: 0.9 }]);
+        if (manos && rec === r && modo === "vigilia") r._modo("vigilia");
+      };
       r.onresult = ev => {
         if (!vigente()) return;
+        diag.tTexto = Date.now();
         let candidatos = [], hayFinal = false; interino = "";
+        clearTimeout(tBarge);
+        // ---- se habló encima de Rex ----
+        let barge = null;
+        if (mudoTxt != null && st.config.hablarEncima !== false && (desdeManos || manos === l || modo === "respuesta" || modo === "motivo")) {
+          for (let i = ev.resultIndex; i < ev.results.length && !barge; i++) {
+            const res = ev.results[i];
+            for (let j = 0; j < res.length && !barge; j++) {
+              const crudoJ = res[j].transcript;
+              let tuyo = parteTuya(crudoJ), k = tuyo && interrumpe(tuyo, res[j].confidence, res.isFinal, l);
+              // un «sí» corto y claro («de una», «sí claro») no se recorta aunque empiece con palabras de Rex («de»)
+              if (!k) { const sn = V.siNo(crudoJ); if (sn && sn.limpio && claveTxt(crudoJ).length <= 5) { tuyo = crudoJ; k = interrumpe(crudoJ, res[j].confidence, res.isFinal, l); } }
+              if (k) barge = { tuyo, k, i, fin: res.isFinal, c: res[j].confidence };
+            }
+          }
+          if (barge) {
+            if (barge.k.k === "orden") { logVoz("hablaste encima de Rex: se calla y toma tu orden", barge.tuyo, l); callarVoz(); }
+            else if (barge.fin) { atenderBarge(barge.k.o, barge.tuyo); return; }
+            else { const o = barge.k.o, t = barge.tuyo; tBarge = setTimeout(() => { if (vigente()) atenderBarge(o, t); }, 220); return; }
+          }
+        }
         if (mudoTxt != null && (modo === "vigilia" || desdeManos || manos)) {
           const crudo = Array.from(ev.results).slice(ev.resultIndex).map(x => x[0].transcript).join(" ");
           const hw = despierta(crudo);
@@ -7268,8 +7486,19 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
         for (let i = ev.resultIndex; i < ev.results.length; i++) {
           const res = ev.results[i];
           if (res.isFinal) {
-            const txt = res[0].transcript;
-            if (esEco(txt)) { logVoz("se ignora: era la voz del asistente", txt, l); continue; }
+            let txt = res[0].transcript;
+            if (barge && barge.i === i) txt = barge.tuyo;
+            else if (esEco(txt)) {
+              // el eco de Rex pegado a lo que dijiste («…a producción? sí claro»): se queda con lo tuyo
+              const t2 = mudoTxt == null ? parteTuya(txt) : ""; if (t2 && t2 !== txt && !esEco(t2)) txt = t2;
+              else { logVoz("se ignora: era la voz del asistente", txt, l); continue; }
+            }
+            else if (dichosRex.length) {
+              // el eco de Rex puede llegar tarde, pegado a lo que ya contestaste: se le quita
+              const t4 = sinEcoLargo(txt);
+              if (t4 !== txt) { if (!t4) { logVoz("se ignora: era la voz del asistente", txt, l); continue; } logVoz("se quitó el eco de Rex", txt + " → " + t4, l); txt = t4; }
+            }
+            if (ultAtendido && Date.now() - ultAtendido.t < 2000 && mismaFrase(txt, ultAtendido.txt) && V.siNo(txt) && V.siNo(txt).limpio) { logVoz("se ignora: es la misma frase que ya se contestó", txt, l); continue; }
             if (modo === "orden" && Date.now() - (Rex.tWake || 0) < 4200) { const hw = despierta(txt); if (hw && !hw.resto) { logVoz("ya me había llamado: se ignora el segundo «" + palabraManos() + "»", txt, l); continue; } }
             hayFinal = true; buf += txt + " "; alts = Array.from(res).map(a => ({ t: a.transcript, c: a.confidence })); candidatos = candidatos.concat(alts.map(a => a.t));
           } else if (mudoTxt == null) interino += res[0].transcript;
@@ -7286,7 +7515,7 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
           if (mudoTxt == null && !despierta(ahora) && hayFinal && !interino) {
             // sin decir «Rex»: si hay una pregunta abierta en algún lugar y lo dicho es un sí/no claro, cuenta como respuesta
             const sn = V.siNo(ahora), o = lugarConPregunta(null);
-            const otra = o && !(sn && sn.limpio) && ((respons[o] && nombreDe(ahora, o)) || (motivo[o] && ahora.split(/\s+/).length <= 8) || (charla && charla.l === o && trCharla() && V.analizarLlegada(ahora, trCharla().items, { lugar: o, cat: st.cat }).entendido));
+            const otra = o && !(sn && sn.limpio) && ((respons[o] && nombreDe(ahora, o)) || (motivo[o] && ahora.split(/\s+/).length <= 8) || (charla && charla.l === o && trCharla() && !(enSesion && marcaSeguir(ahora)) && V.analizarLlegada(ahora, trCharla().items, { lugar: o, cat: st.cat }).entendido));
             if (otra) { logVoz("respuesta sin «" + palabraManos() + "» para " + LUG[o].nombre, ahora, l); buf = ""; alts = []; Sonido.ok(); ordenTexto(o, ahora, "voz", [{ t: ahora, c: 0.85 }]); return; }
             if (sn && sn.limpio && (sn.r === "si" || sn.r === "no") && o) { logVoz("respuesta sin «" + palabraManos() + "» para " + LUG[o].nombre, ahora, l); buf = ""; alts = []; Sonido.ok(); ordenTexto(o, ahora, "voz", [{ t: ahora, c: 0.9 }]); return; }
           }
@@ -7298,12 +7527,12 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
           if (!hit && hayFinal) for (const x of candidatos) { const h = despiertaOye(x); if (h) { hit = h; doFinal = true; logVoz("«oye» con una orden clara: Rex la toma", x, l); Rex.sesion = Rex.act = Date.now(); break; } }
           // conversación en curso: no hace falta repetir «Rex» (se cierra sola a los pocos segundos)
           if (!hit && enSesion && hayFinal && mudoTxt == null) {
-            for (const x of (candidatos.length ? candidatos : [ahora])) { if (esOrdenClara(x, l) || charlaRex(x, l, { sinWake: true })) { hit = { resto: x }; doFinal = true; logVoz("sigue la conversación (sin decir «" + palabraManos() + "»)", x, l); break; } }
+            for (const x of (candidatos.length ? candidatos : [ahora])) { if (esOrdenClara(x, l) || seguimiento(x, l) || charlaRex(x, l, { sinWake: true })) { hit = { resto: x }; doFinal = true; logVoz("sigue la conversación (sin decir «" + palabraManos() + "»)", x, l); break; } }
           }
           if (!hit) {
             // despertar rápido: si lo que se va oyendo es solo «Oye Rex», no espera a que el navegador cierre la frase
             const hi = interino && mudoTxt == null ? despiertaEn(interino) : null;
-            if (hi && !hi.resto) tPre = setTimeout(() => { if (vigente() && modo === "vigilia") { fallos = 0; manosError = null; despertarYa("antes de que cerrara la frase"); } }, 450);
+            if (hi && !hi.resto) tPre = setTimeout(() => { if (vigente() && modo === "vigilia") { fallos = 0; manosError = null; despertarYa("antes de que cerrara la frase"); } }, 280);
             else if (hayFinal && !interino) { logVoz("manos libres: se ignora (no empezó con «" + palabraManos() + "»)", buf.trim(), l); buf = ""; alts = []; }
             else if (buf.length > 260) buf = buf.slice(-120);
             return;
@@ -7329,18 +7558,18 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
             procesarOrden(h.resto, [{ t: h.resto, c: 0.85 }]); return;
           }
         }
-        escucha(l, "<b>" + esc(ahora || "…") + "</b>" + (interino ? "Escuchando…" : "Entendiendo…"));
+        escucha(l, mostrarTx() ? "<b>" + esc(ahora || "…") + "</b>" + (interino ? "Escuchando…" : "Entendiendo…") : "<b>" + (interino ? "Escuchando…" : "Entendiendo…") + "</b>");
         if (modo === "respuesta") {
           // «sí», «de una», «hágale», «no»… apenas se reconoce, en cualquiera de las versiones del navegador
           const bueno = [ahora].concat(candidatos).find(x => { const sn = V.siNo(x); return sn && sn.limpio; });
-          if (bueno) { tResp = setTimeout(() => respondeYa(bueno), charla && charla.l === l ? (charla.paso === "confirmar" ? 200 : 450) : 180); return; }
-          if (hayFinal && !interino) tFin = setTimeout(evaluarRespuesta, 450);   // otra cosa: se revisa tras una pausa corta
+          if (bueno) { tResp = setTimeout(() => respondeYa(bueno), charla && charla.l === l ? (charla.paso === "confirmar" ? 140 : 350) : 110); return; }
+          if (hayFinal && !interino) tFin = setTimeout(evaluarRespuesta, 280);   // otra cosa: se revisa tras una pausa corta
           return;
         }
-        if (modo === "motivo") { if (hayFinal && !interino) tFin = setTimeout(() => { if (vigente() && buf.trim()) motivoDicho(buf.trim()); }, 600); return; }
+        if (modo === "motivo") { if (hayFinal && !interino) tFin = setTimeout(() => { if (vigente() && buf.trim()) motivoDicho(buf.trim()); }, 350); return; }
         if (modo !== "orden") return;
         // orden: si ya soltó el botón (o fue un toque), se procesa en cuanto el navegador cierra la frase
-        if (hayFinal && !interino && !sosteniendo) tFin = setTimeout(() => { if (vigente() && buf.trim()) procesarOrden(buf.trim(), alts); }, 250);
+        if (hayFinal && !interino && !sosteniendo) tFin = setTimeout(() => { if (vigente() && buf.trim()) procesarOrden(buf.trim(), alts); }, 140);
       };
       r._solto = () => {   // soltó el botón después de hablar
         if (!vigente() || modo !== "orden") return;
@@ -7350,6 +7579,7 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
       };
       r._mantener = () => { clearTimeout(tResp); };
       r._limite = ms => ponerLimite(ms);
+      r._vigente = vigente;
       r._saludar = corto => saludar(r, ponerLimite, vigente, corto);
       r._parar = () => {
         if (!vigente()) return;
@@ -7358,6 +7588,7 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
       };
 
       r.onerror = ev => {
+        diag.errores[ev.error] = (diag.errores[ev.error] || 0) + 1; dev("error del dictado: " + ev.error);
         if (ev.error === "language-not-supported" && idioma < idiomas.length - 1) { idioma++; return; }
         if (!vigente() || ev.error === "aborted") return;
         if (ev.error === "no-speech" && (modo === "vigilia" || modo === "respuesta" || modo === "motivo" || desdeManos)) return;   // se vuelve a abrir sola
@@ -7377,13 +7608,14 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
         pintarManos();
       };
       r.onend = () => {
+        diag.fines++; dev("se cerró la escucha (" + (modo || "—") + ")");
         if (!vigente()) return;
         const t = buf.trim(), a = alts, m = modo;
         terminar(); logVoz("fin de la escucha", (m || "") + (t ? " · quedó: " + t : " · sin texto"), l);
         if (m === "respuesta" && t && aceptaRespuesta(l, t)) { if (espera && espera.l === l) espera = null; if (pend[l]) pend[l].escuchando = false; tick(); escucha(l, "<b>«" + esc(t) + "»</b>Listo."); ordenTexto(l, t, "voz", a.length ? a : [{ t, c: 0.8 }]); }
         else if (m === "motivo" && t) motivoDicho(t);
         else if (m === "orden" && t) { tick(); escucha(l, "<b>«" + esc(t) + "»</b>Listo."); logVoz("orden entendida", t, l); ordenTexto(l, t, "voz", a.length ? a : [{ t, c: 0.8 }]); }
-        else if (m === "respuesta" && t) logVoz("no era una respuesta: se ignora", t, l);
+        else if (m === "respuesta" && t) { if (!ordenEnSesion(t, a)) logVoz("no era una respuesta: se ignora", t, l); }
         if (reanudar(l)) { if (pend[l] && espera && espera.tipo === "respuesta") { pend[l].escuchando = true; renderTarjeta(l); } return; }
         if (pend[l] && pend[l].escuchando) { pend[l].escuchando = false; renderTarjeta(l); }
         if (!ultimoError && !manos) escucha(l, hayPregunta(l) ? "<b>La pregunta sigue abierta.</b>Toca el micrófono y di «sí» o «no», o usa los botones." : "<b>Mantén presionado y habla</b>Suelta al terminar.");
@@ -7397,14 +7629,20 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
       if (espera && espera.l === l) { const e = espera; espera = null; if (e.tipo === "motivo" && e.alMotivo) e.alMotivo(null); }
       return false;
     }
+    // hay alguna pregunta abierta en algún lugar (no es buen momento para renovar la escucha)
+    const pendientesDeVoz = () => LUGS.some(x => preguntaEn(x));
     // guardia de manos libres: si no hay ninguna escucha abierta, vuelve a escuchar
     function guardia() {
+      // una escucha que lleva casi un minuto quieta se renueva sola (a veces el navegador la deja muda sin avisar)
+      if (manos && abierto && rec && modo === "vigilia" && !archivo() && Date.now() - diag.tReinicio > 55000 && Date.now() - diag.tTexto > 20000 && Date.now() - (diag.tSonido || 0) > 8000 && Date.now() - (diag.tVoz || 0) > 8000 && mudoTxt == null && !Rex.sesion && !pendientesDeVoz() && !document.hidden) {
+        const v = rec; rec = null; abierto = false; try { v.abort(); } catch (e) {} diag.reciclados++; dev("reinicio preventivo de la escucha"); api.empezar(manos, { modo: "vigilia", silencioso: true }); return;
+      }
       if (!manos || abierto || !SR || modalOk || document.hidden || Date.now() < pausaHasta) { pintarManos(); return; }
       if (archivo()) { manosError = "abierta como archivo"; pintarManos(); return; }
       if (espera && esperaViva(espera.l)) return;
       api.empezar(manos, { modo: "vigilia", silencioso: true });
     }
-    setInterval(guardia, 700);
+    setInterval(guardia, 250);
     document.addEventListener("visibilitychange", () => { if (document.hidden && rec && modo === "vigilia") { const r = rec; rec = null; abierto = false; try { r.abort(); } catch (e) {} } });
 
     function pintarManos() {
@@ -7415,7 +7653,7 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
         const t = b.querySelector("[data-manos-txt]");
         if (t) t.textContent = !on ? "Manos libres: apagado" : !SR ? "Manos libres: este navegador no tiene dictado (usa Chrome o Edge)" : archivo() ? "Manos libres no funciona abierta como archivo: ábrela con INICIAR.bat" : manosError ? "Manos libres: " + manosError : oyendo && modo === "vigilia" ? "Manos libres: di «" + palabraManos() + "» y la orden" : oyendo ? "Manos libres: te escucho" : "Manos libres: espera un momento…";
         const o = b.parentNode && b.parentNode.querySelector("[data-manos-oido]");
-        if (o) { const vivo = on && oidoManos && Date.now() - tOido < 15000; o.hidden = !vivo; if (vivo) o.textContent = "Oí: «" + oidoManos.slice(0, 80) + "»"; }
+        if (o) { const vivo = mostrarTx() && on && oidoManos && Date.now() - tOido < 15000; o.hidden = !vivo; if (vivo) o.textContent = "Oí: «" + oidoManos.slice(0, 80) + "»"; }
       });
     }
     const api = {
@@ -7424,6 +7662,8 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
         o = o || {};
         const m = o.modo || (o.respuesta ? "respuesta" : "orden");
         if (!SR) { escucha(l, "<b>Este navegador no tiene dictado.</b>Usa Chrome o Edge, o escribe la orden."); return; }
+        // manos libres está abierto y la pregunta es de otro lugar: el mismo micrófono la atiende (sin cerrarlo ni reabrirlo)
+        if (abierto && rec && rec._lugar && manos && lugar !== l && m !== "orden" && modo !== "orden" && rec._vigente && rec._vigente()) { rec._lugar(l); rec._modo(m, o); return; }
         // ya hay una escucha abierta aquí: solo cambia de modo (no se apaga el micrófono)
         if (abierto && rec && lugar === l && rec._modo && (modo === "vigilia" || m !== "orden")) { if (m === "orden") { sosteniendo = !o.manos; callarVoz(); } rec._modo(m, o); if (m === "orden") { tInicio = Date.now(); logVoz("escucha una orden (manos libres seguía abierto)", "", l); } return; }
         if (abierto && m === "orden" && modo === "orden" && lugar === l && Date.now() - tInicio < 20000) { this.parar(); return; }
@@ -7431,7 +7671,7 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
         lugar = l; tInicio = Date.now(); ultimoError = null;
         if (m === "orden") { espera = null; sosteniendo = !o.manos; }
         try {
-          rec = crear(l); rec.start(); abierto = true;
+          rec = crear(l); rec.start(); abierto = true; diag.inicios++; diag.tReinicio = Date.now(); dev("se abrió la escucha (" + m + ")");
           rec._modo(m, Object.assign({}, o, { manos: !!o.manos }));
           if (!o.silencioso) logVoz({ orden: "escucha una orden", respuesta: "escucha la respuesta (se abrió solo)", motivo: "escucha el motivo", vigilia: "manos libres escuchando" }[m], "", l);
           if (m === "orden") callarVoz();   // tocó el micrófono para hablar: el asistente se calla
@@ -7461,14 +7701,14 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
       cancelarEspera() { espera = null; },
       soltar(l) {
         if (espera && espera.l === l) espera = null;
-        if (abierto && rec && lugar === l && (modo === "respuesta" || modo === "motivo")) { if (manos === l) rec._modo("vigilia"); else { const r = rec; rec = null; abierto = false; boton(l, false); try { r.abort(); } catch (e) {} escucha(l, "<b>Mantén presionado y habla</b>Suelta al terminar, o toca una vez para empezar y otra para parar."); pintarManos(); } }
+        if (abierto && rec && lugar === l && (modo === "respuesta" || modo === "motivo")) { if (manos) rec._modo("vigilia"); else { const r = rec; rec = null; abierto = false; boton(l, false); try { r.abort(); } catch (e) {} escucha(l, "<b>Mantén presionado y habla</b>Suelta al terminar, o toca una vez para empezar y otra para parar."); pintarManos(); } }
       },
       // soltó el botón del micrófono
       solto(largo) { sosteniendo = false; if (abierto && modo === "orden" && rec && largo && rec._solto) rec._solto(); },
       mantener() { if (rec && rec._mantener) rec._mantener(); logVoz("tocó el micrófono mientras escuchaba (sigue escuchando)", "", lugar); escucha(lugar, txtEspera(lugar)); },
       parar() { if (rec && abierto) { if (rec._parar) rec._parar(); else try { rec.stop(); } catch (e) {} } },
       // mientras el asistente habla, lo que entra por el micrófono no cuenta
-      mudo(txt, sinEco) { if (txt != null) { mudoTxt = txt; ultimoDicho = txt; } else { if (mudoTxt != null) mudoFin = sinEco ? 0 : Date.now() + 1400; if (sinEco) mudoFin = 0; mudoTxt = null; } },
+      mudo(txt, sinEco) { if (txt != null) { mudoTxt = txt; ultimoDicho = txt; dichosRex.push({ t: Date.now(), txt }); if (dichosRex.length > 4) dichosRex.shift(); } else { if (dichosRex.length && !dichosRex[dichosRex.length - 1].fin) dichosRex[dichosRex.length - 1].fin = Date.now(); if (mudoTxt != null) mudoFin = sinEco ? 0 : Date.now() + 1400; if (sinEco) mudoFin = 0; mudoTxt = null; } },
       // manos libres
       manosAlternar(l, callado) {
         if (manos === l && !callado) { this.manosApagar(); return; }
@@ -7503,7 +7743,7 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
       },
       pintarManos, despierta, despiertaEn,
       reabrirOrden(ms) { if (rec && abierto && manos && lugar === manos && rec._modo && modo !== "respuesta" && modo !== "motivo") { rec._modo("orden", { manos: true }); if (rec._limite) rec._limite(ms || 8000); return true; } return false; },
-      get oido() { return oidoManos; }, get tOido() { return tOido; },
+      get diag() { return diag; }, get oido() { return oidoManos; }, get tOido() { return tOido; },
       get manos() { return manos; }, get manosError() { return manosError; }, get hablando() { return mudoTxt; },
       get abierto() { return abierto; },
       get modo() { return abierto ? modo : null; },
@@ -7834,6 +8074,7 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
       '<div class="fila-b" style="gap:18px;margin-top:12px"><label class="campo">Palabra para manos libres<input type="text" data-cfg-txt="palabraManos" value="' + esc(c.palabraManos || "Rex") + '" style="width:140px" autocomplete="off"></label>' +
       '<label><input type="checkbox" data-rex-siempre' + (rexQuiere() ? " checked" : "") + '> Rex escucha siempre (se le habla con «Oye Rex»)</label>' +
       '<label class="campo">Lo que contesta Rex cuando lo llaman<input type="text" data-cfg-txt="saludoRex" value="' + esc(c.saludoRex || "Sí, aquí estoy. ¿En qué te puedo ayudar?") + '" style="width:320px" autocomplete="off"></label>' +
+      '<label><input type="checkbox" data-cfg="mostrarTranscripcion"' + (c.mostrarTranscripcion ? " checked" : "") + "> Mostrar en pantalla lo que Rex escucha (solo para pruebas; apagado, Rex solo escucha, habla y actúa).</label>" +
       '<label><input type="checkbox" data-cfg="ambienteRuidoso"' + (c.ambienteRuidoso ? " checked" : "") + "> Ambiente ruidoso (radio, música, eco): Rex pregunta «¿sí o no?» antes de registrar para no equivocarse. Conviene un micrófono de diadema o direccional.</label>" +
       '<label><input type="checkbox" data-cfg="avisosVoz"' + (c.avisosVoz !== false ? " checked" : "") + "> Avisar en voz alta en cada lugar (pedidos, envíos que vienen y cómo llegaron)</label>" +
       '<label><input type="checkbox" data-cfg="modoRapido"' + (c.modoRapido !== false ? " checked" : "") + "> Modo rápido: una orden clara dicha por voz se registra al instante (sin «¿sí o no?»); si se dice «no» o «cancela» enseguida, se deshace</label>" +
@@ -8471,6 +8712,8 @@ body.rex-despierto .rex-dock.oye .rex-boton{box-shadow:0 0 0 4px rgba(255,122,26
     ["pointerdown", "keydown", "touchstart"].forEach(ev => document.addEventListener(ev, primerToque, { capture: true, passive: true }));
     setInterval(() => { try { pintarRex(); } catch (e) {} }, 800);
     setInterval(() => { try { pintarSiri(); } catch (e) {} }, 200);
+    // latido de la carita cuando el navegador detecta voz (así se ve que Rex oye, sin escribir nada en pantalla)
+    setInterval(() => { try { const v = Oido.abierto && Date.now() - (Rex.voz || 0) < 1300; const d = document.getElementById("rexDock"), w = document.getElementById("rexSiri"); if (d) d.classList.toggle("voz", v); if (w) w.classList.toggle("voz", v); } catch (e) {} }, 150);
     setTimeout(revisarVersion, 2500); setInterval(revisarVersion, 5 * 60 * 1000);
   }
   setInterval(() => { try { vivo(); } catch (e) {} }, 1000);
