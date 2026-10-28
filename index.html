@@ -951,6 +951,30 @@ body.con-rex{padding-bottom:96px}
 .modal{z-index:80}
 body:has(.modal:not([hidden])) .rex-dock{display:none}
 
+/* ===== Rex: ventana tipo Siri (se abre con «Oye Rex», se cierra sola) ===== */
+.rex-siri{position:fixed;z-index:70;left:50%;bottom:96px;transform:translateX(-50%);width:min(520px,calc(100% - 32px));display:flex;align-items:center;gap:16px;padding:16px 46px 16px 16px;background:var(--blanco);border:2.5px solid var(--hondo);border-radius:28px;box-shadow:0 6px 0 var(--hondo),0 22px 50px rgba(2,48,31,.32);color:var(--tinta)}
+.rex-siri[hidden]{display:none}
+.rex-siri.entra{animation:rsEntra .28s cubic-bezier(.2,.9,.3,1.2)}
+@keyframes rsEntra{from{opacity:0;transform:translate(-50%,18px) scale(.94)}to{opacity:1;transform:translate(-50%,0) scale(1)}}
+.rs-cara{position:relative;flex:none;width:78px;height:78px;border-radius:50%;background:var(--crema);border:2.5px solid var(--hondo);display:grid;place-items:center}
+.rs-cara img{position:relative;z-index:1;width:46px;height:auto}
+.rs-onda{position:absolute;inset:-3px;border-radius:50%;border:4px solid var(--lima);opacity:0}
+.rex-siri.oye .rs-onda{animation:rsOnda 1.6s ease-out infinite}
+.rex-siri.oye .rs-onda.o2{animation-delay:.8s}
+.rex-siri.habla .rs-onda{border-color:var(--naranja);animation:rsOnda 1s ease-out infinite}
+.rex-siri.habla .rs-onda.o2{animation-delay:.5s}
+@keyframes rsOnda{0%{transform:scale(1);opacity:.9}100%{transform:scale(1.55);opacity:0}}
+.rs-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.rs-txt b{font-family:var(--f-disp);font-weight:400;font-size:22px;line-height:1.1;color:var(--verde)}
+.rs-txt p{margin:0}
+.rs-oi{font-size:15px;color:var(--tinta-2);font-style:italic}
+.rs-dice{font-size:17px;font-weight:650;line-height:1.35}
+.rs-nota{font-size:13px;font-weight:700;color:#8a4b00}
+.rs-x{position:absolute;top:8px;right:10px;width:32px;height:32px;border-radius:50%;border:2px solid var(--hondo);background:var(--crema);font-size:20px;line-height:1;cursor:pointer;color:var(--tinta)}
+.v3-marco:fullscreen .rex-siri,.casa-marco:fullscreen .rex-siri{position:absolute}
+@media (max-width:700px){.rex-siri{bottom:150px;padding:12px 42px 12px 12px;gap:12px}.rs-cara{width:62px;height:62px}.rs-cara img{width:38px}.rs-txt b{font-size:19px}.rs-dice{font-size:15.5px}}
+@media (prefers-reduced-motion:reduce){.rex-siri.entra,.rs-onda{animation:none!important}}
+
 </style>
 </head>
 <body>
@@ -1519,7 +1543,7 @@ body:has(.modal:not([hidden])) .rex-dock{display:none}
     ["merma", /\b(merma|botar|bota|botalo|botala|botalos|botalas|boten|bote|boto|botamos|botaron|tirar|tira|tire|tiramos|se dano|se danaron|danad[oa]s?|se cayo|se cayeron|cayo|cayeron|se rego|se regaron|derrame|derramo|se pudrio|se pudrieron|podrid[oa]s?|vencid[oa]s?|se vencio|se vencieron|se arruino|se arruinaron|desperdicio|no sirve|no sirven|se echo a perder|se echaron a perder|echad[oa]s? a perder|se malogro|se malograron|malograd[oa]s?|aplastad[oa]s?|se aplasto|se aplastaron|se rompio|se rompieron|rot[oa]s?|botando|tirando)\b/],
     ["produccion", /\b(prepar(ar|e|o|amos|a|en|aron|ado|ada)|bat(ir|i|io|imos|e)|hac(er|emos|e)(?! falta)(?! (un |el |otro )?pedido)|hice|hicimos|hicieron|hizo|haz(?! (un |el |otro )?pedido)|calent(ar|e|o|amos)|calienta|calienten|derret(ir|i|imos)|derrite|derritan|proces(ar|a|e|o|amos|aron|ado|ada|ados|adas)|produc(ir|e|en|imos|ido)|produj(e|o|imos|eron)|elabor(ar|a|e|o|amos|aron)|aument(ar|a|e|o|amos|aron|en)|agreg(ar|a|o|amos|aron|ue|uen)|sum(ar|a|o|amos|aron|e|en))\b/],
     ["recepcion", /\b(recibido|recibi(do|mos)?|ya llego|llego todo|todo llego|si llego|confirmo (que )?llego|llegaron bien|ya llegaron)\b/],
-    ["entrada", /\b(llegaron|llego|compre|compramos|ingres(ar|a|o|amos|en)|entrada|entraron|nos trajeron|me trajeron|trajeron|trajo|trajo el proveedor|del proveedor|recibimos del proveedor)\b/],
+    ["entrada", /\b(llegaron|llego|compre|compramos|ingres(ar|a|o|amos|en|aron|e|ado|ados|ada|adas|ando)|entrada|entraron|nos trajeron|me trajeron|trajeron|trajo|trajo el proveedor|del proveedor|recibimos del proveedor)\b/],
     ["agotado", /\b(se acabo|se acabaron|se termino|se terminaron|ya no hay|ya no queda|ya no quedan|no hay|no queda|no quedan|nos quedamos sin|me quede sin|nos quedemos sin|estamos sin|quedamos sin|agotad[oa]s?|se agoto|se agotaron)\b/],
     ["pedido", /\b(pedir|pidiendo|pide|pido|pidan|pidamos|pidele|pidanle|pideles|pidales|pidale|pidiendole|pedirle|pedirles|pidamosle|solicit(ar|a|o|amos|en|ale|ales|arle)|requiero|requerimos|se requiere|necesito|necesitamos|necesitan|necesitaria|necesitariamos|ocupo|ocupamos|nos falta|nos faltan|me falta|me faltan|hace falta|hacen falta|falta|faltan|se necesita|traigan|trae(r)?|traeme|traime|traigame|traiganme|traenos|traiganos|mandenme|mandame|mandeme|mandanos|mandenos|manden mas|envienme|enviame|envianos|envienos|pasame|pasenme|pasanos|(me|nos) (mandas|mandan|mandes|manden|mande|pasas|pasan|pases|pasen|pase|traes|traen|traigas|traigan|traiga|envias|envian|envies|envien|envie)|ha(z|ga|gan|cer|game|ganme)(le|les|lo| le| les)? (un |el |otro )?pedido|queria pedir|quiero pedir)\b/],
     ["venta", /\b(vend(i|imos|ieron|io)|venta( de)?|registr(ar|a|e|o|ame|emos|en)(?= (?:[a-z0-9]+ ){0,2}?(venta|vaso|vasos|reex|split|mix|exotica|tropical|chill|reexita|godzilla)\b)|se vendio|se vendieron|cobre|despache un|salio un|salio una|salieron)\b/],
@@ -5422,6 +5446,8 @@ body:has(.modal:not([hidden])) .rex-dock{display:none}
   // ---------- utilidades de pantalla ----------
   let tToast = null;
   function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("ver"); clearTimeout(tToast); tToast = setTimeout(() => t.classList.remove("ver"), 3800); }
+  // Rex: el asistente (sesion/act: la ventana tipo Siri; dijo: lo último que dijo; oyendo: lo último que oyó)
+  const Rex = { lugar: "B", ultimo: null, despierto: 0, sesion: 0, act: 0, dijo: "", tDijo: 0, oyendo: "", tOyendo: 0 };
   /* ---------- la voz del asistente ----------
      Se elige la voz más natural que tenga el navegador (en Edge: «Andrea» de Ecuador, natural; en Chrome: «Google español»),
      a ritmo tranquilo. Los avisos («Atención bodega: …») esperan su turno y no se cortan; las respuestas al momento sí
@@ -5461,6 +5487,7 @@ body:has(.modal:not([hidden])) .rex-dock{display:none}
       if (hablaActual) { const f = hablaActual.fin; hablaActual = null; f.cortado = true; }
       speechSynthesis.cancel();
       hablaActual = { fin, anuncio: !!o.anuncio, txt, cb: alTerminar, o };
+      Rex.dijo = txt; Rex.tDijo = Date.now(); if (Rex.sesion && !o.anuncio) Rex.act = Date.now();
       try { Oido.mudo(txt); } catch (e) {}
       speechSynthesis.speak(u);
       setTimeout(() => { if (!empezo && !hecho) { logVoz("el asistente no empezó a hablar en 1,5 s", alTerminar ? "se abre el micrófono igual" : ""); fin(); } }, 1500);  // el navegador no habló: no se hace esperar a nadie
@@ -5499,6 +5526,9 @@ body:has(.modal:not([hidden])) .rex-dock{display:none}
       plan.escuchando = true; renderTarjeta(l);
       if (Oido.esperarRespuesta(l, () => pend[l] === plan && !modalOk, { noRobar: !!plan.anuncio }) === false) { plan.escuchando = false; renderTarjeta(l); }
     };
+    // en una conversación con Rex («Oye Rex, …») la pregunta se dice en voz alta, como Siri: quien habla puede no estar
+    // mirando la pantalla. Se escucha la respuesta apenas Rex termina (lo que se dice encima se tomaría como eco).
+    if (!st.config.leerPregunta && !plan.hablarPregunta && plan.via === "voz" && Rex.sesion && st.config.leerPreguntaVoz !== false) { hablar(texto, escuchar); return; }
     if (st.config.leerPregunta || (plan.hablarPregunta && st.config.avisosVoz !== false)) hablar(texto, escuchar, plan.hablarPregunta ? { cola: true, anuncio: true, lugar: l, vigente: () => pend[l] === plan } : null);
     else { cortarRespuesta(l); escuchar(); }
   }
@@ -6299,7 +6329,6 @@ body:has(.modal:not([hidden])) .rex-dock{display:none}
   /* ===== Rex: un solo asistente para los tres lugares (como Siri o Google) =====
      Escucha siempre; se le habla diciendo «Rex» (o «Rexito», «Jarvis»). Las respuestas a una pregunta abierta
      no necesitan «Rex». Si al comienzo se nombra un lugar («Rex, producción: llegó todo») la orden es de ese lugar. */
-  const Rex = { lugar: "B", ultimo: null, despierto: 0 };
   try { const g = localStorage.getItem(CLAVE + "-rexlugar"); if (LUGS.includes(g)) Rex.lugar = g; } catch (e) {}
   function lugarAlComienzo(txt) {
     const n = V.normalizar(txt).replace(/[,.:;]/g, " ").replace(/\s+/g, " ").trim();
@@ -6330,7 +6359,7 @@ body:has(.modal:not([hidden])) .rex-dock{display:none}
     const d = $("#rexDock"); if (!d) return;
     const on = !!Oido.manos, err = Oido.manosError, modo = Oido.modo, oyendo = Oido.abierto;
     d.classList.toggle("on", on); d.classList.toggle("mal", !!err); d.classList.toggle("oye", oyendo && modo !== "vigilia");
-    const est = !Oido.disponible ? "Este navegador no tiene dictado: usa Chrome o Edge" : location.protocol === "file:" ? "Ábrela con INICIAR.bat o desde la página privada" : !on ? "Rex está apagado · toca para encender" : err ? "Rex: " + err : modo === "orden" ? "Te escucho: di la orden" : modo === "respuesta" ? "Te escucho: ¿sí o no?" : modo === "motivo" ? "Te escucho" : "Di «" + (st.config.palabraManos || "Rex") + "» y la orden";
+    const est = !Oido.disponible ? "Este navegador no tiene dictado: usa Chrome o Edge" : location.protocol === "file:" ? "Ábrela con INICIAR.bat o desde la página privada" : !on && !rexQuiere() ? "Rex está en pausa · toca la carita para hablarle" : !on && /micr/.test(err || "") ? "Permite el micrófono (candado de la barra) y toca la pantalla" : !on ? "Toca la pantalla una vez para despertar a Rex" : err ? "Rex: " + err : modo === "vigilia" && !vozActiva() ? "Di «Oye Rex» · toca la pantalla una vez para que te hable" : modo === "orden" ? "Te escucho: di la orden" : modo === "respuesta" ? "Te escucho: ¿sí o no?" : modo === "motivo" ? "Te escucho" : "Di «" + (st.config.palabraManos || "Rex") + "» y la orden";
     $("[data-rex-est]", d).textContent = est;
     const oido = Oido.oido && Date.now() - Oido.tOido < 12000 ? Oido.oido : (Rex.ultimo && Date.now() - Rex.ultimo.t < 12000 ? Rex.ultimo.txt : "");
     const oi = $("[data-rex-oi]", d); oi.textContent = oido ? "Oí: «" + oido.slice(0, 90) + "»" : ""; oi.hidden = !oido;
@@ -6342,8 +6371,30 @@ body:has(.modal:not([hidden])) .rex-dock{display:none}
     if (o) { const firma = o + "|" + preguntaTexto(o); if (q.dataset.firma !== firma) { q.dataset.firma = firma; q.innerHTML = '<span class="rq-l a-' + o + '">' + esc(LUG[o].nombre) + "</span><span class=\"rq-t\">" + esc(preguntaTexto(o)) + "</span>" + (respons[o] || motivo[o] ? "" : '<button class="b peq lima" data-rex-si="' + o + '">Sí</button><button class="b peq" data-rex-no="' + o + '">No</button>'); } q.hidden = false; }
     else { q.hidden = true; q.dataset.firma = ""; }
   }
-  function rexEncender(callado) { Oido.manosAlternar(Oido.manos || Rex.lugar, true); if (!callado) hablar("Rex te escucha. Di Rex y la orden."); try { localStorage.setItem(CLAVE + "-rex", "1"); } catch (e) {} pintarRex(); }
-  function rexApagar() { Oido.manosApagar(true); try { localStorage.setItem(CLAVE + "-rex", "0"); } catch (e) {} pintarRex(); }
+  /* Ventana tipo Siri: se abre cuando le dicen «Oye Rex» (o tocan su carita), muestra lo que oye y lo que contesta,
+     y se cierra sola a los 5 s sin que nadie hable. La pregunta abierta sigue abajo, en la barra de Rex. */
+  function pintarSiri() {
+    const w = $("#rexSiri"); if (!w) return;
+    const ahora = Date.now(), modo = Oido.modo, hablando = Oido.hablando != null && Rex.tDijo >= Rex.sesion;
+    let activa = !!Rex.sesion && (modo === "orden" || hablando || ahora - Rex.act < 5000);
+    if (Rex.sesion && !activa) Rex.sesion = 0;
+    if (document.querySelector(".modal:not([hidden])")) activa = false;
+    if (w.hidden === activa) { w.hidden = !activa; if (activa) { w.classList.remove("sale"); void w.offsetWidth; w.classList.add("entra"); } }
+    if (!activa) return;
+    w.classList.toggle("oye", modo === "orden" || modo === "respuesta" || modo === "motivo");
+    w.classList.toggle("habla", hablando);
+    const est = hablando ? "Rex" : modo === "orden" ? "Te escucho…" : modo === "respuesta" ? "Te escucho: ¿sí o no?" : modo === "motivo" ? "Te escucho" : "Listo";
+    const oi = Rex.tOyendo >= Rex.sesion - 1500 ? Rex.oyendo : "", dice = Rex.tDijo >= Rex.sesion - 200 ? Rex.dijo : "";
+    const fija = (sel, txt) => { const e = $(sel, w); if (e.textContent !== txt) e.textContent = txt; e.hidden = !txt; };
+    fija("[data-rs-est]", est); fija("[data-rs-oi]", oi ? "«" + oi.slice(0, 140) + "»" : ""); fija("[data-rs-dice]", dice);
+    const sinVoz = !vozActiva() && dice; fija("[data-rs-nota]", sinVoz ? "Toca la pantalla una vez para que Rex te conteste en voz alta." : "");
+  }
+  function rexEncender(callado) { Oido.manosAlternar(Oido.manos || Rex.lugar, true); if (!callado) hablar("Rex te escucha. Di Rex y la orden."); try { localStorage.setItem(CLAVE + "-rex2", "1"); } catch (e) {} pintarRex(); }
+  // Rex se apaga solo desde Catálogo → Ajustes («Rex escucha siempre»); tocar la carita lo despierta
+  function rexApagar() { Oido.manosApagar(true); try { localStorage.setItem(CLAVE + "-rex2", "0"); } catch (e) {} pintarRex(); }
+  function rexQuiere() { try { return localStorage.getItem(CLAVE + "-rex2") !== "0"; } catch (e) { return true; } }
+  const rexPuede = () => Oido.disponible && location.protocol !== "file:" && !/[?&]sinrex\b/.test(location.search);
+  const vozActiva = () => !navigator.userActivation || navigator.userActivation.hasBeenActive;
   function rexLugar(l) { Rex.lugar = l; try { localStorage.setItem(CLAVE + "-rexlugar", l); } catch (e) {} if (Oido.manos && Oido.manos !== l) Oido.manosAlternar(l, true); pintarRex(); }
   /* «no llegó nada», «llegó la mitad», «sí, correcto», «sí, enviar», «despacha lo que pide el local»… dichos sin que haya
      una pregunta abierta en este lugar: se responden con lo que está esperando aquí. */
@@ -6404,7 +6455,13 @@ body:has(.modal:not([hidden])) .rex-dock{display:none}
     else if (plan.bloqueo) hablar("Repite la orden. " + paraVoz(primeraFrase(plan.bloqueo)));
     else if (plan.ajustado) { if (previo) plan.hablarPregunta = true; preguntar(l, plan, previo + fraseSoloHay(plan)); }
     else if (plan.auto && !plan.requierePin && st.config.autoConfirmarSeg > 0 && !plan.previo) timers[l] = setTimeout(() => confirmar(l), st.config.autoConfirmarSeg * 1000);
-    else { if (previo) plan.hablarPregunta = true; preguntar(l, plan, previo + (plan.avisos.some(a => a.code === "producto_supuesto") ? "No dijiste el producto. " : "") + paraVoz(A.pregunta(st, plan)) + " Di sí o no."); }
+    else {
+      if (previo) plan.hablarPregunta = true;
+      // por qué pregunta (si es algo raro), dicho corto: «En el local normalmente no se usa leche.»
+      const raro = plan.avisos.find(a => a.confirmar !== false && a.code !== "producto_supuesto" && a.msg);
+      const porQue = raro ? paraVoz(String(raro.msg).replace(/\s*\([^)]*\)/g, "").replace(/\s*¿[^?]*\?\s*$/, "").trim()) + " " : "";
+      preguntar(l, plan, previo + porQue + (plan.avisos.some(a => a.code === "producto_supuesto") ? "No dijiste el producto. " : "") + paraVoz(A.pregunta(st, plan)) + " Di sí o no.");
+    }
   }
   function avisarResultado(l, ok, titulo, txt, mov, frase, via) {
     const r = resultado[l] = { ok, titulo, txt, mov, frase, via, t: Date.now() };
@@ -6871,15 +6928,32 @@ body:has(.modal:not([hidden])) .rex-dock{display:none}
     const RELLENO_INI = new Set(["oye", "hey", "ey", "ok", "okey", "hola", "ola", "eh", "a", "ver", "ya", "este", "y", "el", "la", "o", "ah", "hay", "ay", "bueno", "buenas"]);
     const DESPIERTA = new Set(["rex", "reex", "reks", "recs", "rek", "rx", "rexs", "rhex", "wrecks", "frutirex", "frutireex", "fruti", "jarvis", "yarvis", "llarvis", "asistente", "rexito", "rexi", "rexy", "rexie", "recsito", "rexsito", "rejito", "reksito", "trex", "t-rex"]);
     const DESPIERTA_INI = new Set(["res", "rez", "reh", "rec", "red", "reich"]);   // palabras comunes: solo cuentan al comienzo
+    /* «Oye, mueve dos cajas de leche al local» (sin decir «Rex»): cuenta solo si lo que sigue es una orden clara
+       (un producto y qué hacer con él). «Oye» suelto no despierta a Rex: es muy común en una conversación. */
+    function despiertaOye(txt) {
+      const crudo = String(txt || "").trim().split(/\s+/);
+      const w0 = (V.normalizar ? V.normalizar(crudo[0] || "") : (crudo[0] || "").toLowerCase()).replace(/[^a-z0-9ñ]/g, "");
+      if (!/^(oye|oiga|oigan|hey|ey|escucha|escuchame)$/.test(w0)) return null;
+      const resto = crudo.slice(1).join(" ").replace(/^[,.:;\s]+/, "").trim();
+      if (!resto || resto.split(/\s+/).length < 3) return null;
+      try {
+        const lp = lugarAlComienzo(resto), f = lp && lp.resto ? lp.resto : resto;
+        const R = V.interpretar(f, { lugar: (lp && lp.l) || manos || "B", cat: st.cat });
+        if (["traslado", "pedido", "merma", "entrada", "conteo", "produccion", "venta", "despachar_pedido", "estado", "consulta", "deshacer"].includes(R.intent) && ((R.items || []).some(x => x.p) || ["estado", "consulta", "deshacer", "despachar_pedido"].includes(R.intent))) return { resto, oye: true };
+      } catch (e) {}
+      return null;
+    }
     /* Cuando lo llaman solo con «Rex» / «Oye Rex»: contesta en voz alta y queda escuchando la orden */
     function saludoRex(corto) {
       const t = (st.config.saludoRex || "").trim();
       return t || "Sí, aquí estoy. ¿En qué te puedo ayudar?";
     }
     function saludar(r, ponerLimite, vigente, corto) {
-      if (st.config.hablar === false) return;
+      Rex.sesion = Date.now(); Rex.act = Date.now();
+      if (st.config.hablar === false) { ponerLimite(7000); return; }
       ponerLimite(16000);   // mientras saluda no se corta la escucha
-      hablar(saludoRex(corto), () => { if (vigente() && modo === "orden") ponerLimite(9000); });
+      // después del saludo espera la orden unos segundos; si no dicen nada, se cierra (como Siri)
+      hablar(saludoRex(corto), () => { Rex.act = Date.now(); if (vigente() && modo === "orden") ponerLimite(5000); });
     }
     function palabraManos() { return (st.config.palabraManos || "Rex").trim() || "Rex"; }
     function despierta(txt) {
@@ -6993,6 +7067,7 @@ body:has(.modal:not([hidden])) .rex-dock{display:none}
           } else if (mudoTxt == null) interino += res[0].transcript;
         }
         const ahora = (buf + interino).trim();
+        if (ahora && (modo !== "vigilia" || despierta(ahora))) { Rex.oyendo = ahora; Rex.tOyendo = Date.now(); Rex.act = Date.now(); if (modo === "vigilia") Rex.sesion = Date.now(); }
         if (candidatos.length) logVoz("dictado final", candidatos.join(" | "), l);
         else if (interino && !r._vioParcial) { r._vioParcial = true; logVoz("primer texto parcial", interino + " (" + (Date.now() - tInicio) + " ms)", l); }
         clearTimeout(tResp); clearTimeout(tFin);
@@ -7009,6 +7084,7 @@ body:has(.modal:not([hidden])) .rex-dock{display:none}
           const textos = [ahora].concat(candidatos);
           let hit = null, conQue = null;
           for (const x of textos) { const h = despierta(x); if (h) { hit = h; conQue = x; break; } }
+          if (!hit && hayFinal && !interino) for (const x of textos) { const h = despiertaOye(x); if (h) { hit = h; conQue = x; logVoz("«oye» con una orden clara: Rex la toma", x, l); Rex.sesion = Rex.act = Date.now(); break; } }
           if (!hit) { if (hayFinal && !interino) { logVoz("manos libres: se ignora (no empezó con «" + palabraManos() + "»)", buf.trim(), l); buf = ""; alts = []; } return; }
           if (!(hayFinal && !interino)) return;   // espera a que termine la frase
           fallos = 0; manosError = null;
@@ -7020,7 +7096,8 @@ body:has(.modal:not([hidden])) .rex-dock{display:none}
         }
         if (mudoTxt != null && !hayFinal) return;   // mientras el asistente habla, no se muestra nada
         if ((modo === "respuesta" || modo === "motivo") && hayFinal && !interino) {
-          const h = despierta(buf.trim());
+          const h = despierta(buf.trim()) || despiertaOye(buf.trim());
+          if (h && h.oye) Rex.sesion = Rex.act = Date.now();
           if (h) {
             if (espera && espera.l === l) espera = null;
             if (pend[l]) pend[l].escuchando = false;
@@ -7050,6 +7127,7 @@ body:has(.modal:not([hidden])) .rex-dock{display:none}
         clearTimeout(tSuelta); tSuelta = setTimeout(() => { if (vigente() && modo === "orden") { if (buf.trim()) procesarOrden(buf.trim(), alts); else if (manos === l) r._modo("vigilia"); else { try { r.stop(); } catch (e) {} } } }, 1200);
       };
       r._mantener = () => { clearTimeout(tResp); };
+      r._saludar = corto => saludar(r, ponerLimite, vigente, corto);
       r._parar = () => {
         if (!vigente()) return;
         if (modo === "orden") { if (buf.trim()) { procesarOrden(buf.trim(), alts); return; } if (manos === l) { r._modo("vigilia"); return; } }
@@ -7190,6 +7268,14 @@ body:has(.modal:not([hidden])) .rex-dock{display:none}
         pintarManos(); if (!callado) hablar("Manos libres apagado.");
       },
       pausar(ms) { pausaHasta = Math.max(pausaHasta, Date.now() + (ms || 1200)); },
+      // tocar la carita de Rex: lo despierta como si le dijeran «Oye Rex»
+      despertar(l) {
+        l = l || manos || Rex.lugar;
+        callarVoz(); Sonido.escucha(); Rex.despierto = Date.now();
+        this.empezar(l, { modo: "orden", manos: true });
+        if (rec && rec._saludar) rec._saludar(); else { Rex.sesion = Date.now(); Rex.act = Date.now(); }
+        pintarRex();
+      },
       pintarManos, despierta,
       get oido() { return oidoManos; }, get tOido() { return tOido; },
       get manos() { return manos; }, get manosError() { return manosError; }, get hablando() { return mudoTxt; },
@@ -7518,7 +7604,9 @@ body:has(.modal:not([hidden])) .rex-dock{display:none}
       '<label>Velocidad <input type="range" min="0.8" max="1.6" step="0.05" data-cfg="vozVelocidad" value="' + (c.vozVelocidad || 1.15) + '"></label>' +
       '<button class="b prim" data-probar-voz>Escuchar la voz</button></div>' +
       (vs.length ? "" : '<p class="nota-voz">Este navegador todavía no cargó voces en español. En Microsoft Edge están las voces naturales de Ecuador (Andrea y Luis).</p>') +
+      (vs.length && !vs.some(v => /natural|neural|online/i.test(v.name)) ? '<p class="nota-voz"><b>Para que Rex suene como una persona:</b> abre esta página en <b>Microsoft Edge</b>. Trae gratis las voces naturales de Ecuador (Andrea y Luis); Rex las elige solo. Este navegador solo tiene voces más robóticas.</p>' : "") +
       '<div class="fila-b" style="gap:18px;margin-top:12px"><label class="campo">Palabra para manos libres<input type="text" data-cfg-txt="palabraManos" value="' + esc(c.palabraManos || "Rex") + '" style="width:140px" autocomplete="off"></label>' +
+      '<label><input type="checkbox" data-rex-siempre' + (rexQuiere() ? " checked" : "") + '> Rex escucha siempre (se le habla con «Oye Rex»)</label>' +
       '<label class="campo">Lo que contesta Rex cuando lo llaman<input type="text" data-cfg-txt="saludoRex" value="' + esc(c.saludoRex || "Sí, aquí estoy. ¿En qué te puedo ayudar?") + '" style="width:320px" autocomplete="off"></label>' +
       '<label><input type="checkbox" data-cfg="avisosVoz"' + (c.avisosVoz !== false ? " checked" : "") + "> Avisar en voz alta en cada lugar (pedidos, envíos que vienen y cómo llegaron)</label>" +
       '<label><input type="checkbox" data-cfg="modoRapido"' + (c.modoRapido !== false ? " checked" : "") + "> Modo rápido: una orden clara dicha por voz se registra al instante (sin «¿sí o no?»); si se dice «no» o «cancela» enseguida, se deshace</label>" +
@@ -7932,11 +8020,11 @@ body:has(.modal:not([hidden])) .rex-dock{display:none}
       anunciarRecepcion(tr); setTimeout(() => ofrecerDespachos(tr.a), 400); return;
     }
     if (t.hasAttribute("data-cerrar-hoja")) { hoja[l] = null; return renderDisp(l); }
-    if (t.hasAttribute("data-rex-toggle")) { if (Oido.manos) rexApagar(); else rexEncender(false); return; }
+    if (t.hasAttribute("data-rex-toggle") || t.hasAttribute("data-rex-mic")) { if (!Oido.manos && rexPuede()) rexEncender(true); Oido.despertar(Oido.manos || Rex.lugar); return; }
+    if (t.hasAttribute("data-rex-cerrar")) { Rex.sesion = 0; Rex.cerrada = Date.now(); if (Oido.modo === "orden") Oido.parar && Oido.parar(); pintarSiri(); return; }
     if (t.dataset.rexL) return rexLugar(t.dataset.rexL);
     if (t.dataset.rexSi) { const o = t.dataset.rexSi; Oido.soltar(o); if (pend[o]) return confirmar(o, null, "toque"); if (charla && charla.l === o) return seguirCharla("sí", "toque"); return; }
     if (t.dataset.rexNo) { const o = t.dataset.rexNo; Oido.soltar(o); if (pend[o]) return cancelar(o, false, "toque"); if (charla && charla.l === o) return seguirCharla("no", "toque"); return; }
-    if (t.hasAttribute("data-rex-mic")) { const l0 = Oido.manos || Rex.lugar; Oido.empezar(l0, { modo: "orden", manos: true }); return; }
     if (t.hasAttribute("data-casa-ver")) { casaVer = !casaVer; try { localStorage.setItem(CLAVE + "-casa", casaVer ? "1" : "0"); } catch (e) {} LUGS.forEach(renderDisp); return renderCasa(); }
     if (t.dataset.tabIr) return ir(t.dataset.tabIr);
     if (t.dataset.casal) { casaLugar = t.dataset.casal; return renderCasa(); }
@@ -8070,6 +8158,7 @@ body:has(.modal:not([hidden])) .rex-dock{display:none}
   document.addEventListener("change", ev => {
     const t = ev.target;
     if (t.matches("[data-quien]")) { quien[lugarDe(t)] = t.value; return; }
+    if (t.matches("[data-rex-siempre]")) { if (t.checked) { try { localStorage.setItem(CLAVE + "-rex2", "1"); } catch (e) {} rexEncender(true); } else rexApagar(); return; }
     if (t.matches("[data-filtro-inv]")) { filtroInv = t.value; return renderInventario(); }
     if (t.dataset.fmov) { fMov[t.dataset.fmov] = t.value; return renderMovs(); }
     if (t.dataset.kx) { kx[t.dataset.kx] = t.value; return renderMovs(); }
@@ -8137,11 +8226,19 @@ body:has(.modal:not([hidden])) .rex-dock{display:none}
     if (/[?&]sinrex\b/.test(location.search)) dock.hidden = true;   // pruebas automáticas de cada lugar
     document.addEventListener("fullscreenchange", () => { const f = document.fullscreenElement; (f || document.body).appendChild(dock); });
     pintarRex();
-    let pref = "1"; try { pref = localStorage.getItem(CLAVE + "-rex") || "1"; } catch (e) {}
-    if (pref !== "0" && Oido.disponible && location.protocol !== "file:" && navigator.permissions && navigator.permissions.query) {
-      navigator.permissions.query({ name: "microphone" }).then(p => { if (p.state === "granted" && !Oido.manos) rexEncender(true); }).catch(() => {});
-    }
+    // la ventana tipo Siri
+    const siri = document.createElement("div"); siri.id = "rexSiri"; siri.className = "rex-siri"; siri.hidden = true; siri.setAttribute("role", "status"); siri.setAttribute("aria-live", "polite");
+    siri.innerHTML = '<button class="rs-x" data-rex-cerrar aria-label="Cerrar">×</button><div class="rs-cara" aria-hidden="true"><span class="rs-onda"></span><span class="rs-onda o2"></span><img src="' + cara + '" alt="" width="52" height="64"></div>' +
+      '<div class="rs-txt"><b data-rs-est>Te escucho…</b><p class="rs-oi" data-rs-oi hidden></p><p class="rs-dice" data-rs-dice hidden></p><p class="rs-nota" data-rs-nota hidden></p></div>';
+    if (!/[?&]sinrex\b/.test(location.search)) document.body.appendChild(siri);
+    document.addEventListener("fullscreenchange", () => { const f = document.fullscreenElement; (f || document.body).appendChild(siri); });
+    // Rex escucha siempre: arranca solo. Si el navegador todavía no dejó el micrófono, el primer toque en la pantalla lo despierta.
+    if (rexQuiere() && rexPuede()) setTimeout(() => { if (!Oido.manos) rexEncender(true); }, 700);
+    let tIntento = 0;
+    const primerToque = () => { if (rexQuiere() && rexPuede() && !Oido.manos && Date.now() - tIntento > 20000) { tIntento = Date.now(); rexEncender(true); } setTimeout(pintarRex, 50); };
+    ["pointerdown", "keydown", "touchstart"].forEach(ev => document.addEventListener(ev, primerToque, { capture: true, passive: true }));
     setInterval(() => { try { pintarRex(); } catch (e) {} }, 800);
+    setInterval(() => { try { pintarSiri(); } catch (e) {} }, 200);
   }
   setInterval(() => { try { vivo(); } catch (e) {} }, 1000);
   window.FRX_UI = { get estado() { return st; }, Rex, rexEncender, rexLugar, lugarConPregunta, get vozUsada() { return ultimaVoz; }, Oido, ordenTexto, confirmar, ir, revisarVoz, leerNum, Vigilia };
