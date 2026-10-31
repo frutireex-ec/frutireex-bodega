@@ -1802,9 +1802,9 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     const reDe = /\b(de|desde|del|de la|de el|sale de|salen de)\s+(la |el )?(bodega|local|tienda|puesto|produccion|planta|cocina)\b/g;
     const reA = /\b(a|al|para|para el|para la|hacia|hacia el|hacia la|pa|pal|a la|a el|en el|en la|en)\s+(la |el )?(bodega|local|tienda|puesto|produccion|planta|cocina)\b/g;
     const reEn = /\b(en)\s+(la |el )?(bodega|local|produccion)\b/g;
-    let deX = null, aX = null, enX = null;
+    let deX = null, aX = null, enX = null, paraX = null, aSolo = null;   // paraX: «para producción» (para quién es); aSolo: «a la bodega» (a quién se le pide)
     while ((m = reDe.exec(t))) deX = lugarDe(m[3]);
-    while ((m = reA.exec(t))) { if (m[1] === "en" || m[1] === "en el" || m[1] === "en la") enX = lugarDe(m[3]); else aX = lugarDe(m[3]); }
+    while ((m = reA.exec(t))) { if (m[1] === "en" || m[1] === "en el" || m[1] === "en la") enX = lugarDe(m[3]); else { aX = lugarDe(m[3]); if (/^(para|pa|pal)\b/.test(m[1])) paraX = aX; else aSolo = aX; } }
     while ((m = reEn.exec(t))) enX = lugarDe(m[3]);
     t = t.replace(reDe, " ").replace(reA, " ").replace(reEn, " ").replace(/\b(bodega|local|produccion)\b/g, " ").replace(/\s+/g, " ").trim();
 
@@ -2083,8 +2083,13 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
       }
     } else if (R.intent === "pedido") {
       const its = R.items.filter(x => x.p && prods[x.p]).map(x => prods[x.p]);
-      R.de = enX || L0;
+      R.de = paraX || enX || L0;
+      // «necesito crema para producción, pídela a la bodega»: pide producción y despacha la bodega
+      if (paraX && aSolo && aSolo !== paraX) aX = aSolo;
+      else if (paraX && !deX) aX = null;
       if (aX && aX === R.de && !deX) R.de = aX;            // «mándame … al local» dicho en el local
+      // la bodega no pide lo que se prepara: «necesito crema» o «pide crema a la bodega» es para producción, donde se hace
+      if (R.de === "B" && !paraX && !enX && its.length && its.every(p => p.prep && (p.hecho || "P") === "P")) { R.de = "P"; if (aX === "P") aX = null; }
       const prov = unico(its.map(p => anteriorDe(p, R.de)), R.de === "B" ? "L" : "B");
       R.a = deX || (aX && aX !== R.de ? aX : null) || prov.v;
       if (R.a === R.de) R.a = R.de === "B" ? "L" : "B";
@@ -2357,7 +2362,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
       if (hallado && pal.length === 2) { const c2 = conocidos.find(c => c.claves.includes(pal[1])); if (c2 && c2.nombre !== hallado) { res.push({ nombre: hallado, nuevo: false }, { nombre: c2.nombre, nuevo: false }); continue; } }
       // dictado aproximado: el nombre mal escrito se acerca al más parecido de la lista
       if (!hallado && pal[0].length >= 3 && !NO_NOMBRE.has(pal[0])) {
-        let mejor = null, md = 9;
+        let mejor = null, md = 9, empatados = new Set();
         for (const c of conocidos) for (const k of c.claves) {
           const kf = k.split(" ")[0], a = pal[0], lim = kf.length >= 6 ? 2 : kf.length >= 4 ? 1 : 0;
           if (a !== kf && COMUNES.has(a) && fon(a) !== fon(kf)) continue;
@@ -2368,8 +2373,10 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
           // María y Mario, Daniel y Daniela son personas distintas: no se confunden
           if (d > 0 && /[ao]$/.test(a) && /[ao]$/.test(kf) && a.slice(0, -1) === kf.slice(0, -1)) d = 9;
           if (d > 0 && (a + "a" === kf || a + "o" === kf || kf + "a" === a || kf + "o" === a)) d = 9;
-          if (d < md) { md = d; mejor = c.nombre; }
+          if (d < md) { md = d; mejor = c.nombre; empatados = new Set([c.nombre]); }
+          else if (d === md && d < 9) empatados.add(c.nombre);
         }
+        if (empatados.size > 1) return null; // no adjudicar a la primera persona por orden de catálogo
         if (mejor && md < 9) hallado = mejor;
       }
       if (hallado) { res.push({ nombre: hallado, nuevo: false }); continue; }
@@ -2656,9 +2663,12 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
   // ---------- operaciones ----------
   function itemsTexto(st, items) { return lista(items.map(it => fmtCant(P(st, it.p), it.q) + " de " + nf(P(st, it.p)))); }
 
+  /* Un producto de un pedido o envío. Los insumos de una receta llevan para qué son (rec: «crema_reex», recQ: kilos que se van a preparar):
+     así el pedido se nombra «insumos para 5 kg de crema Reex» y no con la lista de la receta. */
+  function copiaItem(x) { const y = { p: x.p, q: r3(x.q) }; if (x.emp) y.emp = x.emp; if (x.rec) { y.rec = x.rec; y.recQ = x.recQ; } return y; }
   function despachar(st, o) {
     const de = o.de, a = o.a || destino(st, (o.items[0] || {}).p, o.de);
-    const tr = { id: id(st, "T"), de, a, items: o.items.map(x => (x.emp ? { p: x.p, q: r3(x.q), emp: x.emp } : { p: x.p, q: r3(x.q) })), t: ahora(st), por: o.por, estado: "pendiente", pedido: o.pedido || null };
+    const tr = { id: id(st, "T"), de, a, items: o.items.map(copiaItem), t: ahora(st), por: o.por, estado: "pendiente", pedido: o.pedido || null };
     const mov = aplicar(st, {
       tipo: "envio", lugar: de, de, a, ref: tr.id, por: o.por, via: o.via, frase: o.frase, conf: o.conf,
       titulo: "Envío " + CAT.LUGARES[de].nombre + " → " + CAT.LUGARES[a].nombre,
@@ -2672,9 +2682,9 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
       if (pe) {
         pe.estado = "despachado"; pe.envio = tr.id;
         // si salió menos de lo pedido, lo que falta queda como pedido pendiente (no se pierde)
-        const falta = pe.items.map(it => { const sale = tr.items.filter(x => x.p === it.p).reduce((a, x) => a + x.q, 0); return { p: it.p, q: r3(it.q - sale), emp: it.emp }; }).filter(x => x.q > 0.0005);
+        const falta = pe.items.map(it => { const sale = tr.items.filter(x => x.p === it.p).reduce((a, x) => a + x.q, 0); return Object.assign({}, it, { q: r3(it.q - sale) }); }).filter(x => x.q > 0.0005);
         if (falta.length && o.saldo !== false) {
-          saldo = { id: id(st, "P"), de: pe.de, a: pe.a, items: falta.map(x => (x.emp ? { p: x.p, q: x.q, emp: x.emp } : { p: x.p, q: x.q })), t: ahora(st), por: pe.por, estado: "pendiente", saldoDe: pe.id };
+          saldo = { id: id(st, "P"), de: pe.de, a: pe.a, items: falta.map(copiaItem), t: ahora(st), por: pe.por, estado: "pendiente", saldoDe: pe.id };
           st.pedidos.push(saldo); tr.saldo = saldo.id;
           aplicar(st, { tipo: "pedido", lugar: pe.de, de: pe.de, a: pe.a, ref: saldo.id, por: o.por, via: "sistema", deltas: [],
             titulo: "Saldo del pedido de " + CAT.LUGARES[pe.de].nombre + " a " + CAT.LUGARES[pe.a].nombre, info: itemsTexto(st, saldo.items) + " (no alcanzó al despachar)" });
@@ -2780,7 +2790,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
   }
   function pedir(st, o) {
     const de = o.de, a = o.a || origen(st, (o.items[0] || {}).p, o.de); // de = quien pide, a = quien debe despachar
-    const pe = { id: id(st, "P"), de, a, items: o.items.map(x => (x.emp ? { p: x.p, q: r3(x.q), emp: x.emp } : { p: x.p, q: r3(x.q) })), t: ahora(st), por: o.por, estado: "pendiente" };
+    const pe = { id: id(st, "P"), de, a, items: o.items.map(copiaItem), t: ahora(st), por: o.por, estado: "pendiente" };
     st.pedidos.push(pe);
     aplicar(st, { tipo: "pedido", lugar: de, de, a, ref: pe.id, por: o.por, via: o.via, frase: o.frase, conf: o.conf, deltas: [],
       titulo: "Pedido de " + CAT.LUGARES[de].nombre + " a " + CAT.LUGARES[a].nombre, info: itemsTexto(st, pe.items) });
@@ -3142,7 +3152,11 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
   const LUG = CAT.LUGARES;
 
   function txtItems(st, items) { return E.lista(items.map(it => E.fmtCantLargo(E.P(st, it.p), it.q) + " de " + E.nf(E.P(st, it.p)))); }
+  /* Si todos son insumos de una receta, ¿para qué son? → { p: "crema_reex", q: 5 } */
+  function recetaDe(items) { const r = items && items.length && items[0].rec; return r && items.every(it => it.rec === r) ? { p: r, q: items[0].recQ } : null; }
+  function txtReceta(st, rc) { const p = E.P(st, rc.p); return "insumos para " + (rc.q > 0 ? E.fmtBase(p, rc.q) + " de " : "") + E.nf(p); }
   function txtItemsCorto(st, items, l) {
+    { const rc = recetaDe(items); if (rc) return txtReceta(st, rc); }
     return E.lista(items.map(it => {
       const p = E.P(st, it.p), nom = E.nf(p);
       // Si dijo el empaque («dos cajas de frutilla»), se repite en ese empaque y se agregan los kilos: «2 cajas (8 kg)».
@@ -3310,7 +3324,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     const aviso = (code, msg, confirmar) => plan.avisos.push({ code, msg, confirmar: confirmar !== false });
     (R.issues || []).forEach(x => { if (!["verbo_supuesto", "unidad_supuesta", "producto_supuesto", "producto_parecido", "cantidad_supuesta", "dictado_dudoso", "ambiguo", "autocorreccion"].includes(x.code)) return; aviso(x.code, x.msg, true); });
 
-    const items = (R.items || []).filter(it => it.p).map(it => ({ p: it.p, q: it.q, tandas: it.tandas, alternativas: it.alternativas || [], emp: it.emp || null, enPeso: !!it.enPeso }));
+    const items = (R.items || []).filter(it => it.p).map(it => Object.assign({ p: it.p, q: it.q, tandas: it.tandas, alternativas: it.alternativas || [], emp: it.emp || null, enPeso: !!it.enPeso }, it.rec ? { rec: it.rec, recQ: it.recQ } : {}));
     plan.items = items;
 
     switch (R.intent) {
@@ -3539,19 +3553,39 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     if (!its.length || its.length !== items.length) return null;
     const it = its[0], p = E.P(st, it.p), pr = st.cat.preps[it.p];
     if (!pr) return null;
-    const q = it.q != null ? it.q : Math.max((p.min[l] || 0) - Math.max(0, E.stockDe(st, l, it.p)), pr.sale);
-    const tandas = Math.max(1, Math.ceil(q / pr.sale - 0.15));
-    const plan = planificar(st, { crudo: "", intent: "produccion", lugar: l, de: l, a: l, items: [{ p: it.p, tandas }], issues: [], conf: 1, listo: true }, { lugar: l });
-    plan.previo = (agotado ? "Se acabó " + E.nf(p) + " " + LUG[l].en + ". " : "") + E.CAP(E.nf(p)) + " se prepara aquí " + LUG[l].en + ": no se pide a otro lugar.";
-    if (plan.bloqueo && plan.pedirFalta) return pedirLoQueFalta(st, plan, l, plan.previo);
+    // «necesito crema» sin decir cuánto: se pregunta «¿Cuántos kilos de crema Reex?» (no se inventa una cantidad)
+    if (it.q == null && !it.tandas) return pedirCantidad(st, it.p, l, agotado);
+    const q = it.q != null ? it.q : it.tandas * pr.sale;
+    return planReceta(st, it.p, q, l, agotado ? "Se acabó " + E.nf(p) + " " + LUG[l].en + "." : "");
+  }
+  /* La pantalla pregunta la cantidad y, con la respuesta, llama a planReceta */
+  function pedirCantidad(st, pid, l, agotado) {
+    const p = E.P(st, pid), unidad = p.u === "L" ? "litros" : p.u === "u" ? "unidades" : "kilos";
+    const preg = "¿Cuántos " + unidad + " de " + E.nf(p) + "?";
+    return { R: { conf: 1, issues: [] }, lugar: l, tipo: "cantidad", items: [], avisos: [], soloInfo: true, resumen: preg, respuesta: preg, detalle: "",
+      pideCantidad: { p: pid, l, agotado: !!agotado, unidad, pregunta: preg } };
+  }
+  /* «Necesito 5 kilos de crema» en producción (donde se prepara):
+       hay los insumos aquí  → se prepara (descuenta los insumos de la receta)
+       faltan insumos        → pedido a la bodega: «insumos para 5 kg de crema Reex» (sin leer la receta) */
+  function planReceta(st, pid, kg, l, antes) {
+    const p = E.P(st, pid), pr = st.cat.preps[pid];
+    if (!pr || !(kg > 0)) return null;
+    const tandas = E.r3(kg / pr.sale);
+    const plan = planificar(st, { crudo: "", intent: "produccion", lugar: l, de: l, a: l, items: [{ p: pid, tandas, enPeso: true }], issues: [], conf: 1, listo: true }, { lugar: l });
+    plan.previo = (antes ? antes + " " : "") + E.CAP(E.nf(p)) + " se prepara " + LUG[l].en + ".";
+    if (plan.bloqueo && plan.pedirFalta) return pedirLoQueFalta(st, plan, l, antes);
+    plan.directo = true;
     return plan;
   }
   /* Para preparar falta materia prima: se arma el pedido a la bodega (redondeado al empaque) */
   function pedirLoQueFalta(st, planProd, l, previo) {
-    const items = planProd.pedirFalta.map(x => { const pr = E.P(st, x.p), e = (pr.e || [])[0]; return { p: x.p, q: e && e[1] >= 1 ? Math.ceil(x.q / e[1] - 1e-9) * e[1] : x.q, emp: e && e[1] >= 1 ? e[0] : null }; });
+    const pr0 = st.cat.preps[planProd.prep], kg = E.r3((pr0 ? pr0.sale : 1) * (planProd.tandas || 1));
+    const items = planProd.pedirFalta.map(x => { const pr = E.P(st, x.p), e = (pr.e || [])[0]; return { p: x.p, q: e && e[1] >= 1 ? Math.ceil(x.q / e[1] - 1e-9) * e[1] : x.q, emp: e && e[1] >= 1 ? e[0] : null, rec: planProd.prep, recQ: kg }; });
     const plan = planificar(st, { crudo: "", intent: "pedido", lugar: l, de: l, a: "B", items, issues: [], conf: 1, listo: true }, { lugar: l });
-    plan.previo = (previo ? previo + " " : "") + "Para preparar " + E.nf(E.P(st, planProd.prep)) + " " + LUG[l].en + " falta " + E.lista(planProd.pedirFalta.map(x => E.nf(E.P(st, x.p)))) + ".";
-    plan.paraPreparar = planProd.prep;
+    plan.previo = (previo ? previo + " " : "") + "Para preparar " + E.fmtBase(E.P(st, planProd.prep), kg) + " de " + E.nf(E.P(st, planProd.prep)) + " " + LUG[l].en + " se piden los insumos a la bodega.";
+    plan.paraPreparar = planProd.prep; plan.receta = { p: planProd.prep, q: kg }; plan.directo = true;
+    plan.detalle = "La bodega manda: " + txtItems(st, items) + ".";
     return plan;
   }
   /* Despachar un pedido: revisa lo que hay en el lugar que despacha y arma lo que corresponde.
@@ -3567,7 +3601,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     const estado = pe.items.map(it => ({ it, p: E.P(st, it.p), hay: Math.max(0, E.stockDe(st, l, it.p)) }));
     const conAlgo = estado.filter(x => x.hay > 0.0005);
     if (conAlgo.length) {
-      const R = { crudo: "", intent: "traslado", lugar: l, de: l, a: pe.de, items: pe.items.map(it => ({ p: it.p, q: it.q, emp: it.emp || null })), issues: [], conf: 1, listo: true };
+      const R = { crudo: "", intent: "traslado", lugar: l, de: l, a: pe.de, items: pe.items.map(it => Object.assign({}, it)), issues: [], conf: 1, listo: true };
       const plan = planificar(st, R, Object.assign({}, ctx, { lugar: l, pedido: pe.id }));
       plan.despacho = pe.id;
       const faltan = estado.filter(x => x.hay + 0.0005 < x.it.q);
@@ -3645,7 +3679,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
         const grupos = plan.grupos && plan.grupos.length ? plan.grupos : [{ a: plan.a, items: plan.items }];
         const partes = [];
         grupos.forEach((g, i) => {
-          const x = E.despachar(st, Object.assign({ de: plan.de, a: g.a, items: g.items.map(it => ({ p: it.p, q: it.q, emp: it.emp || null })), pedido: i === 0 ? plan.pedido : null }, base));
+          const x = E.despachar(st, Object.assign({ de: plan.de, a: g.a, items: g.items, pedido: i === 0 ? plan.pedido : null }, base));
           if (i === 0) { r.mov = x.mov; r.tr = x.transito; if (x.saldo) r.saldo = x.saldo; } else (r.otros = r.otros || []).push(x.mov);
           partes.push(txtItemsCorto(st, g.items, g.a) + " " + LUG[g.a].a + (x.recepcion ? " (recibido automáticamente)" : ""));
         });
@@ -3656,7 +3690,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
         const grupos = plan.grupos && plan.grupos.length ? plan.grupos : [{ a: plan.a, items: plan.items }];
         const partes = [];
         grupos.forEach((g, i) => {
-          const pe = E.pedir(st, Object.assign({ de: plan.de, a: g.a, items: g.items.map(it => ({ p: it.p, q: it.q, emp: it.emp || null })) }, base));
+          const pe = E.pedir(st, Object.assign({ de: plan.de, a: g.a, items: g.items }, base));
           if (i === 0) r.pedido = pe;
           partes.push(LUG[g.a].a + ": " + txtItemsCorto(st, g.items, plan.de));
         });
@@ -3808,7 +3842,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     return { ok: true, msg: nuevo ? "Corregido: " + (nuevo.titulo || "") + (meta.autorizo ? " · autorizó " + meta.autorizo : "") : "Quitado: " + (m.titulo || m.tipo) + (meta.autorizo ? " · autorizó " + meta.autorizo : ""), mov: nuevo };
   }
 
-  const API = { estadoLugar, planificar, planDespacho, ejecutar, consulta, txtItems, txtItemsCorto, requierePin, camposCorreccion, corregir, faltaParaVender, quitarItem, pregunta, resumir };
+  const API = { estadoLugar, planificar, planDespacho, planReceta, pedirLoQueFalta, recetaDe, txtReceta, ejecutar, consulta, txtItems, txtItemsCorto, requierePin, camposCorreccion, corregir, faltaParaVender, quitarItem, pregunta, resumir };
   root.FRX_ACC = API;
   if (typeof module !== "undefined" && module.exports) module.exports = API;
 })(typeof window !== "undefined" ? window : globalThis);
@@ -5779,7 +5813,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
   let tToast = null;
   function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("ver"); clearTimeout(tToast); tToast = setTimeout(() => t.classList.remove("ver"), 3800); }
   // Rex: el asistente (sesion/act: la ventana tipo Siri; dijo: lo último que dijo; oyendo: lo último que oyó)
-  const BUILD = { id: "d920a05b", fecha: "2026-10-30 11:00" };
+  const BUILD = { id: "ff652a5f", fecha: "2026-10-31 09:46" };
   const Rex = { lugar: "B", ultimo: null, despierto: 0, sesion: 0, act: 0, dijo: "", tDijo: 0, oyendo: "", tOyendo: 0 };
   /* La conversación con Rex (la ventana tipo Siri) se cierra sola cuando nadie dice nada durante 5 s. */
   const SESION_MS = 5000;
@@ -6201,12 +6235,17 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     // pendientes: lo que viene en camino a este lugar y lo que el otro lugar pidió
     const llegan = st.transito.filter(t => t.estado === "pendiente" && t.a === l).sort((a, b) => a.t - b.t);
     const pedidos = st.pedidos.filter(p => p.estado === "pendiente" && p.a === l).sort((a, b) => a.t - b.t);
+    const preparar = (st.porPreparar || []).filter(x => x.l === l && P(x.p));
     const ahora = E.ahora(st);
     let h = "";
-    if (llegan.length || pedidos.length) {
+    if (llegan.length || pedidos.length || preparar.length) {
       h += '<h3>Por atender <small>' + (llegan.length ? llegan.length + " por recibir" : "") + (llegan.length && pedidos.length ? " · " : "") + (pedidos.length ? pedidos.length + " " + (pedidos.length === 1 ? "pedido" : "pedidos") : "") + "</small></h3><div class=\"lista\">";
       pedidos.forEach(pe => {
         h += '<div class="item aviso alto"><div class="t">Pedido ' + LUG[pe.de].de + ": " + esc(A.txtItemsCorto(st, pe.items, pe.de)) + "<small>" + hora(pe.t) + " · hace " + Math.max(0, Math.round((ahora - pe.t) / 60000)) + ' min</small></div><div class="fila-b"><button class="b lima peq" data-despachar="' + pe.id + '">Despachar</button></div></div>';
+      });
+      preparar.forEach(x => {
+        h += '<div class="item aviso medio"><div class="t">Por preparar: ' + esc(E.fmtBase(P(x.p), x.q)) + " de " + esc(E.nf(P(x.p))) + "<small>Ya llegaron los insumos</small></div>" +
+          '<div class="fila-b"><button class="b lima peq" data-preparar-rec="' + x.id + '">Ya está</button><button class="b peq" data-preparar-quitar="' + x.id + '">Quitar</button></div></div>';
       });
       llegan.forEach(tr => {
         const min = Math.max(0, Math.round((ahora - tr.t) / 60000));
@@ -6453,6 +6492,18 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
       alaVista(cont, motivo[l]);
       return;
     }
+    if (!plan && cantPend[l]) {
+      const cp = cantPend[l], pp = P(cp.p), pr = st.cat.preps[cp.p] || { sale: 1 };
+      const opciones = [1, 2, 3, 5].map(k => E.r3(pr.sale * k));
+      cont.innerHTML = '<div class="tarjeta resp cant" role="group" aria-label="Cantidad"><p class="t-titulo">' + esc(cp.pregunta) + (Oido.modo === "motivo" && Oido.lugar === l ? ' <span class="oyendo"><i></i><i></i><i></i>te escucho</span>' : "") + "</p>" +
+        '<p class="dicho">' + esc(E.CAP(E.nf(pp))) + " se prepara " + esc(LUG[l].en) + ". Con la cantidad se pide a la bodega lo que haga falta (la receta la pone el sistema).</p>" +
+        (cp.duda ? '<p class="det duda">No entendí «' + esc(cp.duda) + '». Di el número, por ejemplo «cinco kilos», o toca una cantidad.</p>' : "") +
+        '<div class="chips">' + opciones.map(q => '<button class="chip" data-cant="' + q + '">' + esc(E.fmtBase(pp, q)) + "</button>").join("") + "</div>" +
+        '<form class="motivo-f" data-cant-f><input name="c" inputmode="decimal" placeholder="Otra cantidad…" autocomplete="off" aria-label="Cantidad"><button class="b">Listo</button></form>' +
+        '<div class="acc"><button class="b" data-cant-saltar>Cancelar</button></div></div>';
+      alaVista(cont, cp);
+      return;
+    }
     if (!plan && respons[l]) {
       const rp = respons[l], noms = personasDet().map(x => x.nombre);
       cont.innerHTML = '<div class="tarjeta resp" role="group" aria-label="Responsable"><p class="t-titulo">' + esc(rp.pregunta) + (Oido.modo === "motivo" && Oido.lugar === l ? ' <span class="oyendo"><i></i><i></i><i></i>te escucho</span>' : "") + "</p>" +
@@ -6490,7 +6541,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
       const dividido = plan.grupos && plan.grupos.length > 1;
       const destinos = dividido ? E.lista(plan.grupos.map(g => LUG[g.a].nombre)) : plan.a ? LUG[plan.a].nombre : "";
       h += '<p class="ruta-t">' + (plan.tipo === "pedido" ? "Pedido " + LUG[plan.de].de + " " + (dividido ? "a " + destinos : LUG[plan.a].a) : plan.tipo === "merma" ? "Merma " + LUG[plan.lugar].en : LUG[plan.de].nombre + " → " + destinos) + "</p>" +
-        '<ul class="items-t">' + plan.items.map((it, i) => { const p = P(it.p), txt = A.txtItemsCorto(st, [it], it.a || lv), m = txt.match(/^([\d.,]+(?: [a-zA-Z]+(?: \+ [\d.,]+ [a-zA-Z]+)?)?)( de )?(.*)$/); return "<li>" + ICO.icono(it.p, "i-ico") + '<span class="i-txt">' + (m ? "<b>" + esc(m[1]) + "</b> " + esc(m[3]) : esc(txt)) + (dividido && it.a ? ' <small class="i-a a-' + it.a + '">' + (plan.tipo === "pedido" ? "de " : "→ ") + esc(LUG[it.a].nombre) + "</small>" : "") + (it.propuesto ? ' <small>propuesto</small>' : "") + '</span><button class="quitar-i" data-quitar-item="' + i + '" aria-label="Quitar ' + esc(p.n) + ' de la lista">×</button></li>'; }).join("") + "</ul>" +
+        '<ul class="items-t">' + plan.items.map((it, i) => { const p = P(it.p), txt = A.txtItemsCorto(st, [Object.assign({}, it, { rec: null })], it.a || lv), m = txt.match(/^([\d.,]+(?: [a-zA-Z]+(?: \+ [\d.,]+ [a-zA-Z]+)?)?)( de )?(.*)$/); return "<li>" + ICO.icono(it.p, "i-ico") + '<span class="i-txt">' + (m ? "<b>" + esc(m[1]) + "</b> " + esc(m[3]) : esc(txt)) + (dividido && it.a ? ' <small class="i-a a-' + it.a + '">' + (plan.tipo === "pedido" ? "de " : "→ ") + esc(LUG[it.a].nombre) + "</small>" : "") + (it.propuesto ? ' <small>propuesto</small>' : "") + '</span><button class="quitar-i" data-quitar-item="' + i + '" aria-label="Quitar ' + esc(p.n) + ' de la lista">×</button></li>'; }).join("") + "</ul>" +
         (plan.detalle ? '<p class="det">' + esc(plan.detalle) + "</p>" : "");
     }
     else h += '<p class="ent">' + esc(plan.resumen) + "</p>" + (plan.detalle ? '<p class="det">' + esc(plan.detalle) + "</p>" : "");
@@ -6520,6 +6571,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     const resp = r.resp || (m && m.responsable) || null;
     box.innerHTML = '<div class="franja ' + (r.ok ? "ok" : "no") + (r.sale ? " sale" : "") + '" role="status" data-cerrar-res title="Toca para cerrar"><span class="f-ico" aria-hidden="true">' + (r.ok ? "✓" : "!") + '</span><div class="f-txt"><b>' + esc(r.titulo) + "</b><span>" + esc(r.txt) + (resp ? " · Responsable: " + esc(resp) : "") + "</span>" +
       (r.frase && (mostrarTx() || r.via !== "voz") ? "<small>" + (r.via === "voz" ? "Escuché" : r.via === "toque" ? "Tocaste" : "Escribiste") + ": «" + esc(r.frase) + "»</small>" : "") + "</div>" +
+      (r.respAuto ? '<button class="f-des" data-cambiar-resp>Otro responsable</button>' : "") +
       (m && !m.deshecho && m.lugar === l ? '<button class="f-des" data-quitar="' + m.id + '">' + (A.requierePin(st, m) ? LOCK : "") + "Deshacer</button>" : "") + "</div>";
   }
   function fraseNoHay(plan) {
@@ -6558,6 +6610,58 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
   }
   /* ----- después de un «no»: ¿por qué no se movió? ----- */
   const motivo = porLugar(null);
+  /* ===== «Necesito crema» → «¿Cuántos kilos de crema Reex?» → «cinco» → se prepara o se piden los insumos a la bodega ===== */
+  const cantPend = porLugar(null);
+  function preguntarCantidad(l, pc, frase, via) {
+    cancelarCuenta(l); pend[l] = null; hoja[l] = null; resultado[l] = null; motivo[l] = null;
+    cantPend[l] = Object.assign({}, pc, { t: Date.now(), frase: frase || "", via, dudas: 0 });
+    logVoz("pregunta la cantidad", pc.pregunta, l);
+    renderDisp(l);
+    hablar(pc.pregunta, () => escucharCantidad(l));
+  }
+  function escucharCantidad(l) {
+    const cp = cantPend[l]; if (!cp || !st.config.escucharRespuesta || !Oido.disponible || modalOk) return;
+    Oido.esperarTexto(l, txt => { if (cantPend[l] !== cp) return; if (txt == null) { renderTarjeta(l); return; } responderCantidad(l, txt, "voz"); }, () => cantPend[l] === cp,
+      "<b>Te escucho: " + esc(cp.pregunta) + "</b>Di, por ejemplo: «cinco kilos».");
+  }
+  // «cinco», «5 kilos», «medio kilo», «dos ollas», «una tanda» → kilos (un número solo son kilos: eso se preguntó)
+  function cantidadDicha(txt, cp) {
+    const pr = st.cat.preps[cp.p]; if (!pr) return null;
+    const t = V.normalizar(String(txt || "")).replace(/[,.;:!¡¿?]/g, " ").replace(/\b(rex|reex|por favor|porfa|nomas|no mas|pues|ya|listo|eh|este|unos|unas)\b/g, " ").replace(/\s+/g, " ").trim();
+    if (!t) return null;
+    const R = V.interpretarSimple("preparar " + t + " de " + E.nf(P(cp.p)), { lugar: cp.l, cat: st.cat });
+    const it = (R.items || []).find(x => x.p === cp.p); if (!it) return null;
+    const unidadDicha = /\b(olla|ollas|tanda|tandas|receta|recetas|balde|baldes)\b/.test(t);
+    if (it.enPeso && it.q > 0) return it.q;
+    if (it.tandas > 0) return unidadDicha ? E.r3(it.tandas * pr.sale) : it.tandas;   // «cinco» = 5 kg
+    if (it.q > 0) return it.q;
+    return null;
+  }
+  /* «ya está la crema» (o el botón «Ya está»): se registra la preparación de lo que se pidió; descuenta los insumos de la receta */
+  function prepararReceta(l, x, via, frase) {
+    st.porPreparar = (st.porPreparar || []).filter(y => y.id !== x.id);
+    const plan = A.planReceta(st, x.p, x.q, l, "");
+    if (!plan) { guardar(); return renderDisp(l); }
+    mostrarPlan(l, plan, frase || "ya está: " + E.fmtBase(P(x.p), x.q) + " de " + E.nf(P(x.p)), via);
+  }
+  function responderCantidad(l, txt, via) {
+    const cp = cantPend[l]; if (!cp) return;
+    if (via === "voz" && Oido.pareceEco && Oido.pareceEco(txt) && !/\d/.test(txt)) { logVoz("se ignora: era la voz del asistente", txt, l); escucharCantidad(l); return; }
+    const kg = cantidadDicha(txt, cp);
+    if (kg == null || !(kg > 0)) {
+      const sn = V.siNo(txt);
+      if (sn && sn.limpio && sn.r === "no") { cantPend[l] = null; renderTarjeta(l); logVoz("no quiso decir la cantidad", txt, l); hablar("Bueno, no se pide nada."); return; }
+      if (via === "voz" && (esOrdenClara(txt, l) || seguimiento(txt, l))) { logVoz("era una orden nueva (no la cantidad)", txt, l); cantPend[l] = null; renderTarjeta(l); ordenTexto(l, txt, via); return; }
+      cp.duda = txt; cp.dudas++; renderTarjeta(l); logVoz("no entendí la cantidad: se vuelve a preguntar", txt, l);
+      if (cp.dudas <= 2) hablar("¿Cuántos " + cp.unidad + "?", () => escucharCantidad(l));
+      return;
+    }
+    cantPend[l] = null;
+    logVoz("cantidad", E.fmtBase(P(cp.p), kg) + " de " + E.nf(P(cp.p)), l);
+    const plan = A.planReceta(st, cp.p, kg, l, cp.agotado ? "Se acabó " + E.nf(P(cp.p)) + " " + LUG[l].en + "." : "");
+    if (!plan) { renderTarjeta(l); return; }
+    mostrarPlan(l, plan, (cp.frase ? cp.frase + ": " : "") + E.fmtBase(P(cp.p), kg), via);
+  }
   const TIPOS_MOTIVO = ["traslado", "pedido", "merma", "compra", "produccion"];
   const MOTIVOS = ["Me equivoqué", "No hay", "Está dañado", "Lo hago después", "No lo pidieron"];
   function pedirMotivo(l, plan, via) {
@@ -6582,7 +6686,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
   /* ===== Responsable: después del «sí», «¿Quién es el responsable?» → «María» =====
      El nombre queda en el movimiento (bitácora, Movimientos y el Excel). Si la orden ya traía el nombre
      («María, lleva dos baldes de frutilla a producción») no se pregunta. Se apaga en Catálogo → Voz. */
-  const respons = porLugar(null), respUlt = porLugar(null);
+  const respons = porLugar(null), respUlt = porLugar(null), respUltT = porLugar(0);
   const TIPOS_RESP = ["traslado", "pedido", "merma", "compra", "produccion", "recepcion", "conteo", "llegada"];
   /* Quién es el responsable según lo dicho: cualquier nombre (los de la lista, con apodos y dictado aproximado, o uno nuevo).
      «Ana es la responsable», «yo, Ana», «soy Rosa», «fue Marta», «Ana y Rosa». Ver V.nombreResponsable. */
@@ -6599,6 +6703,12 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     peds.forEach(id => { const mp = st.movs.find(m => m.tipo === "pedido" && m.ref === id && !m.deshecho); if (mp && !movs.includes(mp.id)) movs.push(mp.id); });
     if (!movs.length && !peds.length) return false;
     if (plan && plan.responsable) { asignarResponsable(l, plan.responsable, null, { movs, peds, trs }, true); return false; }
+    // el mismo responsable de hace un rato en este lugar (15 min): no se vuelve a preguntar. Se cambia tocando el nombre en el resultado. Ajustes → «Repetir el responsable».
+    if (st.config.repetirResponsable !== false && respUlt[l] && Date.now() - (respUltT[l] || 0) < 15 * 60000) {
+      asignarResponsable(l, respUlt[l], null, { movs, peds, trs }, true); r.autoResp = respUlt[l]; logVoz("responsable (el mismo de hace un rato, sin preguntar)", respUlt[l], l);
+      if (resultado[l]) { resultado[l].respAuto = { movs, peds, trs, resumen: plan && plan.resumen || "" }; renderFranja(l); }
+      return false;
+    }
     respons[l] = { movs, peds, trs, t: Date.now(), resumen: plan && plan.resumen || "", pregunta: pregunta || "¿Quién es el responsable?" };
     renderTarjeta(l);
     return true;
@@ -6638,6 +6748,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     }).catch(err => { Mente.ultimoError = String(err && err.message || err); logVoz("Claude no respondió: sigue el intérprete de la página", Mente.ultimoError, l); if (siFalla) siFalla(); });
   }
   function responsableDicho(l, txt, via) {
+    if (!respons[l]) return;   // la respuesta llegó después de que se cerró la pregunta (aporte de Codex, 31-oct-2026)
     if (via === "voz" && respons[l] && respons[l].rapido && Mente.activa() && !Mente.enCurso && Mente.esCorreccion(txt)) { menteDirecto(l, txt, () => { if (!deshacerRapido(l, txt, via)) responsableDicho(l, txt, "voz-local"); }); return; }
     if (deshacerRapido(l, txt, via)) return;
     if (via === "voz") {
@@ -6645,9 +6756,17 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
       if (cr) { logVoz("se despidió con una pregunta de nombre abierta: Rex cierra y la pregunta queda", txt, l); despedirRex(cr); return; }
     }
     const n = nombreDe(txt, l);
+    // lo que repite lo que Rex acaba de decir es su eco: ni nombre nuevo ni orden (un nombre de la lista sí cuenta aunque Rex lo haya dicho)
+    if (via === "voz" && (!n || !personasDet().some(x => x.nombre === n)) && Oido.pareceEco && Oido.pareceEco(txt)) { logVoz("se ignora: era la voz del asistente", txt, l); escucharResponsable(l); return; }
     if (!n && via === "voz" && (esOrdenClara(txt, l) || seguimiento(txt, l))) { logVoz("era una orden nueva (no un nombre)", txt, l); respons[l] = null; renderTarjeta(l); ordenTexto(l, txt, via); return; }
     if (!n && intentarIA(l, txt, via, "nombre")) return;
-    if (!n) { hablar("No entendí el nombre. Dilo otra vez, o toca un nombre.", () => escucharResponsable(l)); respons[l].duda = txt; renderTarjeta(l); return; }
+    if (!n) {
+      respons[l].duda = txt; renderTarjeta(l);
+      // se repregunta UNA vez y corto; después la pregunta queda en pantalla escuchando, sin hablar
+      if (!respons[l].repreguntado) { respons[l].repreguntado = true; hablar("¿Cómo se llama?", () => escucharResponsable(l)); }
+      else { Sonido.aviso(); escucharResponsable(l); }
+      return;
+    }
     asignarResponsable(l, n, via);
   }
   function asignarResponsable(l, nombre, via, ids, callado) {
@@ -6656,7 +6775,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     rp.movs.forEach(id => { const m = st.movs.find(x => x.id === id); if (m) { m.por = nombre; m.responsable = nombre; } });
     rp.peds.forEach(id => { const pe = st.pedidos.find(x => x.id === id); if (pe) { pe.por = nombre; pe.responsable = nombre; } });
     rp.trs.forEach(id => { const tr = st.transito.find(x => x.id === id); if (tr) { tr.por = nombre; tr.responsable = nombre; } });
-    respUlt[l] = nombre; respUlt._ultimo = nombre;
+    respUlt[l] = nombre; respUlt._ultimo = nombre; respUltT[l] = Date.now();
     // un nombre nuevo queda en la lista de personas
     String(nombre).split(/ y /).forEach(un => {
       if (!un || personasDet().some(x => x.nombre === un)) return;
@@ -6679,9 +6798,20 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
       const o = lugarConPregunta(l);
       const esOrden = R.listo && R.intent && !["si", "no", "desconocido", "vacio"].includes(R.intent);
       const llegaAqui = st.transito.some(t => t.estado === "pendiente" && t.a === l) && /\b(lleg|vin|falt|recib|complet|abiert|rot|huec|mitad|nada)/.test(V.normalizar(frase));
-      if (o && !esOrden && !llegaAqui && (R.intent === "si" || R.intent === "no" || respons[o] || motivo[o] || (charla && charla.l === o))) { logVoz("respuesta para " + LUG[o].nombre + " (la pregunta está allá)", frase, l); return procesar(o, R, frase, via, extra); }
+      if (o && !esOrden && !llegaAqui && (R.intent === "si" || R.intent === "no" || respons[o] || motivo[o] || cantPend[o] || (charla && charla.l === o))) { logVoz("respuesta para " + LUG[o].nombre + " (la pregunta está allá)", frase, l); return procesar(o, R, frase, via, extra); }
     }
     if (pend[l] && (pend[l].bloqueo || pend[l].soloInfo) && !(pend[l].bloqueo && pend[l].requierePin)) { pend[l] = null; renderTarjeta(l); }
+    const nfr = V.normalizar(String(frase || ""));
+    if (R.items && R.items[0] && R.items[0].p && R.items[0].q == null && (R.intent === "produccion" || (R.intent === "traslado" && /\b(ya esta|esta list[oa]|ya quedo|quedo list[oa]|ya termin|terminamos|termine)\b/.test(nfr))) &&
+        !/(\d|\b(medi[oa]|un[oa]?|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|doce|quince|veinte|ollas?|tandas?|recetas?)\b)/.test(nfr)) {
+      const x = (st.porPreparar || []).find(y => y.p === R.items[0].p && y.l === ((P(y.p).hecho) || "P"));
+      if (x) { logVoz("se prepara lo que se pidió", E.fmtBase(P(x.p), x.q) + " de " + E.nf(P(x.p)), l); prepararReceta(x.l, x, via, frase); return; }
+    }
+    if (cantPend[l]) {
+      const esOrden = R.listo && R.intent && !["si", "no", "desconocido", "vacio"].includes(R.intent);
+      if (!esOrden) { responderCantidad(l, frase, via); return; }
+      cantPend[l] = null;
+    }
     if (respons[l]) {
       const esOrden = R.listo && R.intent && !["si", "no", "desconocido", "vacio"].includes(R.intent);
       if (!esOrden && deshacerRapido(l, frase, via)) return;
@@ -6868,18 +6998,19 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
       return { dice: Rex.ultimaFrase || "Dime, te escucho.", sigue: true, repite: true };
     return null;
   }
-  function preguntaEn(l) { return !!((pend[l] && !pend[l].bloqueo && !pend[l].soloInfo) || (charla && charla.l === l && trCharla()) || respons[l] || motivo[l]); }
+  function preguntaEn(l) { return !!((pend[l] && !pend[l].bloqueo && !pend[l].soloInfo) || (charla && charla.l === l && trCharla()) || respons[l] || motivo[l] || cantPend[l]); }
   // el lugar con la pregunta más reciente (sin contar «excepto»)
   function lugarConPregunta(excepto) {
     let mejor = null, t = -1;
     LUGS.forEach(l => {
       if (l === excepto || !preguntaEn(l)) return;
-      const tl = Math.max(pend[l] && pend[l].tPend || 0, respons[l] ? respons[l].t : 0, motivo[l] ? motivo[l].t : 0, charla && charla.l === l ? (charla.t || 1) : 0);
+      const tl = Math.max(pend[l] && pend[l].tPend || 0, respons[l] ? respons[l].t : 0, motivo[l] ? motivo[l].t : 0, cantPend[l] ? cantPend[l].t : 0, charla && charla.l === l ? (charla.t || 1) : 0);
       if (tl > t) { t = tl; mejor = l; }
     });
     return mejor;
   }
   function preguntaTexto(l) {
+    if (cantPend[l]) return cantPend[l].pregunta;
     if (respons[l]) return respons[l].pregunta;
     if (motivo[l]) return "¿Por qué no se movió?";
     const p = pend[l]; if (p && !p.bloqueo && !p.soloInfo) return (p.tipo === "traslado" ? (p.pedido ? "¿Despacho? " : "¿Muevo? ") : p.tipo === "pedido" ? "¿Envío el pedido? " : "¿Confirmas? ") + (p.resumen || "");
@@ -6995,13 +7126,16 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
   // con ruido (radio, música, eco) el reconocimiento duda: si no estaba seguro, se pregunta «¿sí o no?» en vez de registrar al instante
   const confBaja = R => { const c = R && R.srConf; return c > 0 && c < (st.config.ambienteRuidoso ? 0.85 : 0.6); };
   function mostrarPlan(l, plan, frase, via, extra) {
+    if (plan.pideCantidad) { preguntarCantidad(plan.pideCantidad.l || l, plan.pideCantidad, frase, via); return; }   // la pregunta va al lugar donde se prepara (producción)
+    cantPend[l] = null;
     plan.tPend = Date.now();
     if (plan.bloqueo && !plan.sinStock && !plan.comprar && !plan.pedirFalta && !plan.requierePin && !(extra && extra.ia) && intentarIA(l, frase, via, "orden")) return;
     if (extra && extra.traducida) plan.traducida = extra.traducida;
     plan.frase = frase; plan.via = via; plan.ctxExtra = extra || null;
     pend[l] = plan; hoja[l] = null; resultado[l] = null; motivo[l] = null;
     renderDisp(l);
-    const rapido = st.config.modoRapido !== false && !st.config.ambienteRuidoso && !confBaja(plan.R) && via === "voz" && !plan.bloqueo && !plan.soloInfo && !plan.ajustado && !plan.previo && !plan.requierePin && !plan.sinControl &&
+    // «directo»: lo pidió con su cantidad (crema para producción) o tocó «pedir lo que falta»: se registra sin otra pregunta
+    const rapido = st.config.modoRapido !== false && !st.config.ambienteRuidoso && !confBaja(plan.R) && (via === "voz" || (plan.directo && via === "toque")) && !plan.bloqueo && !plan.soloInfo && !plan.ajustado && (!plan.previo || plan.directo) && !plan.requierePin && !plan.sinControl &&
       plan.R && plan.R.conf >= 0.9 && !(plan.R.issues || []).length && !plan.avisos.some(a => a.confirmar !== false) && ["traslado", "pedido", "merma", "compra", "produccion"].includes(plan.tipo) &&
       !(plan.items || []).some(i => i.propuesto) && !(plan.opciones && plan.opciones.length) && !(plan.faltaElegir && plan.faltaElegir.length) && !(extra && extra.traducida) && !plan.anuncio;
     if (!plan.bloqueo) Rex.fallos = 0;
@@ -7059,6 +7193,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     if (ok && plan.items && plan.items[0] && plan.items[0].p) { const pl = plan.tipo === "traslado" ? plan.de : plan.lugar || l; [v3op, v3].forEach(x => { try { if (x && x.destacar) x.destacar(plan.items[0].p, pl); } catch (e) {} }); }
     if (pideResp && plan.rapido && respons[l]) respons[l].rapido = true;
     if (pideResp) hablar("Listo. " + (dicho && dicho.length <= 90 ? dicho + ". " : "") + "¿Quién es el responsable?" + (plan.rapido ? "" : ""), () => escucharResponsable(l));
+    else if (ok && r.autoResp) hablar("Listo." + (dicho && dicho.length <= 110 ? " " + dicho + "." : "") + " A nombre de " + r.autoResp + ".");
     else hablar(ok ? "Movimiento correcto." + (dicho && dicho.length <= 130 ? " " + dicho + "." : "") : "No se registró. " + dicho);
     if (!ok) return;
     // avisos en voz alta para los otros lugares
@@ -7106,6 +7241,10 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
   /* El que mandó se entera de cómo llegó */
   function anunciarRecepcion(tr) {
     if (!tr || tr.de === tr.a || !LUG[tr.de]) return;
+    // llegaron los insumos de una receta a donde se prepara: queda «por preparar» (un toque o «ya está la crema» la registra y descuenta los insumos)
+    { const rc = A.recetaDe(tr.items); if (rc && P(rc.p) && (P(rc.p).hecho || "P") === tr.a && !(st.porPreparar || []).some(x => x.id === tr.id)) {
+      (st.porPreparar = st.porPreparar || []).push({ id: tr.id, p: rc.p, q: rc.q, l: tr.a, t: Date.now() }); guardar(); renderDisp(tr.a);
+      toast("Llegaron " + A.txtReceta(st, rc) + ". Cuando esté lista, toca «Ya está» o di «ya está la " + E.nf(P(rc.p)).split(" ")[0] + "»."); } }
     const rec = tr.recibido || {};
     const falta = tr.items.filter(it => rec[it.p] != null && rec[it.p] + 0.0005 < it.q).map(it => E.fmtComo(P(it.p), E.r3(it.q - rec[it.p]), it.emp) + " de " + E.nf(P(it.p)));
     const txt = tr.estado === "diferencia" ? E.CAP(LUG[tr.a].art) + " recibió distinto" + (falta.length ? ": faltan " + E.lista(falta) : "") + "." + (tr.observacion ? " Novedad: " + tr.observacion + "." : " Revisen juntos.")
@@ -7246,8 +7385,9 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     const plan = pend[l], habia = !!plan && !plan.soloInfo && !plan.bloqueo;
     if (habia && !callado) aprenderDe(l, "no");
     pend[l] = null;
-    if (habia && !callado && TIPOS_MOTIVO.includes(plan.tipo)) { pedirMotivo(l, plan, via || plan.via); return; }
-    renderDisp(l); if (habia && !callado) hablar("Cancelado. No se registró nada.");
+    // «¿Por qué?» solo cuando se deja sin atender el pedido de otro lugar (a ese lugar se le avisa el motivo). Si dijo «no» a lo que él mismo pidió, no se pregunta nada.
+    if (habia && !callado && TIPOS_MOTIVO.includes(plan.tipo) && (plan.despacho || plan.pedido || plan.anuncio || plan.paraPedido)) { pedirMotivo(l, plan, via || plan.via); return; }
+    renderDisp(l); if (habia && !callado) hablar("Bueno, no se registró nada.");
   }
 
   /* «Lo mismo de durazno», «y también tres de leche», «otro igual», «uno más»: se completan con la orden anterior (hasta 2 min antes) */
@@ -7752,7 +7892,10 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
 
     setInterval(() => { if (st && st.config && st.config.reconocerLocal === true && !Local.estado && !Local.ocupado) Local.revisar().then(() => { if (Local.activo()) api.reabrir(); }); }, 2000);
     // ----- la voz del asistente no se toma como respuesta -----
-    const palabras = x => (V.normalizar ? V.normalizar(x) : String(x || "").toLowerCase()).replace(/[^a-z0-9ñ ]/g, " ").split(/\s+/).filter(w => w.length > 2);
+    // Rex dice «cuatro kilos» y el dictado de Chrome escribe «4 kilos»: para comparar, los números van en cifras
+    const NUM_PAL = { uno: "1", una: "1", dos: "2", tres: "3", cuatro: "4", cinco: "5", seis: "6", siete: "7", ocho: "8", nueve: "9", diez: "10", once: "11", doce: "12", quince: "15", veinte: "20", treinta: "30", cien: "100" };
+    const enCifra = w => NUM_PAL[w] || w;
+    const palabras = x => (V.normalizar ? V.normalizar(x) : String(x || "").toLowerCase()).replace(/[^a-z0-9ñ ]/g, " ").split(/\s+/).map(enCifra).filter(w => w.length > 2 || /^\d+$/.test(w));
     function esEco(txt) {
       if (mudoTxt != null) return true;                 // está hablando: lo que entra es su voz (o se pisa con ella)
       if (Date.now() > mudoFin) return false;
@@ -7764,7 +7907,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     let ultimoDicho = "";
 
     // ----- hablar ENCIMA de Rex: una persona contesta sin esperar a que termine la pregunta -----
-    const tokNorm = x => (V.normalizar ? V.normalizar(x) : String(x || "").toLowerCase()).replace(/[^a-z0-9ñ]/g, "");
+    const tokNorm = x => enCifra((V.normalizar ? V.normalizar(x) : String(x || "").toLowerCase()).replace(/[^a-z0-9ñ]/g, ""));
     const claveTxt = x => String(x || "").trim().split(/\s+/).map(tokNorm).filter(Boolean);
     let ultAtendido = null;   // { t, txt }: lo último que ya se contestó (el navegador cierra la misma frase un poco después)
     const mismaFrase = (a, b) => { const x = claveTxt(a), y = claveTxt(b); return !!(x.length && y.length && x[0] === y[0]); };
@@ -7772,7 +7915,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     const dichosRex = [];   // lo último que dijo Rex (su eco puede llegar después de que empiece a decir otra cosa)
     /* Las frases cortas con las que Rex saluda o se despide («Dime.», «Te escucho.», «De nada.»): si el micrófono las oye de vuelta (su propio parlante), no son una orden ni un nombre.
        Solo cuenta si Rex las acaba de decir; «sí», «listo», «perfecto» no están aquí porque tú también los dices. */
-    const ECO_CORTAS = new Set(["dime", "te escucho", "aqui estoy", "si dime", "aqui estoy dime", "de nada", "con gusto", "a la orden", "hasta luego", "aqui estoy cuando me necesites"]);
+    const ECO_CORTAS = new Set(["dime", "te escucho", "aqui estoy", "si dime", "aqui estoy dime", "de nada", "con gusto", "a la orden", "hasta luego", "aqui estoy cuando me necesites", "el nombre", "cual es el nombre", "quien lo recibio", "quien es el responsable", "cuantos kilos", "como se llama"]);
     const ecoCorto = txt => { const k = claveTxt(txt).join(" "); if (!k || !ECO_CORTAS.has(k)) return false; const RR = " " + claveTxt((mudoTxt != null ? mudoTxt + " " : "") + recienteRex()).join(" ") + " "; return RR.includes(" " + k + " "); };
     const recienteRex = () => { const t = Date.now(); return dichosRex.filter(d => !d.fin || t - d.fin < 3500).map(d => d.txt).join(" "); };   // solo lo que dice o acaba de decir: si lo repites 5 s después, eres tú
     /* Posiciones de w (palabras) que repiten 4 o más palabras seguidas de lo que dijo Rex: es su eco, no tú.
@@ -7780,11 +7923,15 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     function ecoLargo(w, k, desde) {
       const RR = claveTxt((mudoTxt != null ? mudoTxt + " " : "") + recienteRex());
       const idx = []; k.forEach((x, n) => { if (n >= desde && x) idx.push(n); });
-      const eco = new Set();
+      const eco = new Set(), trozos = new Set();
       for (let t = 0; t < idx.length;) {
         let m = 0; for (let q = 0; q < RR.length; q++) { let c = 0; while (t + c < idx.length && q + c < RR.length && k[idx[t + c]] === RR[q + c]) c++; if (c > m) m = c; }
-        if (m >= 4) { for (let d = 0; d < m; d++) eco.add(idx[t + d]); t += m; } else t++;
+        if (m >= 4) { for (let d = 0; d < m; d++) eco.add(idx[t + d]); t += m; }
+        else if (m >= 3) { for (let d = 0; d < m; d++) trozos.add(idx[t + d]); t += m; }
+        else t++;
       }
+      // «listo 4 kilos quién lo recibió»: el final de una frase de Rex pegado al comienzo de la siguiente (trozos de 3) también es su eco
+      if (idx.length >= 5 && eco.size + trozos.size >= idx.length * 0.8) trozos.forEach(n => eco.add(n));
       return eco;
     }
     const limpiaPuntos = x => x.replace(/^[,.:;¿?¡!\s]+/, "").replace(/\s+[¿?¡!,.;:]+(?=\s|$)/g, "");
@@ -7899,6 +8046,10 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
       let l = l0;   // el lugar de la pregunta que se está atendiendo (cambia sin cerrar el micrófono)
       const r = new SR(); r.lang = idiomas[idioma]; r.interimResults = true; r.maxAlternatives = 5; r.continuous = true;
       if (Local.activo()) { r.lang = Local.lang; try { r.processLocally = true; r._local = true; } catch (e) {} }
+      // reconocimiento en el equipo: se le dan las palabras que tiene que oír bien («Rex», los nombres del equipo, los productos). Idea de Codex.
+      if (r._local && "phrases" in r && typeof window.SpeechRecognitionPhrase === "function" && st.config.sesgoVoz !== false) {
+        try { const fr = Array.from(new Set(["Rex", "oye Rex", "Fruti Reex"].concat(personasDet().map(x => x.nombre), st.cat.orden.map(id => P(id).n)))).slice(0, 80); r.phrases = fr.map(x => new window.SpeechRecognitionPhrase(x, 3)); r._sesgo = true; } catch (e) {}
+      }
       r.onaudiostart = () => { diag.tAudio = Date.now(); dev("el micrófono empezó a captar"); };
       r.onsoundstart = () => { diag.tSonido = Date.now(); };
       r.onspeechstart = () => { diag.tVoz = Date.now(); Rex.voz = Date.now(); };
@@ -8357,6 +8508,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
       };
 
       r.onerror = ev => {
+        if (ev.error === "phrases-not-supported" && r._sesgo) { st.config.sesgoVoz = false; guardar(); dev("este navegador no acepta la lista de palabras: sigue sin ella"); return; }
         diag.errores[ev.error] = (diag.errores[ev.error] || 0) + 1; dev("error del dictado: " + ev.error);
         if (r._local && /^(language-not-supported|service-not-allowed|bad-grammar)$/.test(ev.error)) { Local.fallo(ev.error); return; }
         if (ev.error === "language-not-supported" && idioma < idiomas.length - 1) { idioma++; return; }
@@ -8429,6 +8581,18 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     const api = {
       disponible: !!SR,
       local: Local,
+      /* ¿esto es lo que Rex acaba de decir (por su parlante)? Lo que se oye mientras habla o hasta 8 s después, si casi todas sus palabras son de Rex */
+      pareceEco(txt) {
+        const t = Date.now(), dicho = dichosRex.filter(d => !d.fin || t - d.fin < 8000).map(d => d.txt).join(" ") + " " + (mudoTxt || "");
+        const a = palabras(txt);
+        if (a.length < 3) {
+          // corto: una frase de Rex («quién lo recibió», «recepción confirmada») tal cual, dicha por él hace poco. Una sola palabra solo si es de las suyas («dime»)
+          const kk = claveTxt(txt), k = kk.join(" ");
+          return !!k && (kk.length >= 2 || ECO_CORTAS.has(k)) && (" " + claveTxt(dicho).join(" ") + " ").includes(" " + k + " ");
+        }
+        const b = new Set(palabras(dicho));
+        return a.filter(w => b.has(w)).length / a.length >= 0.7;
+      },
       // cierra la escucha de manos libres y la abre de nuevo (para estrenar un ajuste); no hace nada si en este momento se está hablando con Rex
       reabrir() {
         if (!manos || !abierto || !rec || modo !== "vigilia" || Rex.sesion || mudoTxt != null || pendientesDeVoz()) return false;
@@ -8944,6 +9108,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
       '<label><input type="checkbox" data-cfg="avisosVoz"' + (c.avisosVoz !== false ? " checked" : "") + "> Avisar en voz alta en cada lugar (pedidos, envíos que vienen y cómo llegaron)</label>" +
       '<label><input type="checkbox" data-cfg="modoRapido"' + (c.modoRapido !== false ? " checked" : "") + "> Modo rápido: una orden clara dicha por voz se registra al instante (sin «¿sí o no?»); si se dice «no» o «cancela» enseguida, se deshace</label>" +
       '<label><input type="checkbox" data-cfg="preguntarResponsable"' + (c.preguntarResponsable !== false ? " checked" : "") + "> Después de cada movimiento, preguntar «¿Quién es el responsable?» (el nombre queda en Movimientos y en el Excel)</label>" +
+      '<label><input type="checkbox" data-cfg="repetirResponsable"' + (c.repetirResponsable !== false ? " checked" : "") + "> Repetir el responsable: si en ese lugar ya se dijo un nombre hace menos de 15 min, no se vuelve a preguntar (se cambia con «Otro responsable»)</label>" +
       '<label><input type="checkbox" data-cfg="leerPregunta"' + (c.leerPregunta ? " checked" : "") + "> Leer la pregunta completa antes de escuchar</label></div>";
     h += '<p class="diag-r">Versión de esta página: <b>' + esc(BUILD.id) + "</b> · armada el " + esc(BUILD.fecha) + ' <button class="b peq" data-version-ver>¿Hay una más nueva?</button></p>';
     h += '<h4>El cerebro de Rex</h4><p class="sub">Rex junta lo que aprende todo el equipo: cada semana toca «Exportar lo que aprendió Rex» en cada equipo y sube el archivo a la carpeta <b>rex/aprendizaje</b> del repositorio. El repositorio lo suma solo al cerebro y todos los equipos lo leen al abrir la página.</p>' +
@@ -9321,6 +9486,11 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     if (t.hasAttribute("data-ia-quitar")) { try { localStorage.removeItem(CLAVE + "-ia-clave"); } catch (e) {} toast("Clave quitada de este navegador."); return renderCatalogo(); }
     if (t.hasAttribute("data-ia-probar")) { const e = $("#iaEstado"); if (e) e.textContent = "Probando…"; preguntarIA("B", "dale nomás").then(r => { if (e) e.textContent = "Funciona: entendió «dale nomás» como " + (r.tipo || "?") + "."; }).catch(err => { if (e) e.textContent = "No funcionó: " + (err.message || err); }); return; }
     if (t.dataset.olvidarIa) { if (st.reescritas) { delete st.reescritas[t.dataset.olvidarIa]; guardar(); } return renderCatalogo(); }
+    if (t.dataset.cant) { Oido.soltar(l); return responderCantidad(l, t.dataset.cant + " kilos", "toque"); }
+    if (t.dataset.prepararRec) { const x = (st.porPreparar || []).find(y => y.id === t.dataset.prepararRec); if (!x) return; return prepararReceta(x.l, x, "toque"); }
+    if (t.dataset.prepararQuitar) { st.porPreparar = (st.porPreparar || []).filter(y => y.id !== t.dataset.prepararQuitar); guardar(); return renderDisp(l); }
+    if (t.hasAttribute("data-cant-saltar")) { Oido.soltar(l); cantPend[l] = null; return renderDisp(l); }
+    if (t.hasAttribute("data-cambiar-resp")) { const ra = resultado[l] && resultado[l].respAuto; if (!ra) return; resultado[l].respAuto = null; respUltT[l] = 0; respons[l] = { movs: ra.movs, peds: ra.peds, trs: ra.trs, t: Date.now(), resumen: ra.resumen, pregunta: "¿Quién es el responsable?" }; renderTarjeta(l); renderFranja(l); return escucharResponsable(l); }
     if (t.dataset.resp) { Oido.soltar(l); return asignarResponsable(l, t.dataset.resp, "toque"); }
     if (t.hasAttribute("data-resp-saltar")) { Oido.soltar(l); respons[l] = null; return renderDisp(l); }
     if (t.hasAttribute("data-corregir")) { const inp = $('.disp[data-l="' + l + '"] [data-orden] input'); inp.value = pend[l] && pend[l].frase || ""; cancelar(l, true); inp.focus(); return; }
@@ -9429,6 +9599,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     }
     if (t.hasAttribute("data-pedir-falta")) {
       const plan = pend[l]; if (!plan || !plan.pedirFalta) return;
+      if (plan.prep && plan.tipo === "produccion") { const pl2 = A.pedirLoQueFalta(st, plan, l, ""); return mostrarPlan(l, pl2, "pedir lo que falta para " + E.nf(P(plan.prep)), "toque"); }
       const items = plan.pedirFalta.map(x => { const pr = P(x.p), e = (pr.e || [])[0]; return { p: x.p, q: e && e[1] >= 1 ? Math.ceil(x.q / e[1] - 1e-9) * e[1] : x.q }; });
       return procesar(l, { crudo: "", intent: "pedido", lugar: l, de: l, a: origenDe(items[0].p, l), aAuto: true, items, issues: [], conf: 1, listo: true }, "pedir lo que falta: " + E.itemsTexto(st, items), "toque");
     }
@@ -9490,6 +9661,8 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
       seguirCharla(txt, "texto");
       return;
     }
+    const fc = ev.target.closest("[data-cant-f]");
+    if (fc) { ev.preventDefault(); const l = lugarDe(fc), txt = fc.querySelector("input").value.trim(); if (txt && cantPend[l]) { Oido.soltar(l); responderCantidad(l, /[a-z]/i.test(txt) ? txt : txt + " kilos", "toque"); } return; }
     const fr = ev.target.closest("[data-resp-f]");
     if (fr) { ev.preventDefault(); const l = lugarDe(fr), txt = fr.querySelector("input").value.trim(); if (txt && respons[l]) { Oido.soltar(l); const n = nombreDe(txt, l) || txt.split(/\s+/).slice(0, 2).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" "); asignarResponsable(l, n, "texto"); } return; }
     const fm = ev.target.closest("[data-motivo-f]");
