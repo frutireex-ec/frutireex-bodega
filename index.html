@@ -1599,7 +1599,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     ["recepcion", /\b(recibido|recibi(do|mos)?|ya llego|llego todo|todo llego|si llego|confirmo (que )?llego|llegaron bien|ya llegaron)\b/],
     ["entrada", /\b(llegaron|llego|compre|compramos|ingres(ar|a|o|amos|en|aron|e|ado|ados|ada|adas|ando)|entrada|entraron|nos trajeron|me trajeron|trajeron|trajo|trajo el proveedor|del proveedor|recibimos del proveedor)\b/],
     ["agotado", /\b(se acabo|se acabaron|se termino|se terminaron|ya no hay|ya no queda|ya no quedan|no hay|no queda|no quedan|nos quedamos sin|me quede sin|nos quedemos sin|estamos sin|quedamos sin|agotad[oa]s?|se agoto|se agotaron)\b/],
-    ["pedido", /\b(pedir|pidiendo|pide|pido|pidan|pidamos|pidele|pidanle|pideles|pidales|pidale|pidiendole|pedirle|pedirles|pidamosle|solicit(ar|a|o|amos|en|ale|ales|arle)|requiero|requerimos|se requiere|necesito|necesitamos|necesitan|necesitaria|necesitariamos|ocupo|ocupamos|nos falta|nos faltan|me falta|me faltan|hace falta|hacen falta|falta|faltan|se necesita|traigan|trae(r)?|traeme|traime|traigame|traiganme|traenos|traiganos|mandenme|mandame|mandeme|mandanos|mandenos|manden mas|envienme|enviame|envianos|envienos|pasame|pasenme|pasanos|(me|nos) (mandas|mandan|mandes|manden|mande|pasas|pasan|pases|pasen|pase|traes|traen|traigas|traigan|traiga|envias|envian|envies|envien|envie)|ha(z|ga|gan|cer|game|ganme)(le|les|lo| le| les)? (un |el |otro )?pedido|queria pedir|quiero pedir)\b/],
+    ["pedido", /\b(pedir|pidiendo|pide|pido|pidan|pidamos|pidele|pidanle|pideles|pidales|pidale|pidiendole|pedirle|pedirles|pidamosle|solicit(ar|a|o|amos|en|ale|ales|arle)|requiero|requerimos|se requiere|necesito|necesitamos|necesitan|necesitaria|necesitariamos|ocupo|ocupamos|nos falta|nos faltan|me falta|me faltan|hace falta|hacen falta|falta|faltan|se necesita|traigan|trae(r)?|traeme|traime|traigame|traiganme|traenos|traiganos|mandenme|mandame|mandeme|mandanos|mandenos|manden mas|envienme|enviame|envianos|envienos|pasame|pasenme|pasanos|(me|nos) (mandas|mandan|mandes|manden|mande|pasas|pasan|pases|pasen|pase|traes|traen|traigas|traigan|traiga|envias|envian|envies|envien|envie)|ha(z|ga|gan|cer|game|ganme|zme|zle|zles|ceme|cerme|cele|gamos|gale)(le|les|lo| le| les| me)? (un |el |otro |nuevo |una )?(pedido|solicitud)|(un |nuevo |otro )?pedido de(?= (un|una|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|medio|media|\d))|queria pedir|quiero pedir|quisiera pedir|me (mandas|mandan|mande|manden|envias|envie|envien|traes|traiga|traigan|pasas|pase|pasen|das|de|den))\b/],
     ["venta", /\b(vend(i|imos|ieron|io)|venta( de)?|registr(ar|a|e|o|ame|emos|en)(?= (?:, )?(?:[a-z0-9]+ ){0,2}?(venta|vaso|vasos|reex|reexs|reexes|split|splits|mix|mixs|mixes|exotica|exoticas|tropical|tropicals|tropicales|chill|chills|reexita|reexitas|godzilla|godzillas)\b)|se vendio|se vendieron|cobre|despache un|salio un|salio una|salieron)\b/],
     ["traslado", /\b(poner|pon|pone|ponga|pongan|ponle|ponles|ponlo|ponla|ponlos|ponlas|quitar|quita|quite|quito|quitamos|quitale|quiten|kitar|kita|kite|sacar|saca|saque|sacamos|sacale|saquen|llevar|lleva|lleve|llevo|llevamos|llevate|llevale|llevales|lleven|mandar|manda|mande|mando|mandamos|mandale|mandales|mandarle|enviar|envia|envie|envio|enviamos|enviale|envialo|pasar|pasa|pase|paso|pasamos|pasale|pasales|pasalo|va|van|vaya|vayan|quitando|sacando|llevando|mandando|enviando|pasando|despachando|devolviendo|regresando|despachar|despacha|despache|despacho|despachamos|bajar|baja|baje|subir|sube|subi|devolver|devuelve|devuelvo|devolvi|devolvemos|regresar|regresa|regreso|regrese|regresamos|retirar|retira|retire|mover|mueve|mueveme|muevanme|muevelo|muevela|muevelos|muevelas|muevan|muevo|movi|movemos|movamos|trasladar|traslada|traslade|salida|sale|salen|salio|salieron)\b/],
     ["conteo", /\b(hay|quedan|queda|tenemos|tengo|conte|contamos|cuento|contar|contado|contando|conteo|existen)\b/]
@@ -1661,16 +1661,20 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     "seguro", "despacha", "despachalo", "despachala", "completo", "completa", "acepto", "aceptado", "aprobado", "apruebo", "autorizado", "autorizo", "justo", "buenisimo", "buenazo", "lujo", "correctisimo", "perfectamente", "dokey", "andale", "mandale", "muevan", "registren", "envien", "procedé",
     "hagamoslo", "hagamos", "vamos", "vamonos", "venga", "obvio", "efectivamente", "verdad", "cierto", "sisi", "sisisi", "genial", "excelente", "super", "bacan", "chevere", "positivo", "okidoki", "okk", "okey", "dalee", "daleee", "ajá", "exactamente", "mueve", "muevalo", "despachen", "envie", "mandelo", "llevelo", "obviamente", "totalmente", "definitivamente", "absolutamente", "procedelo", "procedalo", "procedan", "mhm", "mjm", "uhum", "uju", "ujum", "favor", "porfa", "porfis", "porfavor", "hecho", "sipi", "sipis", "claroo", "claroque", "okeyy", "daleq"]);
   const NO_INI = new Set(["no", "nop", "nel", "negativo", "cancela", "cancelar", "cancelo", "cancelalo", "olvidalo", "olvida", "para", "espera", "nada", "tampoco", "incompleto", "falta", "faltan", "falto", "faltaron", "xnox",
-    "dejalo", "dejala", "deja", "detente", "rechazado", "rechazo", "rechaza", "falso", "mentira", "imposible", "equivocaste", "incorrecta", "mal", "alto", "stop", "anula", "anulalo", "borra", "borralo", "ninguno", "ninguna", "nunca", "jamas", "error", "incorrecto", "equivocado", "equivocada", "nones", "nanay", "despues", "luego", "noo", "nooo", "nop", "nopi", "nain"]);
+    "dejalo", "dejala", "deja", "detente", "rechazado", "rechazo", "rechaza", "falso", "mentira", "imposible", "equivocaste", "incorrecta", "mal", "alto", "stop", "anula", "anulalo", "anulala", "borra", "borralo", "cancelarlo", "cancelala", "cancelalos", "cancelado", "cancelemos", "anular", "anulemos", "ninguno", "ninguna", "nunca", "jamas", "error", "incorrecto", "equivocado", "equivocada", "nones", "nanay", "despues", "luego", "noo", "nooo", "nop", "nopi", "nain"]);
   const NOV_INI = new Set(["novedad", "novedades", "observacion", "observaciones", "problema", "problemas", "defecto", "inconveniente", "detalle", "xnovx"]);
-  const RELLENO_RESP = new Set(["obviamente", "totalmente", "definitivamente", "absolutamente", "senor", "senora", "jefe", "pana", "bro", "mano", "loco", "pues", "che", "ve", "oye", "rex", "gracias", "por", "favor", "porfa", "porfis", "porfavor", "nomas", "mas",
+  // (31-oct, video 1420: «sí, correcto, envíala» se tomaba como duda y Rex repetía la pregunta tres veces)
+  const CONFIRMA_RESTO = ["correcto", "correcta", "exacto", "exacta", "enviala", "envialo", "envialas", "envialos", "enviado", "enviada", "envia", "envie", "mandala", "mandalo", "manda", "llevala", "llevalo", "lleva",
+    "muevela", "muevelo", "mueve", "pasala", "pasalo", "registralo", "registrala", "registra", "hazlo", "hagalo", "hagale", "dale", "confirmado", "confirmo", "listo", "perfecto", "asi", "eso", "esa", "ese", "es", "esta", "bien", "todo", "nomas",
+    "el", "la", "lo", "los", "las", "movimiento", "orden", "ya", "va", "vale", "claro", "de", "una"];
+  const RELLENO_RESP = new Set(CONFIRMA_RESTO.concat(["cancelarlo", "cancelalo", "cancelala", "cancelado", "anulalo", "anulala", "olvidalo", "dejalo", "obviamente", "totalmente", "definitivamente", "absolutamente", "senor", "senora", "jefe", "pana", "bro", "mano", "loco", "pues", "che", "ve", "oye", "rex", "gracias", "por", "favor", "porfa", "porfis", "porfavor", "nomas", "mas",
     "ya", "todo", "bien", "completo", "llego", "llegaron", "mismo", "asi", "que", "de", "una", "un", "eso", "es", "esta", "ahi", "va", "claro", "listo", "dale", "ok", "si", "no", "aja",
     "mover", "moverlo", "moverla", "moverlos", "muevelo", "muevela", "mueve", "movelo", "envia", "envialo", "enviar", "manda", "mandalo", "mandar", "registra", "registralo", "registrala", "registrar", "anota", "anotalo", "hazlo", "hagale", "pasa", "pasalo", "adelante", "senor", "perfecto", "correcto", "gracias",
     "lleva", "llevalo", "confirmo", "confirma", "ahora", "nada", "cancela", "cancelar", "mejor", "todavia", "aun", "tampoco", "espera", "dejalo", "deja", "el", "la", "lo", "le", "hay", "existe", "una", "tengo",
     "xsix", "xnox", "xnovx", "muevan", "despacha", "despachalo", "procede", "mandale", "quiero", "quieres", "recibido", "seguro", "esto", "nomás",
     "verdad", "cierto", "exacto", "obvio", "hagamoslo", "hagamos", "vamos", "vamonos", "venga", "nomas", "pues", "ahorita", "rapido", "rapidito", "entonces", "tranquilo", "chevere", "bacan", "genial", "excelente", "super", "bueno", "ese", "esa", "efectivamente",
     "confirmado", "confirmo", "confirmada", "creo", "vez", "dokey", "lujo", "razon", "tienes", "justo", "acuerdo", "rexito", "jarvis", "asistente", "senorita", "jefa", "patron", "mismo", "nomasito", "porfis",
-    "pedir", "pidelo", "pidela", "pide", "pidan", "despachar", "preparar", "preparalo", "preparala", "prepara", "recibir", "recibelo", "guardar", "guardalo", "comprar", "compralo", "llevar", "hacer", "confirmar", "enviarlo", "mandarlo", "mueva", "muevalo", "mandelo", "envie", "envien", "despachen", "despachala", "llevelo", "pasele", "anotelo", "registrelo", "hecho", "listo", "venga", "vale", "okey", "okay", "sale", "andale", "porfavor", "mi", "amigo", "amiga", "hermano", "compa", "nano", "ñaño", "mija", "mijo", "tio", "tia", "amiguito", "amiguita", "hermanito", "hermana", "broder", "brother", "socio", "panita", "manito", "querido", "querida", "crack", "parcero", "causa", "maestro", "master", "compadre", "jefecito", "viejo", "gracias", "please", "plis"]);
+    "pedir", "pidelo", "pidela", "pide", "pidan", "despachar", "preparar", "preparalo", "preparala", "prepara", "recibir", "recibelo", "guardar", "guardalo", "comprar", "compralo", "llevar", "hacer", "confirmar", "enviarlo", "mandarlo", "mueva", "muevalo", "mandelo", "envie", "envien", "despachen", "despachala", "llevelo", "pasele", "anotelo", "registrelo", "hecho", "listo", "venga", "vale", "okey", "okay", "sale", "andale", "porfavor", "mi", "amigo", "amiga", "hermano", "compa", "nano", "ñaño", "mija", "mijo", "tio", "tia", "amiguito", "amiguita", "hermanito", "hermana", "broder", "brother", "socio", "panita", "manito", "querido", "querida", "crack", "parcero", "causa", "maestro", "master", "compadre", "jefecito", "viejo", "gracias", "please", "plis"]));
   /* Frases que el equipo usa y que se aprendieron en el uso (cuando dijo algo y después tocó «Sí» o «No»). */
   let APRENDIDO = { si: new Set(), no: new Set() };
   const claveFrase = x => normalizar(x).replace(/[,.]/g, " ").replace(/\s+/g, " ").trim();
@@ -1706,6 +1710,8 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     t = t.replace(/^((oye|hey|ey|ok|okey|hola|ya)\s+)?(rexito|rexy|rex|reex|reks|recs|frutirex|frutireex|jarvis|yarvis|asistente)\b\s*/, "").trim();
     // «creo que sí», «creería que no», «parece que sí», «me parece que no», «yo diría que sí»
     t = t.replace(/^(yo\s+)?(creo|creeria|pienso|supongo|diria|me parece|parece|segun yo|seguro)\s+que\s+/, "").trim();
+    // «o cancelar, cancelarlo», «y no», «mejor cancela»: la conjunción del comienzo no cuenta (video 1419)
+    t = t.replace(/^(o|u|y|e|pues|entonces|mejor)\s+(?=(no|nop|cancel\w*|anul\w*|olvidalo|dejalo|si|sip|dale|listo)\b)/, "").trim();
     if (!t) return null;
     if (!(opc && opc.sinAprendido)) {
       if (APRENDIDO.si.has(t)) return { r: "si", resto: "", limpio: true, aprendido: true };
@@ -1829,6 +1835,10 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     const reA = /\b(a|al|para|para el|para la|hacia|hacia el|hacia la|pa|pal|a la|a el|en el|en la|en)\s+(la |el )?(bodega|local|tienda|puesto|produccion|planta|cocina)\b/g;
     const reEn = /\b(en)\s+(la |el )?(bodega|local|produccion)\b/g;
     let deX = null, aX = null, enX = null, paraX = null, aSolo = null;   // paraX: «para producción» (para quién es); aSolo: «a la bodega» (a quién se le pide)
+    // a quién se le habla al pedir: «producción, mándame…», «que la bodega me mande…», «bodega, envíanos…» (31-oct, pedidos en todos los sentidos)
+    let vocX = null;
+    { const mv = t.match(/^(?:oye |rex |por favor )*(?:que )?(?:la |el )?(bodega|produccion|local)\b[\s,.:;]+(?:(?:por favor|porfa)[\s,]+)?(?:me |nos )?(mandame|mandanos|mandenme|enviame|envianos|envienme|traeme|traenos|traiganme|pasame|pasanos|pasenme|dame|danos|denme|despachame|mande|manden|envie|envien|traiga|traigan|pase|pasen|de|den|mandas|envias|traes|pasas|das)\b/);
+      if (mv) vocX = lugarDe(mv[1]); }
     while ((m = reDe.exec(t))) deX = lugarDe(m[3]);
     while ((m = reA.exec(t))) { if (m[1] === "en" || m[1] === "en el" || m[1] === "en la") enX = lugarDe(m[3]); else { aX = lugarDe(m[3]); if (/^(para|pa|pal)\b/.test(m[1])) paraX = aX; else aSolo = aX; } }
     while ((m = reEn.exec(t))) enX = lugarDe(m[3]);
@@ -2109,6 +2119,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
       }
     } else if (R.intent === "pedido") {
       const its = R.items.filter(x => x.p && prods[x.p]).map(x => prods[x.p]);
+      if (vocX && !deX && !aX && vocX !== (paraX || enX || L0)) aX = vocX;   // «producción, mándame…»: se le pide a producción
       R.de = paraX || enX || L0;
       // «necesito crema para producción, pídela a la bodega»: pide producción y despacha la bodega
       if (paraX && aSolo && aSolo !== paraX) aX = aSolo;
@@ -2349,6 +2360,23 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
        1) alguien de la lista nombrado en cualquier parte; 2) «se llama / me llamo / es / soy / fue + Nombre»; 3) una sola palabra con mayúscula
        (el dictado escribe los nombres con mayúscula) junto a una pista («responsable», «llama», «nombre»…) o repetida. Nunca si la frase es una orden. */
   const NO_ES_NOMBRE_MAY = new Set(["Rex", "Reex", "Jarvis", "Bodega", "Producción", "Produccion", "Local", "Sí", "Si", "No", "Ya", "Listo", "Bueno", "Claro", "Ok", "Okey", "Oye", "Hola", "El", "La", "Los", "Las", "Un", "Una", "Eso", "Esto", "Ese", "Esa", "Yo", "Él", "Ella", "Es", "Fue", "Soy", "Se", "Me", "Mi", "Lo", "Le", "Que", "Qué", "Quién", "Quien", "Como", "Cómo", "Pero", "Y", "Ahora", "Ahorita", "Dale", "Vale", "Perfecto", "Gracias", "Nada", "Nadie", "Todo", "Todos", "Responsable", "Encargado", "Encargada", "Nombre", "Hoy", "Ayer", "Mañana", "Bien", "Mira", "Entonces", "Pues", "Este", "Esta", "Aquí", "Acá", "Allá", "Tío", "Tía", "Don", "Doña", "Señor", "Señora", "Uno", "Dos", "Tres", "Lleva", "Llevó", "Manda", "Pasa", "Mueve", "Necesito", "Quiero", "Ayúdame", "Ayuda", "Llegó", "Llegaron", "Cancela", "Deshaz", "Así", "Asi", "Verdad", "Cierto", "Correcto", "Exacto", "Seguro", "Todavía", "Tampoco", "También", "Siempre", "Nunca", "Mejor", "Peor", "Rápido", "Despacio", "Dónde", "Cuándo", "Cuánto", "Por", "Para", "Con", "Sin", "De", "Del", "Al", "En"]);
+  // verbos con «lo/la» pegado («Mándalo», «Pásalo», «Envíala»): no son nombres de personas
+  const VERBO_NO_NOMBRE = /^(mand|envi|llev|pas|muev|mov|traj|trae|despach|recib|entreg|sac|hag|hac|dej|registr|anot|confirm|cancel|pon|pid|ped|prepar|guard|cuent|cont|revis|ayud|esper|escuch|dig|dim|repit|corrig)\w*(lo|la|los|las|le|les|me)$|^(mand|envi|llev|pas|muev|mov|traj|despach|recib|entreg|registr|anot|confirm|cancel|prepar)(a|o|e|i|ar|as|amos|an|aste|ado|ada|ando|en|es|io|ie|iste|ido|ida|imos)$/;
+  function nombrePartido(t, claves) {
+    const w = t.split(" "), cand = new Set();
+    for (const x of claves) {
+      if (x.k.includes(" ") || x.k.length < 5) continue;
+      const formas = [x.k].concat(/^s[^aeiou]/.test(x.k) ? ["e" + x.k] : []);
+      for (let i = 0; i < w.length; i++) for (let n = 1; n <= 3 && i + n <= w.length; n++) {
+        if (n === 1 && w[i] === x.k) continue;
+        const j = w.slice(i, i + n).join("");
+        if (j.length < 5) continue;
+        // una sola palabra: solo si es el comienzo del nombre («estal» de «estalin»); juntando palabras, también con una letra de diferencia
+        if (formas.some(f => j === f || (n >= 2 && f.length >= 6 && Math.abs(j.length - f.length) <= 1 && lev(j, f) <= 1) || (j.length >= f.length * 0.7 && f.startsWith(j) && !(n === 1 && COMUNES.has(j))))) cand.add(x.nombre);
+      }
+    }
+    return cand.size === 1 ? Array.from(cand)[0] : null;
+  }
   function nombreEnFrase(crudo, conocidos, ctx) {
     const t = normalizar(crudo).replace(/[^a-zñ ]/g, " ").replace(/\s+/g, " ").trim(); if (!t) return null;
     { const sn = siNo(crudo, { sinAprendido: true }); if (sn && sn.limpio && (sn.r === "si" || sn.r === "no")) return null; }
@@ -2358,6 +2386,9 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     const claves = []; conocidos.forEach(c => c.claves.forEach(k => { if (k && k.length >= 3) claves.push({ k, nombre: c.nombre }); }));
     claves.sort((a, b) => b.k.length - a.k.length);
     const vistos = new Set(); claves.forEach(x => { if (new RegExp("(^| )" + x.k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "( |$)").test(t)) vistos.add(x.nombre); });
+    // 1b) el dictado partió el nombre en palabras comunes: «Esteban» dicho rápido → «es te van», «esteban» partido (31-oct, video 1420:
+    //     «quién lo recibe es tal»). Se juntan 1 a 3 palabras seguidas y se comparan con cada nombre de la lista (y con «e» + nombre si empieza con s + consonante)
+    if (!vistos.size) { const pt = nombrePartido(t, claves); if (pt) vistos.add(pt); }
     if (vistos.size === 1) return { nombre: Array.from(vistos)[0], lista: [{ nombre: Array.from(vistos)[0], nuevo: false }], ultimo: false };
     if (vistos.size > 1) return null;
     // 2) «se llama Luis», «me llamo Luis», «el responsable es Luis», «fue Luis»
@@ -2373,9 +2404,11 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
       }
     }
     // 3) una palabra con mayúscula que se repite, o junto a una pista
-    const may = toks.filter(w => /^\p{Lu}\p{Ll}{2,}$/u.test(w) && okNom(w));
+    if (/\b(bodega|produccion|planta|cocina|local|tienda)\b/.test(t)) return null;   // «mándalo a producción» es una orden, no un nombre
+    const may = toks.filter(w => /^\p{Lu}\p{Ll}{2,}$/u.test(w) && okNom(w) && !VERBO_NO_NOMBRE.test(normalizar(w)));
     const distintas = Array.from(new Set(may.map(normalizar)));
-    const pista = /\b(responsable|llama|llamo|nombre|recibio|recibi|hizo|llevo|encargad[oa]|soy|fue)\b/.test(t);
+    // (31-oct, video 1420: «lo mandó de acá Luis» con el nombre todavía fuera de la lista del equipo)
+    const pista = /\b(responsable|llama|llamo|nombre|recib\w*|hizo|hice|llev\w*|encargad[oa]|soy|fue|mand\w*|envi\w*|despach\w*|traj\w*|trae|entreg\w*|movi\w*|paso|saco|aca|aqui|yo)\b/.test(t);
     if (distintas.length === 1 && (pista || may.length > 1)) { const w = cap(may[0]); return { nombre: w, lista: [{ nombre: w, nuevo: true }], ultimo: false }; }
     return null;
   }
@@ -2383,6 +2416,14 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
   function nombreResponsable(txt, conocidos, ctx) {
     EMPATE = null;
     const r = nombreResponsable0(txt, conocidos, ctx);
+    // «es tal» → nombre nuevo «Tal»; pero si juntando las palabras sale alguien de la lista («es te ban» = Esteban), es esa persona
+    if (r && !r.ultimo && (r.lista || []).length && r.lista.every(x => x.nuevo)) {
+      try {
+        const claves = []; (conocidos || []).forEach(c => (c.claves || []).forEach(k => { if (k) claves.push({ k, nombre: c.nombre }); }));
+        const pt = nombrePartido(normalizar(String(txt || "")).replace(/[^a-zñ ]/g, " ").replace(/\s+/g, " ").trim(), claves);
+        if (pt) { EMPATE = null; return { nombre: pt, lista: [{ nombre: pt, nuevo: false }], ultimo: false }; }
+      } catch (e) {}
+    }
     if (r) { EMPATE = null; return r; }
     try { const r2 = nombreEnFrase(String(txt || ""), conocidos || [], ctx || {}); if (r2) EMPATE = null; return r2; } catch (e) { return null; }
   }
@@ -2452,7 +2493,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
       // un nombre nuevo: hoy puede estar alguien que ayer no estaba
       if (pal.length > (explicito ? 3 : 2)) return null;
       if (!parte.every(x => /^[\p{L}]{2,}$/u.test(x.raw)) || pal[0].length < 3) return null;
-      if (pal.some(w => NO_NOMBRE.has(w)) || pal.some(w => /^(m+|hm+|mh+|ah+|eh+|uh+|oh+|ey+|ay+)$/.test(w))) return null;
+      if (pal.some(w => NO_NOMBRE.has(w) || VERBO_NO_NOMBRE.test(w)) || pal.some(w => /^(m+|hm+|mh+|ah+|eh+|uh+|oh+|ey+|ay+)$/.test(w))) return null;
       const R = interpretar(parte.map(x => x.raw).join(" "), { lugar: ctx.lugar || "B", cat: ctx.cat });
       if ((R.items || []).some(x => x.p) || R.listo) return null;
       res.push({ nombre: parte.map(x => x.raw.charAt(0).toUpperCase() + x.raw.slice(1).toLowerCase()).join(" "), nuevo: true });
@@ -5820,6 +5861,8 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
      el recorrido de cada producto y lo preparado que había en la bodega pasa a producción (con su huella). */
   function migrar(o) {
     E.asegurarLugares(o);
+    // 31-oct-2026: Freddy pidió que Rex hable un poco más despacio, como una persona («bajar las revoluciones»): 1,15 → 1,0 una sola vez
+    if (o.config && !o.config.vozMig1031) { if (o.config.vozVelocidad == null || +o.config.vozVelocidad >= 1.1) o.config.vozVelocidad = 1; o.config.vozMig1031 = true; }
     const base = E.catalogoBase();
     let viejo = false;
     Object.keys(base.prods).forEach(id => {
@@ -5886,7 +5929,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
   let tToast = null;
   function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("ver"); clearTimeout(tToast); tToast = setTimeout(() => t.classList.remove("ver"), 3800); }
   // Rex: el asistente (sesion/act: la ventana tipo Siri; dijo: lo último que dijo; oyendo: lo último que oyó)
-  const BUILD = { id: "d0ccfe77", fecha: "2026-10-31 16:12" };
+  const BUILD = { id: "d1651244", fecha: "2026-10-31 21:54" };
   const Rex = { lugar: "B", ultimo: null, despierto: 0, sesion: 0, act: 0, dijo: "", tDijo: 0, oyendo: "", tOyendo: 0 };
   /* La conversación con Rex (la ventana tipo Siri) se cierra sola cuando nadie dice nada durante 5 s. */
   const SESION_MS = 8000;   // 31-oct-2026: con 5 s Rex se cerraba mientras la persona pensaba («se corta de golpe»)
@@ -5954,7 +5997,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
         const u = new SpeechSynthesisUtterance(txt); u.lang = "es-EC";
         const v = vozElegida(); if (v) { try { u.voice = v; u.lang = v.lang; } catch (e) { u.lang = v.lang || "es-EC"; } }
         ultimaVoz = v ? v.name : "";
-        u.rate = Math.max(0.7, Math.min(1.6, +st.config.vozVelocidad || 1.15)); u.pitch = Math.max(0.6, Math.min(1.4, +st.config.vozTono || 1));
+        u.rate = Math.max(0.7, Math.min(1.6, +st.config.vozVelocidad || 1)); u.pitch = Math.max(0.6, Math.min(1.4, +st.config.vozTono || 1));
         return u;
       };
       let u = crear(), empezo = false, intento = 0; const t0 = Date.now();
@@ -6583,7 +6626,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     if (!plan && respons[l]) {
       const rp = respons[l], noms = personasDet().map(x => x.nombre);
       cont.innerHTML = '<div class="tarjeta resp" role="group" aria-label="Responsable"><p class="t-titulo">' + esc(rp.pregunta) + (Oido.modo === "motivo" && Oido.lugar === l ? ' <span class="oyendo"><i></i><i></i><i></i>te escucho</span>' : "") + "</p>" +
-        (rp.resumen ? '<p class="dicho">' + esc(rp.resumen) + "</p>" : "") + (rp.duda ? '<p class="det duda">No entendí «' + esc(rp.duda) + '». Toca el nombre o escríbelo (así lo aprendo).</p>' : "") +
+        (rp.resumen ? '<p class="dicho">' + esc(rp.resumen) + "</p>" : "") + (rp.duda ? '<p class="det duda">' + (rp.empate ? "¿" + esc(rp.empate.join(" o ")) + "? Di o toca el nombre." : 'No entendí «' + esc(rp.duda) + '». Di solo el nombre, tócalo o escríbelo.') + "</p>" : "") +
         '<div class="chips">' + noms.map(x => '<button class="chip" data-resp="' + esc(x) + '">' + esc(x) + "</button>").join("") + "</div>" +
         '<form class="motivo-f" data-resp-f><input name="n" placeholder="Otro nombre…" autocomplete="off" aria-label="Nombre del responsable"><button class="b">Anotar</button></form>' +
         '<div class="acc"><button class="b" data-resp-saltar>Saltar</button></div><p class="det pie">Di el nombre: queda en Movimientos y en el Excel.</p></div>';
@@ -6607,7 +6650,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     else if (plan.frase && (mostrarTx() || plan.via !== "voz")) h += '<p class="dicho">' + (plan.via === "voz" ? "Escuché" : plan.via === "toque" ? "Tocaste" : "Escribiste") + ": «" + esc(plan.frase) + "»" + (R && R.conf != null && plan.via !== "toque" ? " · seguridad " + Math.round(R.conf * 100) + "%" : "") + "</p>";
     if (plan.traducida) h += '<p class="det ia-t">Lo entendí como: «' + esc(plan.traducida) + "»</p>";
     if (plan.previo) h += '<p class="previo">' + esc(plan.previo) + "</p>";
-    if (plan.dudaFrase) h += '<p class="det duda">No entendí «' + esc(plan.dudaFrase) + '». Di «sí» o «no», o toca un botón (así aprendo esa frase).</p>';
+    if (plan.dudaFrase) h += '<p class="det duda">No entendí «' + esc(plan.dudaFrase) + '». Di «sí» o «no», o di la cantidad que va («solo un balde»), o toca un botón.</p>';
     if (plan.bloqueo && plan.comprar) h += '<p class="ent">' + esc(plan.bloqueo) + '</p><p class="det">' + esc(plan.detalle) + "</p>";
     else if (plan.bloqueo) h += '<p class="ent">' + esc(plan.bloqueo) + '</p><p class="det">' + (plan.sinStock ? esc((plan.detalle ? plan.detalle + " " : "") + "No se registró nada.") : "No se registró nada. Mantén presionado el micrófono y dilo de nuevo, por ejemplo: «quitar dos cajas de frutilla».") + "</p>";
     else if (plan.soloInfo) h += '<p class="ent info">' + esc(plan.respuesta) + "</p>";
@@ -6759,7 +6802,8 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     if (!movs.length && !peds.length) return false;
     if (plan && plan.responsable) { asignarResponsable(l, plan.responsable, null, { movs, peds, trs }, true); return false; }
     // el mismo responsable de hace un rato en este lugar (15 min): no se vuelve a preguntar. Se cambia tocando el nombre en el resultado. Ajustes → «Repetir el responsable».
-    if (st.config.repetirResponsable !== false && respUlt[l] && Date.now() - (respUltT[l] || 0) < 15 * 60000) {
+    // (31-oct, video 1420: Freddy quiere que SIEMPRE pregunte el responsable de cada movimiento; repetirlo solo queda como opción en Ajustes)
+    if (st.config.repetirResponsable === true && respUlt[l] && Date.now() - (respUltT[l] || 0) < 15 * 60000) {
       asignarResponsable(l, respUlt[l], null, { movs, peds, trs }, true); r.autoResp = respUlt[l]; logVoz("responsable (el mismo de hace un rato, sin preguntar)", respUlt[l], l);
       if (resultado[l]) { resultado[l].respAuto = { movs, peds, trs, resumen: plan && plan.resumen || "" }; renderFranja(l); }
       return false;
@@ -6844,6 +6888,27 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     if (resultado[l]) { resultado[l].resp = nombre; renderTarjeta(l); }
     if (!callado) hablar("Anotado: " + nombre + ".");
   }
+  /* «solo un balde», «no, solo mover un balde», «mejor dos cajas», «sí pero solo uno», «eran tres» mientras se pregunta «¿Deseas mover…?»:
+     es corregir la cantidad (31-oct, video 1419: Rex no lo entendía y hasta sumaba otro balde). Devuelve la orden corregida o null. */
+  function corregirCantidad(l, frase, R) {
+    const plan = pend[l]; if (!plan || !["traslado", "pedido"].includes(plan.tipo)) return null;
+    const ps = Array.from(new Set((plan.items || []).map(x => x.p).filter(Boolean))); if (ps.length !== 1) return null;
+    const p = ps[0];
+    if ((R.items || []).some(x => x.p && x.p !== p)) return null;   // otro producto: es otra orden
+    let n = V.normalizar(String(frase || "")).replace(/[,.;:!¡¿?]/g, " ").replace(/\s+/g, " ").trim();
+    if (/\b(bodega|produccion|planta|cocina|local|tienda)\b/.test(n)) return null;   // dijo a dónde: lo entiende el intérprete como orden nueva
+    n = n.replace(/\b(oye|rex|si|no|pero|solo|solamente|unicamente|nomas|nada mas|mejor|que sea|que sean|eran|era|son|es|fueron|cambia|cambialo|cambiala|corrige|corrijo|pon|ponle|ponme|mover|mueve|muevelo|muevela|lleva|llevar|llevalo|llevala|manda|mandar|mandalo|envia|enviar|envialo|pasa|pasar|registra|por favor|porfa|perdon|me equivoque|de|del|la|el)\b/g, " ").replace(/\s+/g, " ").trim();
+    const prod = P(p), nomP = V.normalizar(E.nf(prod));
+    (prod.sin || []).concat([nomP]).forEach(k => { n = n.replace(new RegExp("\\b" + V.normalizar(k) + "\\b", "g"), " "); });
+    n = n.replace(/\s+/g, " ").trim();
+    if (!n || !/(\d|\b(un|una|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|quince|veinte|medio|media)\b)/.test(n)) return null;
+    const de = plan.tipo === "traslado" ? plan.de : plan.de || l, a = plan.tipo === "traslado" ? ((plan.items[0] && plan.items[0].a) || plan.a) : plan.a;
+    const txt = plan.tipo === "traslado" ? "lleva " + n + " de " + E.nf(prod) + " " + LUG[de].de + " " + LUG[a].a : "pide " + n + " de " + E.nf(prod) + " " + LUG[a].a;
+    let R2; try { R2 = V.interpretar(txt, { lugar: plan.tipo === "traslado" ? de : de, cat: st.cat }); } catch (e) { return null; }
+    const its = (R2.items || []).filter(x => x.p);
+    if (its.length !== 1 || its[0].p !== p || its[0].q == null) return null;
+    return txt;
+  }
   // una respuesta que no se entendió no borra la pregunta: se vuelve a preguntar
   function repreguntar(l, frase) {
     if (intentarIA(l, frase, "voz", "respuesta")) return;
@@ -6893,6 +6958,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
       const sn = V.siNo(frase);
       const otraOrden = R.intent && !["si", "no", "desconocido", "vacio", "deshacer"].includes(R.intent) && !(pend[l].tipo === "recepcion" && ["recepcion", "entrada"].includes(R.intent)) && !(R.intent === "despachar_pedido" && pend[l].pedido);
       if (R.intent === "despachar_pedido" && pend[l].pedido) { logVoz("respuesta a la pregunta", "«" + frase + "» = sí (despachar)", l); confirmar(l, null, via); return; }
+      if (!(sn && sn.limpio)) { const nuevo = corregirCantidad(l, frase, R); if (nuevo) { logVoz("corrige la cantidad de lo que se iba a mover", "«" + frase + "» → «" + nuevo + "»", l); cancelar(l, true, via); ordenTexto(l, nuevo, via, [{ t: nuevo, c: 0.9 }]); return; } }
       if (sn && sn.limpio && (sn.r === "si" || sn.r === "no") && !otraOrden) { logVoz("respuesta a la pregunta", "«" + frase + "» = " + sn.r + (sn.aprendido ? " (frase aprendida)" : ""), l); sn.r === "si" ? confirmar(l, null, via) : cancelar(l, false, via); return; }
       if (pend[l] && (R.intent === "si" || R.intent === "no")) { R.intent === "si" ? confirmar(l, null, via) : cancelar(l, false, via); return; }
       // no se entendió: la pregunta sigue abierta
@@ -6925,6 +6991,8 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     const n = V.normalizar(txt).replace(/[,.:;]/g, " ").replace(/\s+/g, " ").trim();
     const m = n.match(/^(soy |aqui |aca |habla |en |desde )?(la |el )?(bodega|produccion|planta|cocina|local|tienda)( aqui| habla)?\b\s*(.*)$/);
     if (!m) return null;
+    // «producción, mándame…», «bodega, tráeme…»: se le habla a ese lugar (se le pide), no es desde dónde se habla
+    if (!m[1] && /^((por favor|porfa) )?((me|nos) )?(mandame|mandanos|mandenme|enviame|envianos|envienme|traeme|traenos|traiganme|pasame|pasanos|pasenme|dame|danos|denme|despachame|mande|manden|envie|envien|traiga|traigan|mandas|envias|traes|pasas|das)\b/.test(m[5] || "")) return null;
     const l = { bodega: "B", produccion: "P", planta: "P", cocina: "P", local: "L", tienda: "L" }[m[3]];
     return { l, resto: m[5] || "" };
   }
@@ -7331,7 +7399,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     const nuevosTr = st.transito.filter(x => !trAntes.has(x.id) && x.estado === "pendiente");
     nuevosTr.forEach((tr, i) => { if (i === 0) avisarEnvio(tr); else setTimeout(() => avisarEnvio(tr), 300 + i * 200); });
     const nuevosPe = st.pedidos.filter(x => !peAntes.has(x.id) && x.estado === "pendiente" && x.a !== l && !x.saldoDe);
-    if (plan.tipo === "pedido") nuevosPe.forEach(pe => setTimeout(() => anunciarPedido(pe), 300));
+    if (plan.tipo === "pedido") nuevosPe.forEach(pe => setTimeout(() => conCalma(() => anunciarPedido(pe)), 1500));
     if (plan.tipo === "recepcion") { const tr = st.transito.find(x => x.id === plan.tr); if (tr) anunciarRecepcion(tr); setTimeout(() => ofrecerDespachos(l), 400); }
     if (plan.tipo === "produccion" || plan.tipo === "compra") setTimeout(() => ofrecerDespachos(l, plan.despuesDespachar), 400);
   }
@@ -7394,8 +7462,23 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
        «no» / «hay una novedad»     → «¿Qué pasó?»
        lo que cuente con sus palabras («llegó una lata abierta y las demás todavía», «faltó una caja»…)
                                     → lee lo que entendió y pregunta «¿Es correcto?»; con «sí» se registra */
-  function avisarEnvio(tr) {
+  /* Con calma (31-oct, video 1420): el aviso al otro lugar («Atención producción, viene…», «Bodega pide…») espera a que termine lo de aquí:
+     el «¿sí o no?», el responsable, la cantidad y la conversación con Rex. Antes la llegada se preguntaba al instante y se quedaba con el «sí»
+     o el nombre que eran para la bodega (y se daba por recibido). Espera hasta 3 min; después avisa igual. */
+  function ocupadoParaAvisos() {
+    if (LUGS.some(x => (pend[x] && !pend[x].soloInfo && !pend[x].bloqueo) || respons[x] || motivo[x] || cantPend[x])) return true;
+    if (Rex.sesion && Date.now() - (Rex.act || 0) < SESION_MS + 500) return true;
+    try { if (["orden", "respuesta", "motivo"].includes(Oido.modo) && !(Oido.manos && Oido.modo === "vigilia")) return true; } catch (e) {}
+    try { return Date.now() - (Oido.diag.tTexto || 0) < 1500; } catch (e) { return false; }   // alguien está hablando ahora mismo
+  }
+  function conCalma(fn, desde) {
+    desde = desde || Date.now();
+    if (ocupadoParaAvisos() && Date.now() - desde < 180000) { setTimeout(() => conCalma(fn, desde), 1200); return; }
+    fn();
+  }
+  function avisarEnvio(tr, yaEspero) {
     if (!tr || tr.estado !== "pendiente") return;
+    if (!yaEspero) { setTimeout(() => conCalma(() => avisarEnvio(tr, true)), 1500); return; }
     if (charla && charla.tr !== tr.id && trCharla()) { anunciar(tr.a, "Viene " + LUG[tr.de].de + " " + A.txtItemsCorto(st, tr.items, tr.a) + ". Cuando llegue, confírmalo.", null, trPendiente(tr.id)); return; }
     envioAviso = tr.id; charla = { tr: tr.id, l: tr.a, paso: "llego", obs: [], propuesta: null, t: Date.now() };
     Sonido.llegada(); renderEnvio();
@@ -7941,6 +8024,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
       if (sn) return true;
       // una corrección clara («no, mejor tres cajas de frutilla») sí cuenta; ruido o charla, no
       const R = V.interpretar(txt, { lugar: l, cat: st.cat });
+      if (corregirCantidad(l, txt, R)) return true;   // «solo un balde», «solo mover un balde», «mejor dos»
       return !!(R.listo && R.items && R.items.some(x => x.p) && R.conf >= 0.7);
     }
     return true;
@@ -8116,7 +8200,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     }
 
     // ----- palabra para despertar (manos libres) -----
-    const RELLENO_INI = new Set(["oye", "hey", "ey", "ok", "okey", "hola", "ola", "eh", "a", "ver", "ya", "este", "y", "el", "la", "o", "ah", "hay", "ay", "bueno", "buenas", "buenos", "dias", "tardes", "noches", "oiga", "mira", "disculpa", "perdon", "con", "permiso"].concat(Array.from(VOCATIVOS)));
+    const RELLENO_INI = new Set(["oye", "hey", "ey", "ok", "okey", "hola", "ola", "eh", "a", "ver", "ya", "este", "y", "el", "la", "o", "ah", "hay", "ay", "bueno", "buenas", "buenos", "dias", "tardes", "noches", "oiga", "mira", "disculpa", "perdon", "con", "permiso", "ayer", "aye", "vaya", "hoy", "olle", "oie", "oi", "halle"].concat(Array.from(VOCATIVOS)));
     // lo único que sigue al llamado y no es una orden: «Rex, ayúdame», «Rex, dime»
     const SOLO_LLAMADO = /^(ayudame|ayuda|oye|oiga|escucha|escuchame|dime|digame|dime algo|ven|aqui|una consulta|una pregunta|una cosa|una duda|te necesito)$/;
     // lo que queda de «por favor» cuando el dictado va a mitad de palabra («oye Rex por…»)
@@ -8166,8 +8250,9 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     }
     function palabraManos() { return (st.config.palabraManos || "Rex").trim() || "Rex"; }
     // «oye» tal como lo escribe el dictado (oye, oie, hoy, oi, hey…) y «Rex» tal como suena (rex, rec, reks, rets, regs, rey…)
-    const esOye = w => OYE_PAL.has(w) || /^(h?o+[iy]e?s?|o+ie|ohe|hoye|joye|olle|ei|hei|ay|eh|okay)$/.test(w);
-    const suenaRex = w => DESPIERTA_OYE.has(w) || /^re[ei]?[ckxgqszt]{1,2}s?$/.test(w) || /^rey[ae]?$/.test(w) || /^r[eé]x[a-z]{0,3}$/.test(w);
+    // (31-oct, video 1420: dicho rápido, «oye Rex» se escribe también «ayer Rick», «vaya red», «hoy Rix»)
+    const esOye = w => OYE_PAL.has(w) || /^(h?o+[iy]e?s?|o+ie|ohe|hoye|joye|olle|ei|hei|ay|eh|okay|h?ayer?|aye|vaya|halle|alle|olla|oyes)$/.test(w);
+    const suenaRex = w => DESPIERTA_OYE.has(w) || /^re[ei]?[ckxgqszt]{1,2}s?$/.test(w) || /^ri[ckxgqsz]{1,2}s?$/.test(w) || /^re[dt]s?$/.test(w) || /^rey[ae]?$/.test(w) || /^r[eé]x[a-z]{0,3}$/.test(w);
     function despierta(txt) {
       const crudo = String(txt || "").trim().split(/\s+/);
       const w = crudo.map(x => (V.normalizar ? V.normalizar(x) : x.toLowerCase()).replace(/[^a-z0-9ñ]/g, ""));
@@ -9281,7 +9366,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     let h = '<div class="panel cat voz-panel" id="voz"><h3>Voz y micrófono</h3><p class="sub">Cómo habla el asistente, la palabra de manos libres, lo que aprendió del equipo y la prueba del micrófono.</p>';
     h += '<div class="fila-b" style="gap:18px;align-items:end"><label class="campo">Voz del asistente<select data-cfg-txt="voz"><option value="">Automática (la más natural: ' + esc(elegida ? elegida.name : "la del navegador") + ")</option>" +
       vs.slice().sort((a, b) => puntajeVoz(b) - puntajeVoz(a)).map(v => '<option value="' + esc(v.name) + '"' + (c.voz === v.name ? " selected" : "") + ">" + esc(v.name + " · " + v.lang) + "</option>").join("") + "</select></label>" +
-      '<label>Velocidad <input type="range" min="0.8" max="1.6" step="0.05" data-cfg="vozVelocidad" value="' + (c.vozVelocidad || 1.15) + '"></label>' +
+      '<label>Velocidad <input type="range" min="0.8" max="1.6" step="0.05" data-cfg="vozVelocidad" value="' + (c.vozVelocidad || 1) + '"></label>' +
       '<button class="b prim" data-probar-voz>Escuchar la voz</button></div>' +
       (vs.length ? "" : '<p class="nota-voz">Este navegador todavía no cargó voces en español. En Microsoft Edge están las voces naturales de Ecuador (Andrea y Luis).</p>') +
       (vs.length && !vs.some(v => /natural|neural|online/i.test(v.name)) ? '<p class="nota-voz"><b>Para que Rex suene como una persona:</b> abre esta página en <b>Microsoft Edge</b>. Trae gratis las voces naturales de Ecuador (Andrea y Luis); Rex las elige solo. Este navegador solo tiene voces más robóticas.</p>' : "") +
@@ -9303,7 +9388,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
       '<label><input type="checkbox" data-cfg="avisosVoz"' + (c.avisosVoz !== false ? " checked" : "") + "> Avisar en voz alta en cada lugar (pedidos, envíos que vienen y cómo llegaron)</label>" +
       '<label><input type="checkbox" data-cfg="modoRapido"' + (c.modoRapido !== false ? " checked" : "") + "> Modo rápido: una orden clara dicha por voz se registra al instante (sin «¿sí o no?»); si se dice «no» o «cancela» enseguida, se deshace</label>" +
       '<label><input type="checkbox" data-cfg="preguntarResponsable"' + (c.preguntarResponsable !== false ? " checked" : "") + "> Después de cada movimiento, preguntar «¿Quién es el responsable?» (el nombre queda en Movimientos y en el Excel)</label>" +
-      '<label><input type="checkbox" data-cfg="repetirResponsable"' + (c.repetirResponsable !== false ? " checked" : "") + "> Repetir el responsable: si en ese lugar ya se dijo un nombre hace menos de 15 min, no se vuelve a preguntar (se cambia con «Otro responsable»)</label>" +
+      '<label><input type="checkbox" data-cfg="repetirResponsable"' + (c.repetirResponsable === true ? " checked" : "") + "> Repetir el responsable: si en ese lugar ya se dijo un nombre hace menos de 15 min, no se vuelve a preguntar (se cambia con «Otro responsable»)</label>" +
       '<label><input type="checkbox" data-cfg="leerPregunta"' + (c.leerPregunta ? " checked" : "") + "> Leer la pregunta completa antes de escuchar</label></div>";
     h += '<p class="diag-r">Versión de esta página: <b>' + esc(BUILD.id) + "</b> · armada el " + esc(BUILD.fecha) + ' <button class="b peq" data-version-ver>¿Hay una más nueva?</button></p>';
     h += '<h4>El cerebro de Rex</h4><p class="sub">Rex junta lo que aprende todo el equipo: cada semana toca «Exportar lo que aprendió Rex» en cada equipo y sube el archivo a la carpeta <b>rex/aprendizaje</b> del repositorio. El repositorio lo suma solo al cerebro y todos los equipos lo leen al abrir la página.</p>' +
