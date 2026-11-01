@@ -1597,7 +1597,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     ["merma", /\b(merma|botar|bota|botalo|botala|botalos|botalas|boten|bote|boto|botamos|botaron|tirar|tira|tire|tiramos|se dano|se danaron|danad[oa]s?|se cayo|se cayeron|cayo|cayeron|se rego|se regaron|derrame|derramo|se pudrio|se pudrieron|podrid[oa]s?|vencid[oa]s?|se vencio|se vencieron|se arruino|se arruinaron|desperdicio|no sirve|no sirven|se echo a perder|se echaron a perder|echad[oa]s? a perder|se malogro|se malograron|malograd[oa]s?|aplastad[oa]s?|se aplasto|se aplastaron|se rompio|se rompieron|rot[oa]s?|botando|tirando)\b/],
     ["produccion", /\b(prepar(ar|e|o|amos|a|en|aron|ado|ada)|bat(ir|i|io|imos|e)|hac(er|emos|e)(?! falta)(?! (un |el |otro )?pedido)|hice|hicimos|hicieron|hizo|haz(?! (un |el |otro )?pedido)|calent(ar|e|o|amos)|calienta|calienten|derret(ir|i|imos)|derrite|derritan|proces(ar|a|e|o|amos|aron|ado|ada|ados|adas)|produc(ir|e|en|imos|ido)|produj(e|o|imos|eron)|elabor(ar|a|e|o|amos|aron)|aument(ar|a|e|o|amos|aron|en)|agreg(ar|a|o|amos|aron|ue|uen)|sum(ar|a|o|amos|aron|e|en))\b/],
     ["recepcion", /\b(recibido|recibi(do|mos)?|ya llego|llego todo|todo llego|si llego|confirmo (que )?llego|llegaron bien|ya llegaron)\b/],
-    ["entrada", /\b(llegaron|llego|compre|compramos|ingres(ar|a|o|amos|en|aron|e|ado|ados|ada|adas|ando)|entrada|entraron|nos trajeron|me trajeron|trajeron|trajo|trajo el proveedor|del proveedor|recibimos del proveedor)\b/],
+    ["entrada", /\b(se recibi(o|eron)|recibieron|se ingres(o|aron)|acaba(n)? de (llegar|entrar|ingresar)|ha(n)? llegado|ha(n)? entrado|esta(n)? llegando|recien (llego|llegaron|entro|entraron)|llegada de|ingreso de|registr\w* (el |la )?(ingreso|entrada|llegada)|llegaron|llego|compre|compramos|ingres(ar|a|o|amos|en|aron|e|ado|ados|ada|adas|ando)|entrada|entraron|nos trajeron|me trajeron|trajeron|trajo|trajo el proveedor|del proveedor|recibimos del proveedor)\b/],
     ["agotado", /\b(se acabo|se acabaron|se termino|se terminaron|ya no hay|ya no queda|ya no quedan|no hay|no queda|no quedan|nos quedamos sin|me quede sin|nos quedemos sin|estamos sin|quedamos sin|agotad[oa]s?|se agoto|se agotaron)\b/],
     ["pedido", /\b(pedir|pidiendo|pide|pido|pidan|pidamos|pidele|pidanle|pideles|pidales|pidale|pidiendole|pedirle|pedirles|pidamosle|solicit(ar|a|o|amos|en|ale|ales|arle)|requiero|requerimos|se requiere|necesito|necesitamos|necesitan|necesitaria|necesitariamos|ocupo|ocupamos|nos falta|nos faltan|me falta|me faltan|hace falta|hacen falta|falta|faltan|se necesita|traigan|trae(r)?|traeme|traime|traigame|traiganme|traenos|traiganos|mandenme|mandame|mandeme|mandanos|mandenos|manden mas|envienme|enviame|envianos|envienos|pasame|pasenme|pasanos|(me|nos) (mandas|mandan|mandes|manden|mande|pasas|pasan|pases|pasen|pase|traes|traen|traigas|traigan|traiga|envias|envian|envies|envien|envie)|ha(z|ga|gan|cer|game|ganme|zme|zle|zles|ceme|cerme|cele|gamos|gale)(le|les|lo| le| les| me)? (un |el |otro |nuevo |una )?(pedido|solicitud)|(un |nuevo |otro )?pedido de(?= (un|una|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|medio|media|\d))|queria pedir|quiero pedir|quisiera pedir|me (mandas|mandan|mande|manden|envias|envie|envien|traes|traiga|traigan|pasas|pase|pasen|das|de|den))\b/],
     ["venta", /\b(vend(i|imos|ieron|io)|venta( de)?|registr(ar|a|e|o|ame|emos|en)(?= (?:, )?(?:[a-z0-9]+ ){0,2}?(venta|vaso|vasos|reex|reexs|reexes|split|splits|mix|mixs|mixes|exotica|exoticas|tropical|tropicals|tropicales|chill|chills|reexita|reexitas|godzilla|godzillas)\b)|se vendio|se vendieron|cobre|despache un|salio un|salio una|salieron)\b/],
@@ -1749,6 +1749,16 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     ctx = ctx || {}; const cat = ctx.cat || null;
     const prods = cat ? cat.prods : Object.fromEntries(CAT.PRODUCTOS.map(p => [p.id, p]));
     let t = normalizar(frase);
+    // «un paquete de 5 cajas de durazno» son 5 cajas; «dos cajas de 6 latas» son 12 latas (31-oct: «ingresar el paquete de 5 cajas de latas de durazno»)
+    {
+      const NUM_W = { un: 1, una: 1, uno: 1, dos: 2, tres: 3, cuatro: 4, cinco: 5, seis: 6, siete: 7, ocho: 8, nueve: 9, diez: 10, once: 11, doce: 12, quince: 15, veinte: 20, veinticuatro: 24, treinta: 30 };
+      const nv = w => /^\d+$/.test(w) ? +w : NUM_W[w];
+      const EMPQ = "(cajas?|latas?|fundas?|baldes?|paquetes?|bultos?|sacos?|cubetas?|canastos?|canastas?|frascos?|botellas?|rollos?|unidad(es)?|bolsas?|galon(es)?|racimos?|manos?|kilos?|libras?)";
+      const NUMQ = "(\\d+|un|una|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|quince|veinte|veinticuatro|treinta)";
+      t = t.replace(new RegExp("\\b(el|la|un|una|1) (paquete|caja|bulto|lote|bolsa|saco|caja grande) de " + NUMQ + " " + EMPQ + "\\b", "g"), (m, a, c, n, e) => n + " " + e);
+      t = t.replace(new RegExp("\\b" + NUMQ + " (paquetes|cajas|bultos|bolsas|sacos|lotes) de " + NUMQ + " " + EMPQ + "\\b", "g"), (m, n1, c, n2, e) => { const a = nv(n1), b = nv(n2); return a && b && c.replace(/s$/, "") !== e.replace(/e?s$/, "") ? (a * b) + " " + (/s$/.test(e) ? e : e + (/[aeiou]$/.test(e) ? "s" : "es")) : m; });
+      t = t.replace(/\b(cajas?|paquetes?) de latas de\b/g, "$1 de");   // «5 cajas de latas de durazno» = 5 cajas de durazno
+    }
     const crudo = frase;
     const R = { crudo, texto: t, intent: null, lugar: ctx.lugar || "L", de: null, a: null, items: [], issues: [], conf: 1 };
     if (!t) { R.intent = "vacio"; R.conf = 0; return R; }
@@ -2199,7 +2209,8 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
      items: lo que salió [{p, q, emp}]. Devuelve { cant: {p: q recibida}, obs, cambios, entendido }.
      Regla: lo que describe un estado (abierta, golpeada, dañada…) es una NOVEDAD y no cambia la cantidad,
      salvo que diga que faltan («solo», «faltó», «no llegó», «las demás todavía»). */
-  const COND_LLEGADA = /\b(abiert[oa]s?|rot[oa]s?|golpead[oa]s?|aplastad[oa]s?|danad[oa]s?|mojad[oa]s?|derramad[oa]s?|regad[oa]s?|vencid[oa]s?|caducad[oa]s?|podrid[oa]s?|mal estado|malograd[oa]s?|suci[oa]s?|derretid[oa]s?|rajad[oa]s?|abollad[oa]s?|destapad[oa]s?|sin tapa|hinchad[oa]s?|reventad[oa]s?|madur[oa]s?|aguad[oa]s?|calientes?|manchad[oa]s?|picad[oa]s?|hongos?|huele mal|mal olor|fe[oa]s?|mal[oa]s?|chancad[oa]s?|machucad[oa]s?|estropead[oa]s?|huec[oa]s?|huequit[oa]s?|agujer[oa]s?|perforad[oa]s?|fisurad[oa]s?|fisuras?|rajaduras?|gote(a|ando)|chorre(a|ando)|bota(ndo)? (liquido|agua|jugo)|pinchad[oa]s?|cortad[oa]s?|descongelad[oa]s?|tibi[oa]s?)\b/;
+  // (31-oct, video 1433: «la frutilla llegó pequeña», «muy grande», «estaba regada», «la lata golpeada», «las Oreo vinieron en un frasco pequeño»)
+  const COND_LLEGADA = new RegExp("\\b(" + 'abiert[oa]s?|rot[oa]s?|golpead[oa]s?|aplastad[oa]s?|danad[oa]s?|mojad[oa]s?|derramad[oa]s?|regad[oa]s?|vencid[oa]s?|caducad[oa]s?|podrid[oa]s?|mal estado|malograd[oa]s?|suci[oa]s?|derretid[oa]s?|rajad[oa]s?|abollad[oa]s?|destapad[oa]s?|sin tapa|hinchad[oa]s?|reventad[oa]s?|madur[oa]s?|aguad[oa]s?|calientes?|manchad[oa]s?|picad[oa]s?|hongos?|huele mal|mal olor|fe[oa]s?|mal[oa]s?|chancad[oa]s?|machucad[oa]s?|estropead[oa]s?|huec[oa]s?|huequit[oa]s?|agujer[oa]s?|perforad[oa]s?|fisurad[oa]s?|fisuras?|rajaduras?|gote(a|ando)|chorre(a|ando)|bota(ndo)? (liquido|agua|jugo)|pinchad[oa]s?|cortad[oa]s?|descongelad[oa]s?|tibi[oa]s?' + "|" + 'pequen[oa]s?|pequenit[oa]s?|chiquit[oa]s?|chic[oa]s?|menudit[oa]s?|enanas?|grandes?|grandot[oa]s?|enormes?|gigantes?|verdes?|biches?|tiern[oa]s?|bland(it)?[oa]s?|duras?|duros|arrugad[oa]s?|marchit[oa]s?|sec[oa]s?|pasad[oa]s?|fermentad[oa]s?|acid[oa]s?|agri[oa]s?|desabrid[oa]s?|sin sabor|congelad[oa]s?|frias?|frios?|deformad[oa]s?|abombad[oa]s?|inflad[oa]s?|raspad[oa]s?|magullad[oa]s?|lastimad[oa]s?|chafad[oa]s?|aplanad[oa]s?|desarmad[oa]s?|desbaratad[oa]s?|quebrad[oa]s?|partid[oa]s?|despedazad[oa]s?|hech[oa]s? (pure|papilla|polvo|nada)|en mal estado|por vencer|fecha vencida|sin etiqueta|mal sellad[oa]s?|sin sello|desellad[oa]s?|humed[oa]s?|humedad|mojadit[oa]s?|feisim[oa]s?|horribles?|rar[oa]s?|extran[oa]s?|mitad vaci[oa]|medi[oa] vaci[oa]|a medias|a la mitad|incomplet[oa]s?|regadit[oa]s?|tirad[oa]s?|(se|se le|se les) (rompio|rompieron|rego|regaron|derramo|derramaron|abrio|abrieron|dano|danaron|aplasto|aplastaron|mojo|mojaron|derritio|derritieron|golpeo|golpearon|cayo|cayeron|revento|reventaron|maltrato|maltrataron|machuco|machucaron|chanco|chancaron|pudrio|pudrieron|paso|pasaron)|(en|un|una|otr[oa]) (frasco|envase|tarro|funda|bolsa|caja|paquete|presentacion|marca|tamano)s? (pequen\\\\w*|chiquit\\\\w*|grande\\\\w*|distint\\\\w*|diferente\\\\w*|otr\\\\w*|rot\\\\w*|abiert\\\\w*)|(otro|otra|distinto|distinta|diferente) (tamano|marca|presentacion|envase|empaque|calibre|color|sabor|funda|caja|bolsa|frasco|tarro|paquete)|(en|con) (otr[oa]s?|distint[oa]s?|diferentes?) (frasco|envase|tarro|funda|bolsa|caja|paquete|presentacion|marca|empaque)s?' + ")\\b");
   function analizarLlegada(frase, items, ctx) {
     ctx = ctx || {};
     const prods = ctx.cat ? ctx.cat.prods : Object.fromEntries(CAT.PRODUCTOS.map(p => [p.id, p]));
@@ -2222,19 +2233,29 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
       return [];
     };
     const numero = w => { const T = [w]; const n = numeroEn(T, 0); return n ? n.v : null; };
+    const nombresProd = Array.from(new Set(ids.flatMap(p => [prods[p].n].concat(prods[p].sin || [])).map(x => normalizar(String(x)).replace(/[()]/g, " ").replace(/\s+/g, " ").trim()).filter(x => x.includes(" ") || x.length > 3))).sort((a, b) => b.length - a.length);
+    const nombresFuera = cl => { let x = " " + cl + " "; nombresProd.forEach(nm => { x = x.split(" " + nm + " ").join(" producto "); }); return x.trim(); };
     // se parte en pedazos: «… y …», «… pero …», «… , …»
     const pedazos = t.split(/\s*(?:,|\by\b|\bpero\b|\bmas\b|\bademas\b|\bsino\b)\s*/).map(x => x.trim()).filter(Boolean);
-    let restoMal = false, restoBien = false; const soloEstos = new Set();
+    let restoMal = false, restoBien = false; const soloEstos = new Set(), novedades = [];
     pedazos.forEach(cl => {
+      // «no llegó (todo) bien», «no vino en buen estado»: es una queja de cómo llegó, no que no llegó (31-oct, video 1433)
+      if (/\bno (llego|llegaron|vino|vinieron|esta|estaba|estan|estaban) (todo |toda |muy |tan |del todo )?(bien|en buen estado|como (debia|debe|deberia|era|esperabamos)|perfect[oa]s?|bonit[oa]s?|buen[oa]s?)\b/.test(cl)) {
+        obs = true; entendido = true;
+        const resto = cl.replace(/^.*?\bno (llego|llegaron|vino|vinieron|esta|estaba|estan|estaban) (todo |toda |muy |tan |del todo )?(bien|en buen estado|como (debia|debe|deberia|era|esperabamos)|perfect[oa]s?|bonit[oa]s?|buen[oa]s?)\b\s*/, "").trim();
+        if (resto.split(" ").length >= 2) novedades.push(resto);
+        return;
+      }
       const sinVerbo = cl.replace(/^(ya |si |no |solo |solamente )*(llego|llegaron|vino|vinieron|entro|entraron|recibimos|recibi)\s+/, "");
       // «las demás todavía», «las otras no llegan», «el resto falta»
-      if (/\b(las|los|el) (demas|otras|otros|resto)\b/.test(cl)) {
+      if (/\b(las|los|el|lo) (demas|otras|otros|resto)\b/.test(cl)) {
         if (/\b(todavia|no|faltan?|aun|pendientes?|despues|luego)\b/.test(cl) && !/\b(bien|buen[oa]s?|complet[oa]s?|cerrad[oa]s?|ok|perfect[oa]s?|normales?|sanas?)\b/.test(cl)) restoMal = true;
         else restoBien = true;
         entendido = true; return;
       }
       if (/\b(todo|todas|todos|complet[oa]s?)\b/.test(cl) && !/\bno\b/.test(cl)) { restoBien = true; entendido = true; }
-      const cond = COND_LLEGADA.test(cl);
+      // el nombre del producto no cuenta como estado («nuez picada», «vasos pequeños», «leche en polvo»)
+      const cond = COND_LLEGADA.test(nombresFuera(cl));
       const falta = /\bfalt(a|o|aron|an|ando)\b/.test(cl);
       const noLlego = /\bno (llego|llegaron|vino|vinieron|hay|entro)\b/.test(cl) || /\b(no llego|no vino) nada\b/.test(cl) || /^(el|la|los|las) [a-z ]+ no$/.test(cl);
       const nada = /\b(nada|ninguna|ninguno)\b/.test(cl) && !cond;
@@ -2248,7 +2269,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
           const ps2 = ps.length && !unoSolo ? ps : ids.map(p => ({ p }));
           ps2.forEach(x => { cant[x.p] = Math.round(enviado[x.p] * (falta ? 1 - fr : fr) * 1000) / 1000; }); entendido = true; return; } }
       if (nada) ps.forEach(x => { cant[x.p] = 0; });
-      if (cond) { obs = true; entendido = true; ps.forEach(x => { if (x.q != null) mencion[x.p] = x.q; }); }
+      if (cond) { obs = true; entendido = true; novedades.push(cl.replace(/^(y|e|pero|aunque|solo que|lo que pasa es que|el problema es que|eso si|eso)\s+/, "").trim()); ps.forEach(x => { if (x.q != null) mencion[x.p] = x.q; }); }
       // «llegaron 3 de 4 cajas» / «una caja de las dos»
       if (deY && numero(deY[1]) != null && numero(deY[2]) != null && !cond) {
         const p = ps.length ? ps[0].p : unoSolo;
@@ -2268,7 +2289,13 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     if (restoMal) ids.forEach(p => { cant[p] = mencion[p] != null ? mencion[p] : (cant[p] !== enviado[p] ? cant[p] : 0); });
     Object.keys(cant).forEach(p => { cant[p] = Math.max(0, Math.min(cant[p], Math.max(cant[p], 0))); });
     const cambios = ids.filter(p => Math.abs(cant[p] - enviado[p]) > 0.0005);
-    return { cant, obs: obs ? String(frase).trim() : "", cambios, entendido: entendido || obs, completo: !cambios.length };
+    // la novedad en limpio: solo lo que cuenta cómo llegó («la frutilla llegó pequeña»), sin «sí, llegó bien, pero…»
+    // (con las tildes de lo que se dijo: se busca el mismo pedazo en la frase original)
+    const tw = t.split(" "), ow = String(frase).replace(/[,.;]/g, " , ").replace(/\s+/g, " ").trim().split(" ");
+    const original = cl => { if (tw.length !== ow.length) return cl; const cw = cl.split(" "); for (let i = 0; i + cw.length <= tw.length; i++) if (cw.every((w, k) => tw[i + k] === w)) return ow.slice(i, i + cw.length).join(" ").toLowerCase(); return cl; };
+    const limpia = Array.from(new Set(novedades.filter(Boolean).map(original))).join("; ");
+    // «no llegó todo bien» sin decir qué: es una queja sin detalle (la pantalla pregunta «¿Qué pasó?»)
+    return { cant, obs: obs ? (limpia ? limpia.charAt(0).toUpperCase() + limpia.slice(1) : String(frase).trim()) : "", generico: obs && !limpia && !cambios.length, cambios, entendido: entendido || obs, completo: !cambios.length };
   }
 
   /* ===== Seguimientos de la orden anterior =====
@@ -3589,6 +3616,8 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
       case "recepcion": {
         plan.a = R.a;
         const pend = st.transito.filter(x => x.estado === "pendiente" && x.a === R.a).sort((a, b) => a.t - b.t);
+        // «recibimos 2 cajas de tapas» sin nada en camino: es una entrada (del proveedor), no la recepción de un envío (31-oct)
+        if (!pend.length && items.length && items.every(it => it.q != null)) return planificar(st, Object.assign({}, R, { intent: "entrada", proveedor: true }), ctx);
         if (!pend.length) { plan.bloqueo = "No hay envíos pendientes para " + LUG[R.a].art + "."; break; }
         const tr = items.length ? pend.find(x => items.every(it => x.items.some(y => y.p === it.p))) || pend[0] : pend[0];
         plan.tr = tr.id; plan.cantidades = {};
@@ -5929,7 +5958,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
   let tToast = null;
   function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("ver"); clearTimeout(tToast); tToast = setTimeout(() => t.classList.remove("ver"), 3800); }
   // Rex: el asistente (sesion/act: la ventana tipo Siri; dijo: lo último que dijo; oyendo: lo último que oyó)
-  const BUILD = { id: "d1651244", fecha: "2026-10-31 21:54" };
+  const BUILD = { id: "ff90dfe9", fecha: "2026-10-31 23:25" };
   const Rex = { lugar: "B", ultimo: null, despierto: 0, sesion: 0, act: 0, dijo: "", tDijo: 0, oyendo: "", tOyendo: 0 };
   /* La conversación con Rex (la ventana tipo Siri) se cierra sola cuando nadie dice nada durante 5 s. */
   const SESION_MS = 8000;   // 31-oct-2026: con 5 s Rex se cerraba mientras la persona pensaba («se corta de golpe»)
@@ -6921,6 +6950,14 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
       const esOrden = R.listo && R.intent && !["si", "no", "desconocido", "vacio"].includes(R.intent);
       const llegaAqui = st.transito.some(t => t.estado === "pendiente" && t.a === l) && /\b(lleg|vin|falt|recib|complet|abiert|rot|huec|mitad|nada)/.test(V.normalizar(frase));
       if (o && !esOrden && !llegaAqui && (R.intent === "si" || R.intent === "no" || respons[o] || motivo[o] || cantPend[o] || (charla && charla.l === o))) { logVoz("respuesta para " + LUG[o].nombre + " (la pregunta está allá)", frase, l); return procesar(o, R, frase, via, extra); }
+      // «la frutilla llegó bien pero llegó muy pequeña en el local» dicho con el micrófono de la bodega mientras el local tiene abierta «¿Llegó todo bien?»:
+      // es la respuesta de esa llegada, no una entrada en la bodega (31-oct, video 1433: Rex contestaba «¿Cuánta frutilla llegó?»)
+      if (charla && charla.l !== l && trCharla() && !llegaAqui) {
+        const lc = charla.l, an = V.analizarLlegada(frase, trCharla().items, { lugar: lc, cat: st.cat });
+        const nombra = new RegExp("\\b(" + ({ B: "bodega", P: "produccion|planta|cocina", L: "local|tienda" })[lc] + ")\\b").test(V.normalizar(frase));
+        const sinCant = !(R.items || []).some(x => x.q != null);
+        if (an.entendido && (nombra || an.obs || (sinCant && ["entrada", "recepcion", "si", "no", "desconocido"].includes(R.intent)))) { logVoz("es la llegada " + LUG[lc].a + " (la pregunta está allá)", frase, l); return procesar(lc, R, frase, via, extra); }
+      }
     }
     if (pend[l] && (pend[l].bloqueo || pend[l].soloInfo) && !(pend[l].bloqueo && pend[l].requierePin)) { pend[l] = null; renderTarjeta(l); }
     const nfr = V.normalizar(String(frase || ""));
@@ -7085,6 +7122,8 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
   function faltaEnOrden(txt, l) {
     const n = V.normalizar(String(txt || "")).replace(/[,.;:!¡¿?]/g, " ").replace(/\s+/g, " ").trim(); if (!n) return null;
     const w = n.split(" "), ult = w[w.length - 1];
+    // con una llegada abierta, «la frutilla llegó bien pero muy pequeña» es la respuesta de esa llegada: no se espera ni se pregunta «¿Cuánto llegó?» (video 1433)
+    try { if (charla && trCharla() && V.analizarLlegada(txt, trCharla().items, { lugar: charla.l, cat: st.cat }).entendido && /\b(lleg|vin|recib|falt|esta|estaba|todo)/.test(n)) return null; } catch (e) {}
     // «uno más», «lo mismo de durazno», «y también una caja de leche»: siguen la orden anterior (V.seguir), no esperan ni preguntan
     try { if (marcaSeguir(txt) || seguimiento(txt, l)) return null; } catch (e) {}
     // «ya está la crema», «quedó listo el chocolate»: es avisar que se preparó (lo atiende ordenTexto), no una orden a medias
@@ -7483,7 +7522,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     envioAviso = tr.id; charla = { tr: tr.id, l: tr.a, paso: "llego", obs: [], propuesta: null, t: Date.now() };
     Sonido.llegada(); renderEnvio();
     const pe = tr.pedido ? st.pedidos.find(x => x.id === tr.pedido) : null;
-    setTimeout(() => { if (charla && charla.tr === tr.id) decirCharla("Atención " + LUG[tr.a].corto + ". Viene " + LUG[tr.de].de + " " + A.txtItemsCorto(st, tr.items, tr.a) + (pe && pe.de === tr.a ? ", es tu pedido" : "") + ". ¿Llegó todo bien? Di sí, o cuéntame qué pasó.", true); }, 900);
+    setTimeout(() => { if (charla && charla.tr === tr.id) decirCharla("Atención " + LUG[tr.a].corto + ": " + LUG[tr.de].nombre + " te envió " + A.txtItemsCorto(st, tr.items, tr.a) + (pe && pe.de === tr.a ? ", es tu pedido" : "") + ". ¿Llegó todo bien, o me cuentas qué pasó?", true); }, 900);
   }
   /* Si el envío ya debería haber llegado y nadie confirmó, se vuelve a avisar una vez en el lugar que recibe */
   const yaRecordado = new Set();
@@ -7511,7 +7550,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
   function textoPropuesta(tr, pr) {
     const partes = tr.items.map(it => {
       const p = P(it.p), r = pr.cant[it.p] != null ? pr.cant[it.p] : it.q, salio = E.fmtComo(p, it.q, it.emp);
-      if (Math.abs(r - it.q) < 0.0005) return (tr.items.length > 1 ? "de " + E.nf(p) + " llegó todo" : "llegó todo") + " (" + salio + ")";
+      if (Math.abs(r - it.q) < 0.0005) return tr.items.length > 1 ? "de " + E.nf(p) + " llegó todo (" + salio + ")" : "llegó completo: " + salio + " de " + E.nf(p);
       if (r <= 0.0005) return "no llegó " + E.nf(p) + " (salieron " + salio + ")";
       return "llegaron " + E.fmtComo(p, r, it.emp) + " de " + E.nf(p) + " de " + salio + "; faltan " + E.fmtComo(p, E.r3(it.q - r), it.emp);
     });
@@ -7521,7 +7560,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     const obs = charla.obs.concat(an.obs ? [an.obs] : []).join(". ");
     charla.paso = "confirmar"; charla.propuesta = { cant: an.cant, obs, frase };
     logVoz("lo que entendí de la llegada", textoPropuesta(tr, charla.propuesta), tr.a);
-    decirCharla("Entendí: " + textoPropuesta(tr, charla.propuesta) + ". ¿Es correcto? Di sí o no.");
+    decirCharla("Entendí: " + textoPropuesta(tr, charla.propuesta) + ". ¿Lo registro así?");
   }
   function registrarLlegada(tr, cant, via, frase, obsDada) {
     const obs = obsDada != null ? obsDada : (charla ? charla.obs.join(". ") : ""), l = tr.a;
@@ -7551,7 +7590,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
       const an = analizar(texto);   // lo corrigió directo: «no, llegaron las dos y una abierta»
       if (an.entendido) { proponer(tr, an, frase); return true; }
       if (intentarIA(tr.a, frase, via, "llegada")) return true;
-      decirCharla("¿Es correcto lo que entendí? Di sí o no."); return true;
+      decirCharla("¿Lo registro así? Di sí, o dime qué cambio."); return true;
     }
     // una pregunta («qué falta», «qué viene en camino») o algo dicho con «Rex» no es la respuesta a la llegada
     { const R1 = V.interpretar(frase, { lugar: tr.a, cat: st.cat }); if (R1.listo && ["estado", "consulta", "deshacer", "abrir_caja", "cerrar_caja", "venta"].includes(R1.intent)) return false; }
@@ -7560,7 +7599,9 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     if (!(sn && sn.limpio) && !/\b(falt|lleg|vin|recib|abiert|rot|golpe|dan|complet|novedad|sobr)/.test(V.normalizar(frase))) { const R0 = V.interpretar(frase, { lugar: tr.a, cat: st.cat }); if (R0.listo && ["traslado", "pedido", "merma", "produccion", "conteo", "agotado", "venta", "estado", "despachar_pedido", "consulta", "abrir_caja", "cerrar_caja"].includes(R0.intent)) return false; }
     if (charla.paso === "llego") {
       if (sn && sn.limpio && sn.r === "si") { registrarLlegada(tr, null, via, frase); return true; }
-      { const an0 = analizar(String(frase || "")); if (an0.entendido && (an0.cambios.length || an0.obs)) { proponer(tr, an0, frase); return true; } }
+      { const an0 = analizar(String(frase || ""));
+        if (an0.generico) { charla.paso = "detalle"; decirCharla("¿Qué pasó? Cuéntame: ¿algo llegó dañado, faltó algo o vino distinto?"); return true; }
+        if (an0.entendido && (an0.cambios.length || an0.obs)) { proponer(tr, an0, frase); return true; } }
       if (sn && sn.limpio) { charla.paso = "detalle"; decirCharla(sn.r === "no" ? "¿Qué pasó? Di cuánto llegó o la novedad. Por ejemplo: faltó una caja, o una lata llegó abierta." : "¿Qué novedad hay?"); return true; }
       const an = analizar(texto);
       if (an.entendido) { proponer(tr, an, frase); return true; }
@@ -7582,7 +7623,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     const tr = charla ? st.transito.find(x => x.id === charla.tr && x.estado === "pendiente") : null;
     if (!tr) { box.innerHTML = ""; return; }
     const paso = charla.paso;
-    const tit = { llego: "¿Llegó todo bien?", detalle: "¿Qué pasó?", confirmar: "¿Es correcto?" }[paso];
+    const tit = { llego: "¿Llegó todo bien?", detalle: "¿Qué pasó?", confirmar: "¿Lo registro así?" }[paso];
     const ayuda = { llego: "Di «sí», o cuenta qué pasó: «llegó una lata abierta», «faltó una caja», «no llegó el banano».",
       detalle: "Cuenta cuánto llegó o la novedad, o toca «No, llegó distinto» para escribir las cantidades.", confirmar: "Di «sí» para registrarlo o «no» para decirlo de nuevo." }[paso];
     const propuesta = paso === "confirmar" && charla.propuesta ? '<p class="envio-prop"><b>Entendí:</b> ' + esc(textoPropuesta(tr, charla.propuesta)) + "</p>" : "";
@@ -8263,6 +8304,9 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
         if (propia.length && propia.every((p, j) => w[k + j] === p)) n = propia.length;
         else if (DESPIERTA.has(w[k]) || (k === 0 && DESPIERTA_INI.has(w[k])) || (k > 0 && esOye(w[k - 1]) && suenaRex(w[k]))) n = 1;
         else if (w[k] === "fruti" && /^(rex|reex|res)$/.test(w[k + 1] || "")) n = 2;
+        // (31-oct, video 1433) «oye Rex» pegado: «oyerex», «yerex», «oirex»; y con un «el» en medio: «hoy el ex», «oye el Rex»
+        else if (/^(h?o[iy]e?|y?e|oi)?y?e?re[xks]$/.test(w[k]) && w[k].length >= 5) n = 1;
+        else if (k > 0 && w[k] === "el" && esOye(w[k - 1]) && /^(h?ex|rex|res|rec)$/.test(w[k + 1] || "")) n = 2;
         if (n) return { resto: sinCortesia(crudo.slice(k + n).join(" ")) };
       }
       return null;
@@ -8853,7 +8897,9 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
         const l = lugarDe(b), on = l === manos, oyendo = on && abierto && lugar === l;
         b.setAttribute("aria-pressed", String(on)); b.classList.toggle("oye", oyendo); b.classList.toggle("mal", on && !!manosError);
         const t = b.querySelector("[data-manos-txt]");
-        if (t) t.textContent = !on ? "Manos libres: apagado" : !SR ? "Manos libres: este navegador no tiene dictado (usa Chrome o Edge)" : archivo() ? "Manos libres no funciona abierta como archivo: ábrela con INICIAR.bat" : manosError ? "Manos libres: " + manosError : oyendo && modo === "vigilia" ? "Manos libres: di «" + palabraManos() + "» y la orden" : oyendo ? "Manos libres: te escucho" : "Manos libres: espera un momento…";
+        // (31-oct, video 1433: «¿por qué solo activa el micrófono de bodega?»): Rex es uno solo y escucha los tres lugares con un micrófono
+        if (t) t.textContent = !on ? (manos && SR && !archivo() ? "Rex escucha los tres lugares (con el micrófono " + LUG[manos].de + "): di «Oye Rex» y la orden" : "Manos libres: apagado") : !SR ? "Manos libres: este navegador no tiene dictado (usa Chrome o Edge)" : archivo() ? "Manos libres no funciona abierta como archivo: ábrela con INICIAR.bat" : manosError ? "Manos libres: " + manosError : oyendo && modo === "vigilia" ? "Manos libres: di «" + palabraManos() + "» y la orden" : oyendo ? "Manos libres: te escucho" : "Manos libres: espera un momento…";
+        if (!on && manos) { const d = b.closest(".disp"), e = d && d.querySelector("[data-escucha]"); if (e && /Mantén presionado y habla/.test(e.textContent)) e.innerHTML = "<b>Rex te escucha aquí también</b>Di «Oye Rex» y la orden (desde cualquier lugar), o mantén presionado y habla."; }
         const o = b.parentNode && b.parentNode.querySelector("[data-manos-oido]");
         if (o) { const vivo = mostrarTx() && on && oidoManos && Date.now() - tOido < 15000; o.hidden = !vivo; if (vivo) o.textContent = "Oí: «" + oidoManos.slice(0, 80) + "»"; }
       });
