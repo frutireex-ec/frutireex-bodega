@@ -1,7 +1,7 @@
 # Rex — el agente de voz de Fruti Reex
 
 Rex es el asistente de voz de la bodega, producción y el local. Se le habla con «Rex», «oye Rex», «Rexito» o «Jarvis»:
-*«Rex, lleva dos baldes de frutilla a producción»* → *«Listo. ¿Quién es el responsable?»* → *«Stalin»*.
+*«Rex, lleva dos baldes de frutilla a producción»* → *«Listo. ¿Quién es el responsable?»* → *«Ana»*.
 
 Esta carpeta es su **cerebro compartido**: lo que aprende cada equipo se junta aquí y todos los equipos lo usan.
 

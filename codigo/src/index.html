@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#044E33">
+<title>Frutireex Bodega, Producción y Local</title>
+<link rel="icon" href="__ICONO__">
+<style>
+/*CSS*/
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="marca">
+    <img class="reex-cara" src="__REEX_CARA__" alt="" width="38" height="48">
+    <img class="logo" src="__LOGO__" alt="Frutireex" width="190" height="19">
+    <span class="script">Bodega, producción y local</span>
+    <span class="ver-badge" title="Misma versión 7, con las mejoras en prueba hasta la 7.1 oficial">7.1 en pruebas</span>
+  </div>
+  <div class="reloj" id="reloj"><small>Hora de prueba</small><output aria-live="off">--:--</output><button data-mas="10" title="Adelantar 10 minutos">+10 min</button><button data-mas="60" title="Adelantar una hora">+1 h</button></div>
+  <div class="dia" id="diaEstado"></div>
+</header>
+<nav class="tabs" role="tablist" aria-label="Secciones">
+  <button role="tab" data-tab="operar">Bodega, producción y local<span class="n" hidden></span></button>
+  <button role="tab" data-tab="vista3d">Vista 3D</button>
+  <button role="tab" data-tab="inventario">Inventario</button>
+  <button role="tab" data-tab="movimientos">Movimientos</button>
+  <button role="tab" data-tab="cierre">Cierre de caja</button>
+  <button role="tab" data-tab="catalogo">Catálogo y recetas</button>
+</nav>
+<div id="alertaGlobal" aria-live="assertive"></div>
+<main>
+  <section class="vista" id="v-operar"></section>
+  <section class="vista" id="v-vista3d" hidden></section>
+  <section class="vista" id="v-inventario" hidden></section>
+  <section class="vista" id="v-movimientos" hidden></section>
+  <section class="vista" id="v-cierre" hidden></section>
+  <section class="vista" id="v-catalogo" hidden></section>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="modal" id="modal" hidden></div>
+<div class="ficha" id="ficha" role="tooltip" hidden></div>
+<script>
+/*VENDOR*/
+</script>
+<script>
+/*JS*/
+</script>
+</body>
+</html>
