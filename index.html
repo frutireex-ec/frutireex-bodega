@@ -1724,9 +1724,12 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     t = t.replace(/^((no|nop|nada|ninguna|ninguno)\s+)+(?=(todo bien|todo esta bien|todo correcto|todo en orden|todo perfecto|todo completo|esta todo bien|todo llego|llego todo|llego completo|llego bien|ninguna novedad|sin novedad\w*|ningun problema|no paso nada|no pasa nada|todo normal)\b)/, "").trim();
     // a «¿Llegó todo bien, o hay alguna novedad?»: «nada», «ninguna», «no, ninguna», «no pasó nada» = no hay novedad = llegó bien
     if (opc && opc.llegada && /^((no|nada|ninguna|ninguno)\s*)*(nada|ninguna|ninguno|ninguna novedad|no paso nada|ningun problema)( (todo|ahi|nomas))?$/.test(t)) return { r: "si", resto: "", limpio: true, sinNovedad: true };
+    // (2-nov-2026) a «¿Está correcto el pedido, o hay alguna observación?»: «no hay observaciones», «ninguna observación», «sin observaciones»,
+    // «sí, el pedido está correcto», «está correcto el pedido», «sí, llegó completo, ninguna observación» = llegó bien (antes «no hay observaciones» era un «no»)
+    if (opc && opc.llegada && t && POS_LLEGADA.test(t.replace(/^no (?=(nada|ninguna|ninguno|ningun|sin|cero|no hay|no hubo|no tengo)\b)/, ""))) return { r: "si", resto: "", limpio: true, sinNovedad: true };
     if (!t) return null;
     // (1-nov-2026, Freddy: «cualquier respuesta afirmativa») más formas de decir que sí
-    if (/^(si |pues |claro |ya )?(me parece bien|conforme|fijo|de ley|todo normal|en orden|todo en orden|bien|muy bien|okey dokey)( rex| pues| nomas| gracias)?$/.test(t)) return { r: "si", resto: "", limpio: true };
+    if (/^(si |pues |claro |ya )?(me parece bien|conforme|fijo|de ley|todo normal|en orden|todo en orden|bien|muy bien|okey dokey|concuerdo|estoy de acuerdo|coincido|asi esta bien|esta bien asi|exacto concuerdo|si concuerdo|lo confirmo|confirmadisimo|eso mismo es)( rex| pues| nomas| gracias| contigo)?$/.test(t)) return { r: "si", resto: "", limpio: true };
     if (opc && opc.llegada && /^(si )?(normal|todo normal|sin novedad\w*|todo en orden|en orden|llegaron (todos|todas|completos|completas|bien)( completos| completas| bien)?|llego (todo|completo|bien|correcto|perfecto)( todo)?)( gracias| rex)?$/.test(t)) return { r: "si", resto: "", limpio: true };
     if (!(opc && opc.sinAprendido)) {
       if (APRENDIDO.si.has(t)) return { r: "si", resto: "", limpio: true, aprendido: true };
@@ -2228,11 +2231,17 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
      Regla: lo que describe un estado (abierta, golpeada, dañada…) es una NOVEDAD y no cambia la cantidad,
      salvo que diga que faltan («solo», «faltó», «no llegó», «las demás todavía»). */
   // (31-oct, video 1433: «la frutilla llegó pequeña», «muy grande», «estaba regada», «la lata golpeada», «las Oreo vinieron en un frasco pequeño»)
+  const POS_CL = "(si|sip|claro|correcto|exacto|perfecto|listo|todo bien|todo correcto|todo en orden|todo completo|todo perfecto|esta todo bien|en orden|normal|todo normal|" +
+    "(el pedido )?(esta|llego|vino|llegaron|vinieron) (todo |todos |todas )?(correcto|correctos|completo|completos|completa|bien|perfecto)( el pedido)?|(esta )?correcto el pedido|" +
+    "el pedido (esta |llego |vino )?(todo )?(correcto|completo|bien|perfecto)|(no hay|no tengo|no hubo|sin|cero|ninguna|ningun|ninguno) (ninguna |ningun |alguna )?" +
+    "(observacion|observaciones|novedad|novedades|problema|problemas|inconveniente|inconvenientes)|nada|ninguna|ninguno|gracias|rex)";
+  const POS_LLEGADA = new RegExp("^" + POS_CL + "( " + POS_CL + ")*$");
   const COND_LLEGADA = new RegExp("\\b(" + 'abiert[oa]s?|rot[oa]s?|golpead[oa]s?|aplastad[oa]s?|danad[oa]s?|mojad[oa]s?|derramad[oa]s?|regad[oa]s?|vencid[oa]s?|caducad[oa]s?|podrid[oa]s?|mal estado|malograd[oa]s?|suci[oa]s?|derretid[oa]s?|rajad[oa]s?|abollad[oa]s?|destapad[oa]s?|sin tapa|hinchad[oa]s?|reventad[oa]s?|madur[oa]s?|aguad[oa]s?|calientes?|manchad[oa]s?|picad[oa]s?|hongos?|huele mal|mal olor|fe[oa]s?|mal[oa]s?|chancad[oa]s?|machucad[oa]s?|estropead[oa]s?|huec[oa]s?|huequit[oa]s?|agujer[oa]s?|perforad[oa]s?|fisurad[oa]s?|fisuras?|rajaduras?|gote(a|ando)|chorre(a|ando)|bota(ndo)? (liquido|agua|jugo)|pinchad[oa]s?|cortad[oa]s?|descongelad[oa]s?|tibi[oa]s?' + "|" + 'pequen[oa]s?|pequenit[oa]s?|chiquit[oa]s?|chic[oa]s?|menudit[oa]s?|enanas?|grandes?|grandot[oa]s?|enormes?|gigantes?|verdes?|biches?|tiern[oa]s?|bland(it)?[oa]s?|duras?|duros|arrugad[oa]s?|marchit[oa]s?|sec[oa]s?|pasad[oa]s?|fermentad[oa]s?|acid[oa]s?|agri[oa]s?|desabrid[oa]s?|sin sabor|congelad[oa]s?|frias?|frios?|deformad[oa]s?|abombad[oa]s?|inflad[oa]s?|raspad[oa]s?|magullad[oa]s?|lastimad[oa]s?|chafad[oa]s?|aplanad[oa]s?|desarmad[oa]s?|desbaratad[oa]s?|quebrad[oa]s?|partid[oa]s?|despedazad[oa]s?|hech[oa]s? (pure|papilla|polvo|nada)|en mal estado|por vencer|fecha vencida|sin etiqueta|mal sellad[oa]s?|sin sello|desellad[oa]s?|humed[oa]s?|humedad|mojadit[oa]s?|feisim[oa]s?|horribles?|rar[oa]s?|extran[oa]s?|mitad vaci[oa]|medi[oa] vaci[oa]|a medias|a la mitad|incomplet[oa]s?|regadit[oa]s?|tirad[oa]s?|(se|se le|se les) (rompio|rompieron|rego|regaron|derramo|derramaron|abrio|abrieron|dano|danaron|aplasto|aplastaron|mojo|mojaron|derritio|derritieron|golpeo|golpearon|cayo|cayeron|revento|reventaron|maltrato|maltrataron|machuco|machucaron|chanco|chancaron|pudrio|pudrieron|paso|pasaron)|(en|un|una|otr[oa]) (frasco|envase|tarro|funda|bolsa|caja|paquete|presentacion|marca|tamano)s? (pequen\\\\w*|chiquit\\\\w*|grande\\\\w*|distint\\\\w*|diferente\\\\w*|otr\\\\w*|rot\\\\w*|abiert\\\\w*)|(otro|otra|distinto|distinta|diferente) (tamano|marca|presentacion|envase|empaque|calibre|color|sabor|funda|caja|bolsa|frasco|tarro|paquete)|(en|con) (otr[oa]s?|distint[oa]s?|diferentes?) (frasco|envase|tarro|funda|bolsa|caja|paquete|presentacion|marca|empaque)s?' + ")\\b");
   function analizarLlegada(frase, items, ctx) {
     ctx = ctx || {};
     const prods = ctx.cat ? ctx.cat.prods : Object.fromEntries(CAT.PRODUCTOS.map(p => [p.id, p]));
-    const t = normalizar(frase).replace(/[,.;]/g, " , ").replace(/\s+/g, " ").trim();
+    // (2-nov-2026) «no hay ninguna novedad con las latas, excepto que…», «sin problema con la frutilla»: eso no dice que algo no llegó
+    const t = normalizar(frase).replace(/[,.;]/g, " , ").replace(/\b(?:(?:no hay|no tengo|no existe|sin|no hubo) (?:ninguna |ningun |alguna |algun )?|(?:ninguna|ningun|cero|nada de) )(?:novedad|novedades|problema|problemas|inconveniente|inconvenientes|observacion|observaciones)(?: (?:con|en) (?:el|la|los|las|lo) [a-z]+(?: (?!excepto|salvo|solo|pero|aunque|sin|y\b|e\b)[a-z]+)?)?\b/g, " todo bien , ").replace(/\s+/g, " ").trim();
     const ids = items.map(it => it.p);
     const enviado = Object.fromEntries(items.map(it => [it.p, it.q]));
     const cant = Object.assign({}, enviado), mencion = {};
@@ -2254,7 +2263,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     const nombresProd = Array.from(new Set(ids.flatMap(p => [prods[p].n].concat(prods[p].sin || [])).map(x => normalizar(String(x)).replace(/[()]/g, " ").replace(/\s+/g, " ").trim()).filter(x => x.includes(" ") || x.length > 3))).sort((a, b) => b.length - a.length);
     const nombresFuera = cl => { let x = " " + cl + " "; nombresProd.forEach(nm => { x = x.split(" " + nm + " ").join(" producto "); }); return x.trim(); };
     // se parte en pedazos: «… y …», «… pero …», «… , …»
-    const pedazos = t.split(/\s*(?:,|\by\b|\bpero\b|\bmas\b|\bademas\b|\bsino\b)\s*/).map(x => x.trim()).filter(Boolean);
+    const pedazos = t.split(/\s*(?:,|\by\b|\bpero\b|\bmas\b|\bademas\b|\bsino\b|\baunque\b|\bexcepto(?: que)?\b|\bsalvo(?: que)?\b|\bsolo que\b|\bsin embargo\b|\bnada mas que\b)\s*/).map(x => x.trim()).filter(Boolean);
     let restoMal = false, restoBien = false; const soloEstos = new Set(), novedades = [];
     pedazos.forEach(cl => {
       // «no llegó (todo) bien», «no vino en buen estado»: es una queja de cómo llegó, no que no llegó (31-oct, video 1433)
@@ -2309,9 +2318,31 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     const cambios = ids.filter(p => Math.abs(cant[p] - enviado[p]) > 0.0005);
     // la novedad en limpio: solo lo que cuenta cómo llegó («la frutilla llegó pequeña»), sin «sí, llegó bien, pero…»
     // (con las tildes de lo que se dijo: se busca el mismo pedazo en la frase original)
-    const tw = t.split(" "), ow = String(frase).replace(/[,.;]/g, " , ").replace(/\s+/g, " ").trim().split(" ");
-    const original = cl => { if (tw.length !== ow.length) return cl; const cw = cl.split(" "); for (let i = 0; i + cw.length <= tw.length; i++) if (cw.every((w, k) => tw[i + k] === w)) return ow.slice(i, i + cw.length).join(" ").toLowerCase(); return cl; };
-    const limpia = Array.from(new Set(novedades.filter(Boolean).map(original))).join("; ");
+    // (se compara palabra por palabra con la frase original, cada una en minúsculas y sin tildes)
+    const ow = String(frase).replace(/[,.;]/g, " , ").replace(/\s+/g, " ").trim().split(" "), tw = ow.map(w => normalizar(w));
+    const original = cl => { const cw = cl.split(" "); for (let i = 0; i + cw.length <= tw.length; i++) if (cw.every((w, k) => tw[i + k] === w)) return ow.slice(i, i + cw.length).join(" ").toLowerCase(); return cl; };
+    // (2-nov-2026) la novedad dicha a medias («está muy pequeña», «muy maduro», «un poco aplastada») lleva el nombre del producto: «la frutilla está muy pequeña»
+    const nombreDe = p => { const n0 = String((prods[p] || {}).n || p).toLowerCase(), w0 = n0.split(" ")[0]; return (/as$/.test(w0) ? "las " : /s$/.test(w0) ? "los " : /a$|ión$|ez$|ud$|ad$|^(leche|miel|sal|carne|crema)$/.test(w0) ? "la " : "el ") + n0; };
+    // de quién se habla: el producto como lo dijo («el durazno», «los huevos»), o el único que se envió
+    const dicho = (() => { const vistos = new Set(); let txt = null;
+      ids.forEach(p => [prods[p].n].concat(prods[p].sin || []).map(x => normalizar(String(x)).replace(/[()]/g, " ").replace(/\s+/g, " ").trim()).filter(x => x.length > 2).sort((a, b) => b.length - a.length).some(nm => {
+        const m = tw.join(" ").match(new RegExp("\\b(el|la|los|las) " + nm.replace(/[.*+?^${}|[\]\\]/g, "\\$&") + "\\b")); if (m) { vistos.add(p); txt = original(m[0]); return true; } return false; }));
+      return vistos.size === 1 ? txt : null; })();
+    const sujeto = dicho || (unoSolo ? nombreDe(unoSolo) : null);
+    const VERBO = /(^|\s)(esta|está|estan|están|estaba|estaban|llego|llegó|llegaron|vino|vinieron|viene|vienen|tiene|tienen|tenia|tenía|hay|habia|había|es|son|era|eran|se|falta|faltan|falto|faltó|faltaron|parece|parecen|huele|gotea|chorrea|bota)(?=\s|$)/i;
+    const conSujeto = x => {
+      let y = x.replace(/^(todo|todos|todas)\s+(llego|llegó|llegaron|vino|vinieron|esta|está|estan|están)?\s*(bien|completo|completos|correcto)?\s*/i, "").replace(/^(llego|llegó|llegaron|vino|vinieron)\s+(bien|completo|completa|completos|completas|correcto)\s*/i, "").trim();
+      if (!y) return x;
+      if (!sujeto) return y;
+      const plural = /^(los|las)\s/i.test(sujeto), esta = plural ? "están " : "está ";
+      // «está muy pequeña», «muy maduro», «llegó golpeada» → con el producto delante
+      if (/^(esta|está|estan|están|llego|llegó|llegaron|vino|vinieron)(?=\s|$)/i.test(y)) return sujeto + " " + y;
+      if (/^(muy|un poco|algo|bastante|demasiado|medio|super|súper)(?=\s|$)/i.test(y)) return sujeto + " " + esta + y;
+      // solo el estado, sin verbo ni producto («aunque mojados», «aunque vencido», «en otra funda»)
+      if (!VERBO.test(y) && !/^(el|la|los|las|un|una|unos|unas)\s/i.test(y)) return sujeto + " " + esta + y;
+      return y;
+    };
+    const limpia = Array.from(new Set(novedades.filter(Boolean).map(original).map(conSujeto))).join("; ");
     // «no llegó todo bien» sin decir qué: es una queja sin detalle (la pantalla pregunta «¿Qué pasó?»)
     return { cant, obs: obs ? (limpia ? limpia.charAt(0).toUpperCase() + limpia.slice(1) : String(frase).trim()) : "", generico: obs && !limpia && !cambios.length, cambios, entendido: entendido || obs, completo: !cambios.length };
   }
@@ -5986,7 +6017,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
   let tToast = null;
   function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("ver"); clearTimeout(tToast); tToast = setTimeout(() => t.classList.remove("ver"), 3800); }
   // Rex: el asistente (sesion/act: la ventana tipo Siri; dijo: lo último que dijo; oyendo: lo último que oyó)
-  const BUILD = { id: "d8c9eb98", fecha: "2026-11-02 00:48" };
+  const BUILD = { id: "64666738", fecha: "2026-11-02 12:41" };
   const Rex = { lugar: "B", ultimo: null, despierto: 0, sesion: 0, act: 0, dijo: "", tDijo: 0, oyendo: "", tOyendo: 0 };
   /* La conversación con Rex (la ventana tipo Siri) se cierra sola cuando nadie dice nada durante 5 s. */
   const SESION_MS = 8000;   // 31-oct-2026: con 5 s Rex se cerraba mientras la persona pensaba («se corta de golpe»)
@@ -6036,7 +6067,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
   function hablar(txt, alTerminar, o) {
     o = o || {};
     if (txt && !o.anuncio) { Rex.dijo = txt; Rex.tDijo = Date.now(); if (Rex.sesion) { Rex.act = Date.now(); if (txt.length > 12) Rex.ultimaFrase = txt; } }
-    let hecho = false; const fin = () => { if (hecho) return; hecho = true; if (Rex.sesion) Rex.act = Date.now(); if (hablaActual && hablaActual.fin === fin) hablaActual = null; if (!hablaActual) { try { Oido.mudo(null); } catch (e) {} } if (alTerminar && !fin.callado) alTerminar(); siguienteVoz(); };
+    let hecho = false; const fin = () => { if (hecho) return; hecho = true; TTS.fin = Date.now(); if (Rex.sesion) Rex.act = Date.now(); if (hablaActual && hablaActual.fin === fin) hablaActual = null; if (!hablaActual) { try { Oido.mudo(null); } catch (e) {} } if (alTerminar && !fin.callado) alTerminar(); siguienteVoz(); };
     if (!st.config.hablar || !txt || !window.speechSynthesis || callaPorIphone()) {
       // en iPhone Rex no habla (el micrófono quedaría sordo): lo que contesta en una conversación se lee arriba
       if (txt && o.charla && callaPorIphone()) toast(txt);
@@ -6047,6 +6078,9 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     }
     // un aviso espera si alguien está hablando con el asistente (dando una orden o contestando en otro lugar)
     if (o.anuncio && avisoEspera(o.lugar) && !(o.cola === false && o.yaEspero)) { if (o.cola) colaVoz.push([txt, alTerminar, o]); else colaVoz.unshift([txt, alTerminar, Object.assign({}, o, { cola: true })]); setTimeout(siguienteVoz, 500); return; }
+    // (2-nov-2026, Freddy: «ni siquiera termina de decir el nombre y comienza a hablar») lo que se dice entero («Anotado: Luis.») no lo corta
+    // otra frase del sistema: espera su turno. Solo lo corta la persona (callarVoz, «cállate», hablarle encima).
+    if (hablaActual && hablaActual.o && hablaActual.o.entero && !o.urgente) { colaVoz.unshift([txt, alTerminar, Object.assign({}, o, { cola: true })]); return; }
     // un aviso no se corta: lo nuevo espera su turno (las respuestas pasan primero en la fila)
     if (hablaActual && (o.cola || hablaActual.anuncio)) { if (o.cola) colaVoz.push([txt, alTerminar, o]); else colaVoz.unshift([txt, alTerminar, o]); return; }
     try {
@@ -6109,7 +6143,8 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     esperaAvisos = 0;
     const [t, cb, o] = colaVoz.shift();
     if (o && o.vigente && !o.vigente()) { siguienteVoz(); return; }   // ya no hace falta decirlo
-    setTimeout(() => hablar(t, cb, Object.assign({}, o, { cola: false, yaEspero: ocupado })), 120);
+    // una pausa natural entre una frase y la siguiente (antes 120 ms: sonaba todo pegado)
+    setTimeout(() => hablar(t, cb, Object.assign({}, o, { cola: false, yaEspero: ocupado })), Math.max(120, 650 - (Date.now() - (TTS.fin || 0))));
   }
   function callarVoz() { colaVoz.length = 0; if (hablaActual) { const f = hablaActual.fin; hablaActual = null; f.cortado = true; f.callado = true; } cortarTTS(); try { Oido.mudo(null, true); } catch (e) {} }
   /* Avisos en voz alta en el lugar que tiene que hacer algo («cantar»): «Atención bodega: producción pide…» */
@@ -6907,6 +6942,17 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
       if (res.dice) hablar(res.dice, null, { charla: true });
     }).catch(err => { Mente.ultimoError = String(err && err.message || err); logVoz("Claude no respondió: sigue el intérprete de la página", Mente.ultimoError, l); if (siFalla) siFalla(); });
   }
+  function novedadTardia(l, txt) {
+    const nT = V.normalizar(String(txt || "")).replace(/[,.;:!¡¿?]/g, " ").replace(/\s+/g, " ").trim();
+    if (!/^(y |pero |aunque |excepto |salvo |solo que |sin embargo |eso si |lo unico )/.test(nT + " ")) return false;
+    const mRec = (respons[l].movs || []).map(id => st.movs.find(m => m.id === id)).find(m => m && m.tipo === "recepcion");
+    const tr = mRec ? st.transito.find(x => x.id === mRec.ref) : null; if (!tr) return false;
+    const an = V.analizarLlegada(txt, tr.items, { lugar: tr.a, cat: st.cat }); if (!an.obs || an.cambios.length) return false;
+    tr.observacion = tr.observacion ? tr.observacion + ". " + an.obs : an.obs; mRec.nota = (mRec.nota ? mRec.nota + " · " : "") + "Observación: " + an.obs;
+    guardar(); renderTodo(); logVoz("novedad de la llegada dicha después", an.obs, l); toast("Novedad registrada: " + an.obs + ".");
+    hablar("Anotado: " + an.obs.charAt(0).toLowerCase() + an.obs.slice(1) + ". " + (respons[l].pregunta || "¿Quién lo recibió?"), () => escucharResponsable(l), { entero: true });
+    return true;
+  }
   function responsableDicho(l, txt, via) {
     if (!respons[l]) return;   // la respuesta llegó después de que se cerró la pregunta (aporte de Codex, 31-oct-2026)
     if (via === "voz" && respons[l] && respons[l].rapido && Mente.activa() && !Mente.enCurso && Mente.esCorreccion(txt)) { menteDirecto(l, txt, () => { if (!deshacerRapido(l, txt, via)) responsableDicho(l, txt, "voz-local"); }); return; }
@@ -6918,6 +6964,8 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     const n = nombreDe(txt, l), empN = !n && V.empateNombre ? V.empateNombre() : null;
     // lo que repite lo que Rex acaba de decir es su eco: ni nombre nuevo ni orden (un nombre de la lista sí cuenta aunque Rex lo haya dicho)
     if (via === "voz" && (!n || !personasDet().some(x => x.nombre === n)) && Oido.pareceEco && Oido.pareceEco(txt)) { logVoz("se ignora: era la voz del asistente", txt, l); escucharResponsable(l); return; }
+    // (2-nov-2026) «llegó bien» … (pausa) … «aunque el plátano está muy maduro»: es la novedad de la llegada que se acaba de registrar, no un nombre ni una orden
+    if (!n && respons[l] && novedadTardia(l, txt)) return;
     if (!n && via === "voz" && (esOrdenClara(txt, l) || seguimiento(txt, l))) { logVoz("era una orden nueva (no un nombre)", txt, l); respons[l] = null; renderTarjeta(l); ordenTexto(l, txt, via); return; }
     if (!n && intentarIA(l, txt, via, "nombre")) return;
     if (!n) {
@@ -6947,7 +6995,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     logVoz("responsable", nombre, l);
     guardar(); renderTodo();
     if (resultado[l]) { resultado[l].resp = nombre; renderTarjeta(l); }
-    if (!callado) hablar("Anotado: " + nombre + ".");
+    if (!callado) hablar("Anotado: " + nombre + ".", null, { entero: true });
   }
   /* «solo un balde», «no, solo mover un balde», «mejor dos cajas», «sí pero solo uno», «eran tres» mientras se pregunta «¿Deseas mover…?»:
      es corregir la cantidad (31-oct, video 1419: Rex no lo entendía y hasta sumaba otro balde). Devuelve la orden corregida o null. */
@@ -7308,7 +7356,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     if (respons[l]) return respons[l].pregunta;
     if (motivo[l]) return "¿Por qué no se movió?";
     const p = pend[l]; if (p && !p.bloqueo && !p.soloInfo) return (p.tipo === "traslado" ? (p.pedido ? "¿Despacho? " : "¿Muevo? ") : p.tipo === "pedido" ? "¿Envío el pedido? " : "¿Confirmas? ") + (p.resumen || "");
-    if (charla && charla.l === l) { const tr = trCharla(); if (tr) return charla.paso === "confirmar" ? "¿Es correcto? " + textoPropuesta(tr, charla.propuesta || { cant: {} }) : "¿Llegó todo bien? " + A.txtItemsCorto(st, tr.items, l) + " " + LUG[tr.de].de; }
+    if (charla && charla.l === l) { const tr = trCharla(); if (tr) return charla.paso === "confirmar" ? fraseConfirmar(tr, charla.propuesta || { cant: {} }) + " ¿Lo registro así?" : "¿Está correcto el pedido, o hay alguna observación? " + A.txtItemsCorto(st, tr.items, l) + " " + LUG[tr.de].de; }
     return "";
   }
   function pintarRex() {
@@ -7580,6 +7628,8 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
      el «¿sí o no?», el responsable, la cantidad y la conversación con Rex. Antes la llegada se preguntaba al instante y se quedaba con el «sí»
      o el nombre que eran para la bodega (y se daba por recibido). Espera hasta 3 min; después avisa igual. */
   function ocupadoParaAvisos() {
+    // mientras Rex habla, y un momento después (1,5 s), ningún aviso nuevo empieza (ni su sonido)
+    if (hablaActual || Date.now() - (TTS.fin || 0) < 1500) return true;
     if (LUGS.some(x => (pend[x] && !pend[x].soloInfo && !pend[x].bloqueo) || respons[x] || motivo[x] || cantPend[x])) return true;
     if (Rex.sesion && Date.now() - (Rex.act || 0) < SESION_MS + 500) return true;
     try { if (["orden", "respuesta", "motivo"].includes(Oido.modo) && !(Oido.manos && Oido.modo === "vigilia")) return true; } catch (e) {}
@@ -7597,7 +7647,9 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     envioAviso = tr.id; charla = { tr: tr.id, l: tr.a, paso: "llego", obs: [], propuesta: null, t: Date.now() };
     Sonido.llegada(); renderEnvio();
     const pe = tr.pedido ? st.pedidos.find(x => x.id === tr.pedido) : null;
-    setTimeout(() => { if (charla && charla.tr === tr.id) decirCharla("Atención " + LUG[tr.a].corto + ": " + LUG[tr.de].nombre + " te envió " + A.txtItemsCorto(st, tr.items, tr.a) + (pe && pe.de === tr.a ? ", es tu pedido" : "") + ". ¿Llegó todo bien, o hay alguna novedad?", true); }, 900);
+    // (2-nov-2026, Freddy) «Atención producción: llegaron 2 baldes de frutilla de la bodega. ¿Está correcto el pedido, o hay alguna observación?»
+    const its = A.txtItemsCorto(st, tr.items, tr.a), varios = tr.items.length > 1 || !/^(1|un|una|medio|media)\s/.test(its);
+    setTimeout(() => { if (charla && charla.tr === tr.id) decirCharla("Atención " + LUG[tr.a].corto + ": " + (varios ? "llegaron " : "llegó ") + its + " " + LUG[tr.de].de + (pe && pe.de === tr.a ? ", es tu pedido" : "") + ". ¿Está correcto el pedido, o hay alguna observación?", true); }, 900);
   }
   /* Si el envío ya debería haber llegado y nadie confirmó, se vuelve a avisar una vez en el lugar que recibe */
   const yaRecordado = new Set();
@@ -7607,7 +7659,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
       yaRecordado.add(tr.id);
       if (pend[tr.a] || motivo[tr.a]) return;
       if (!charla || !trCharla()) { envioAviso = tr.id; charla = { tr: tr.id, l: tr.a, paso: "llego", obs: [], propuesta: null }; renderEnvio(); }
-      if (charla.tr === tr.id) { Sonido.llegada(); decirCharla("Atención " + LUG[tr.a].corto + ". Ya debería haber llegado " + A.txtItemsCorto(st, tr.items, tr.a) + " " + LUG[tr.de].de + ". ¿Llegó todo bien?", true); }
+      if (charla.tr === tr.id) { Sonido.llegada(); decirCharla("Atención " + LUG[tr.a].corto + ". Ya debería haber llegado " + A.txtItemsCorto(st, tr.items, tr.a) + " " + LUG[tr.de].de + ". ¿Está correcto el pedido, o hay alguna observación?", true); }
     });
   }
   function decirCharla(texto, esAviso) {
@@ -7640,7 +7692,14 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     const obs = charla.obs.concat(an.obs ? [an.obs] : []).join(". ");
     charla.paso = "confirmar"; charla.propuesta = { cant: an.cant, obs, frase };
     logVoz("lo que entendí de la llegada", textoPropuesta(tr, charla.propuesta), tr.a);
-    decirCharla("Entendí: " + textoPropuesta(tr, charla.propuesta) + ". ¿Lo registro así?");
+    decirCharla(fraseConfirmar(tr, charla.propuesta) + " ¿Lo registro así?");
+  }
+  // (2-nov-2026, Freddy) «El pedido llegó completo, pero con esta observación: el plátano está muy maduro.» (lo mismo en la voz y en la tarjeta)
+  function fraseConfirmar(tr, pr) {
+    const completo = tr.items.every(it => Math.abs((pr.cant[it.p] != null ? pr.cant[it.p] : it.q) - it.q) < 0.0005);
+    const o = pr.obs ? pr.obs.charAt(0).toLowerCase() + pr.obs.slice(1) : "";
+    return completo ? (o ? "El pedido llegó completo, pero con esta observación: " + o + "." : "El pedido llegó completo.")
+      : "Entendí: " + textoPropuesta(tr, Object.assign({}, pr, { obs: "" })) + (o ? ". Y esta observación: " + o : "") + ".";
   }
   function registrarLlegada(tr, cant, via, frase, obsDada) {
     const obs = obsDada != null ? obsDada : (charla ? charla.obs.join(". ") : ""), l = tr.a;
@@ -7688,7 +7747,9 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     { const R1 = V.interpretar(frase, { lugar: tr.a, cat: st.cat }); if (R1.listo && ["estado", "consulta", "deshacer", "abrir_caja", "cerrar_caja", "venta"].includes(R1.intent)) return false; }
     if (Oido.despierta(frase)) return false;
     // una orden clara («mover una mano de banano», «necesito frutilla») no es la respuesta a la llegada
-    if (!(sn && sn.limpio) && !/\b(falt|lleg|vin|recib|abiert|rot|golpe|dan|complet|novedad|sobr)/.test(V.normalizar(frase))) { const R0 = V.interpretar(frase, { lugar: tr.a, cat: st.cat }); if (R0.listo && ["traslado", "pedido", "merma", "produccion", "conteo", "agotado", "venta", "estado", "despachar_pedido", "consulta", "abrir_caja", "cerrar_caja"].includes(R0.intent)) return false; }
+    // (2-nov-2026) «sí, todo correcto, aunque el durazno está un poco mojado» se leía como «llevar durazno»: lo que cuenta cómo llegó no es una orden
+    if (!(sn && sn.limpio) && !/\b(falt|lleg|vin|recib|abiert|rot|golpe|dan|complet|novedad|sobr|correct|observ|aunque|excepto|salvo|sin embargo)/.test(V.normalizar(frase)) &&
+        !(() => { const a0 = analizar(String(frase || "")); return a0.obs && !a0.cambios.length; })()) { const R0 = V.interpretar(frase, { lugar: tr.a, cat: st.cat }); if (R0.listo && ["traslado", "pedido", "merma", "produccion", "conteo", "agotado", "venta", "estado", "despachar_pedido", "consulta", "abrir_caja", "cerrar_caja"].includes(R0.intent)) return false; }
     if (charla.paso === "llego") {
       if (sn && sn.limpio && sn.r === "si") { registrarLlegada(tr, null, via, frase); return true; }
       { const an0 = analizar(String(frase || ""));
@@ -7718,10 +7779,10 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     const tr = charla ? st.transito.find(x => x.id === charla.tr && x.estado === "pendiente") : null;
     if (!tr) { box.innerHTML = ""; return; }
     const paso = charla.paso;
-    const tit = { llego: "¿Llegó todo bien?", detalle: "¿Qué pasó?", confirmar: "¿Lo registro así?" }[paso];
-    const ayuda = { llego: "Di «sí», o cuenta qué pasó: «llegó una lata abierta», «faltó una caja», «no llegó el banano».",
+    const tit = { llego: "¿Está correcto el pedido, o hay alguna observación?", detalle: "¿Qué pasó?", confirmar: "¿Lo registro así?" }[paso];
+    const ayuda = { llego: "Di «sí», o cuenta la novedad: «llegó bien, aunque el plátano está muy maduro», «faltó una caja», «no llegó el banano».",
       detalle: "Cuenta cuánto llegó o la novedad, o toca «No, llegó distinto» para escribir las cantidades.", confirmar: "Di «sí» para registrarlo o «no» para decirlo de nuevo." }[paso];
-    const propuesta = paso === "confirmar" && charla.propuesta ? '<p class="envio-prop"><b>Entendí:</b> ' + esc(textoPropuesta(tr, charla.propuesta)) + "</p>" : "";
+    const propuesta = paso === "confirmar" && charla.propuesta ? '<p class="envio-prop">' + esc(fraseConfirmar(tr, charla.propuesta)) + "</p>" : "";
     box.innerHTML = '<div class="envio-card a-' + tr.a + (Oido.abierto && Oido.lugar === charla.l ? " oye" : "") + '" role="alert"><div class="envio-txt"><b>' + esc(llegoTxt(tr)) + '</b><span>' + esc(A.txtItemsCorto(st, tr.items, tr.a)) + "</span>" +
       propuesta + '<p class="envio-preg">' + esc(tit) + " <small>" + esc(ayuda) + "</small></p>" +
       (charla.obs.length && paso !== "confirmar" ? '<ul class="envio-obs">' + charla.obs.map(o => "<li>Novedad: " + esc(o) + "</li>").join("") + "</ul>" : "") + "</div>" +
@@ -7823,6 +7884,10 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     clave() { try { return localStorage.getItem(CLAVE + "-ia-clave") || ""; } catch (e) { return ""; } },
     activa() { return !!IA.clave() && st.config.iaUsar !== false; },
     modelo() { return (st.config.iaModelo || "claude-haiku-5-5").trim(); },
+    /* (2-nov-2026) Claude Haiku 5.5 piensa antes de contestar (viene encendido) y ese pensamiento cuenta dentro de max_tokens: con 200 o 500
+       la respuesta podía quedar cortada. Para Rex (rápido y barato) se apaga el pensamiento y el esfuerzo va en «low» en los modelos 5.x
+       que lo permiten (Haiku y Sonnet). Otros modelos van como antes. */
+    opciones() { const m = IA.modelo(); return /^claude-(haiku|sonnet)-5/.test(m) ? { thinking: { type: "disabled" }, output_config: { effort: "low" } } : {}; },
     enCurso: porLugar(false),
     ultimoError: ""
   };
@@ -7831,7 +7896,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     let pregunta = "";
     if (respons[l]) pregunta = respons[l].pregunta;
     else if (plan && !plan.bloqueo && !plan.soloInfo) pregunta = paraVoz(A.pregunta(st, plan)) + " (" + (plan.resumen || "") + ")";
-    else if (charla && charla.l === l) { const tr = trCharla(); if (tr) pregunta = (charla.paso === "confirmar" && charla.propuesta ? "¿Es correcto lo que entendí? " + textoPropuesta(tr, charla.propuesta) : "¿Llegó todo bien? Envío " + LUG[tr.de].de + ": " + A.txtItemsCorto(st, tr.items, l)); }
+    else if (charla && charla.l === l) { const tr = trCharla(); if (tr) pregunta = (charla.paso === "confirmar" && charla.propuesta ? fraseConfirmar(tr, charla.propuesta) + " ¿Lo registro así?" : "¿Está correcto el pedido, o hay alguna observación? Envío " + LUG[tr.de].de + ": " + A.txtItemsCorto(st, tr.items, l)); }
     else if (motivo[l]) pregunta = "¿Por qué no se movió? (" + (motivo[l].plan.resumen || "") + ")";
     const llegan = st.transito.filter(t => t.estado === "pendiente" && t.a === l).map(t => A.txtItemsCorto(st, t.items, l) + " " + LUG[t.de].de);
     const piden = st.pedidos.filter(p => p.estado === "pendiente" && p.a === l).map(p => A.txtItemsCorto(st, p.items, p.de) + " (pedido " + LUG[p.de].de + ")");
@@ -7854,7 +7919,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     const r = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: { "content-type": "application/json", "x-api-key": IA.clave(), "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" },
-      body: JSON.stringify({ model: IA.modelo(), max_tokens: 200, system: sistema, messages: [{ role: "user", content: usuario }] })
+      body: JSON.stringify(Object.assign({ model: IA.modelo(), max_tokens: 400, system: sistema, messages: [{ role: "user", content: usuario }] }, IA.opciones()))
     });
     if (!r.ok) { let m = r.status + ""; try { const j = await r.json(); m += " " + ((j.error && j.error.message) || ""); } catch (e) {} throw new Error(m); }
     const j = await r.json();
@@ -8036,7 +8101,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
         const r = await fetch("https://api.anthropic.com/v1/messages", {
           method: "POST", signal: ac.signal,
           headers: { "content-type": "application/json", "x-api-key": IA.clave(), "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" },
-          body: JSON.stringify({ model: IA.modelo(), max_tokens: 500, system: this.sistema(), tools: this.herramientas, messages: msgs })
+          body: JSON.stringify(Object.assign({ model: IA.modelo(), max_tokens: 800, system: this.sistema(), tools: this.herramientas, messages: msgs }, IA.opciones()))
         });
         if (!r.ok) { let m = r.status + ""; try { const j = await r.json(); m += " " + ((j.error && j.error.message) || ""); } catch (e) {} throw new Error(m); }
         return await r.json();
@@ -8292,7 +8357,9 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     const tokNorm = x => enCifra((V.normalizar ? V.normalizar(x) : String(x || "").toLowerCase()).replace(/[^a-z0-9ñ]/g, ""));
     const claveTxt = x => String(x || "").trim().split(/\s+/).map(tokNorm).filter(Boolean);
     let ultAtendido = null;   // { t, txt }: lo último que ya se contestó (el navegador cierra la misma frase un poco después)
-    const mismaFrase = (a, b) => { const x = claveTxt(a), y = claveTxt(b); return !!(x.length && y.length && x[0] === y[0]); };
+    // (2-nov-2026) la misma frase = una es el comienzo de la otra («sí» y luego «sí claro»); antes bastaba la primera palabra
+    // y en el iPhone «sí, exacto, concuerdo» se ignoraba por venir justo después de «sí, la frutilla llegó bien, aunque…»
+    const mismaFrase = (a, b) => { const x = claveTxt(a), y = claveTxt(b); if (!x.length || !y.length) return false; const n = Math.min(x.length, y.length); for (let i = 0; i < n; i++) if (x[i] !== y[i]) return false; return true; };
     /* Lo que queda de lo dicho al quitar del comienzo lo que repite la voz de Rex (su eco). «Sí» y «no» nunca se quitan. */
     const dichosRex = [];   // lo último que dijo Rex (su eco puede llegar después de que empiece a decir otra cosa)
     /* Las frases cortas con las que Rex saluda o se despide («Dime.», «Te escucho.», «De nada.»): si el micrófono las oye de vuelta (su propio parlante), no son una orden ni un nombre.
@@ -8454,7 +8521,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
       r.onsoundstart = () => { diag.tSonido = Date.now(); };
       r.onspeechstart = () => { diag.tVoz = Date.now(); Rex.voz = Date.now(); };
       r.onnomatch = () => dev("el navegador oyó voz pero no pudo escribirla");
-      let buf = "", alts = [], interino = "", cerrado = false, tResp = null, tFin = null, tSuelta = null, tPre = null, tBarge = null, tAdel = null, limite = null, desdeManos = false;
+      let buf = "", alts = [], interino = "", cerrado = false, tResp = null, tFin = null, tSuelta = null, tPre = null, tBarge = null, tAdel = null, limite = null, desdeManos = false, tOido = 0, prorrogas = 0;
       let holdTxt = null, tHold = null, holdFn = null;   // frase a medias que espera lo que sigue (Chrome la cerró en una pausa); mientras sigue hablando, se sigue esperando
       const HOLD_MS = 1700;
       const lat = (k, ms) => { diag.lat.push({ k, ms: Math.round(ms), t: Date.now() }); if (diag.lat.length > 60) diag.lat.shift(); };
@@ -8489,6 +8556,9 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
       const vencio = () => {
         if (modo === "orden") { if (buf.trim()) { procesarOrden(buf.trim(), alts); return; } if (manos === l && desdeManos) { r._modo("vigilia"); return; } try { r.stop(); } catch (e) {} return; }
         if (modo === "motivo") { const e = espera; if (e && e.l === l && e.tipo === "motivo") { espera = null; if (e.alMotivo) e.alMotivo(null); } despues(); return; }
+        // (2-nov-2026) si justo está hablando (llegó texto hace menos de 2,5 s), no se le corta: se esperan 3 s más (hasta 4 veces).
+        // En el iPhone «la frutilla llegó golpeada» dicho al final del tiempo cerraba la escucha y el «sí» siguiente se perdía al reabrir.
+        if (Date.now() - tOido < 2500 && prorrogas < 4) { prorrogas++; dev("se espera: todavía está hablando"); ponerLimite(3000); return; }
         // respuesta: se reinicia la escucha (si se quedó trabada, así se recupera) mientras la pregunta siga abierta
         try { r.stop(); } catch (e) {}
       };
@@ -8754,7 +8824,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
       };
       r.onresult = ev => {
         if (!vigente()) return;
-        const tAhora = Date.now(); diag.tTexto = tAhora;
+        const tAhora = Date.now(); diag.tTexto = tAhora; tOido = tAhora;
         // sigue hablando después de una frase a medias: se espera a que termine (no se pregunta encima de lo que dice)
         if (holdTxt != null && holdFn && mudoTxt == null) { clearTimeout(tHold); tHold = setTimeout(holdFn, HOLD_MS); }
         let candidatos = [], hayFinal = false; interino = "";
@@ -8927,18 +8997,23 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
           const corregible = pend[l] && ["traslado", "pedido", "compra"].includes(pend[l].tipo);
           let corrige = false; if (corregible && ahora) { try { corrige = !!corregirCantidad(l, ahora, V.interpretar(ahora, { lugar: l, cat: st.cat })); } catch (e) {} }
           if (corrige) { if (hayFinal && !interino) tFin = setTimeout(evaluarRespuesta, 280); return; }
-          const bueno = [ahora].concat(candidatos).find(x => { const sn = V.siNo(x); return sn && sn.limpio && (hayFinal || !/(^|\s)eso es$/.test(V.normalizar(x).replace(/[,.;:!¡¿?]/g, " ").replace(/\s+/g, " ").trim())); });
+          // (2-nov-2026) en la llegada «no hay observaciones», «ninguna novedad», «el pedido está correcto» también son un sí
+          const enLlegada = charla && charla.l === l && charla.paso !== "confirmar", opcSN = enLlegada ? { llegada: true } : undefined;
+          const bueno = [ahora].concat(candidatos).find(x => { const sn = V.siNo(x, opcSN); return sn && sn.limpio && (hayFinal || !/(^|\s)eso es$/.test(V.normalizar(x).replace(/[,.;:!¡¿?]/g, " ").replace(/\s+/g, " ").trim())); });
           if (bueno) {
-            const esNo = (V.siNo(bueno) || {}).r === "no";
+            const esNo = (V.siNo(bueno, opcSN) || {}).r === "no";
             // un «no» suelto mientras se confirma un movimiento o una entrada puede seguir con la corrección: se espera un poco más
             // un «no» que todavía no terminó puede seguir: «no, sí, llegó todo bien», «no, faltó una caja», «no, corregir, entraron 3» (video 1446): se espera
             const sigueHablando = !(hayFinal && !interino);
-            const ms = esNo && sigueHablando ? (charla && charla.l === l ? 1200 : corregible ? 1100 : 600) : charla && charla.l === l ? (sigueHablando ? 900 : charla.paso === "confirmar" ? 140 : 350) : 110;
+            // en la llegada, un «sí / llegó bien» puede seguir con «…aunque el plátano está muy maduro»: se esperan 2 s callado antes de darlo por completo
+            // (2-nov-2026, Freddy: «debería esperar un rato, unos 3 segundos máximo»; en el iPhone la frase nunca se cierra sola y antes eran 0,9 s)
+            const ms = esNo && sigueHablando ? (charla && charla.l === l ? 1200 : corregible ? 1100 : 600) : enLlegada ? (/[,;]\s*$/.test(String(bueno)) ? 2600 : 2000) : charla && charla.l === l ? (sigueHablando ? 900 : 140) : 110;
             tResp = setTimeout(() => respondeYa(bueno), ms); return;
           }
           // (1-nov-2026, video 1446) también si lo que llegó ahora era solo el eco de Rex (se descartó) y lo tuyo quedó esperando: si no, el eco
           // cancelaba el temporizador y «Luis» (el nombre) se quedaba sin atender hasta la frase siguiente
-          if ((hayFinal || buf.trim()) && !interino) tFin = setTimeout(evaluarRespuesta, 280);   // otra cosa: se revisa tras una pausa corta
+          // otra cosa: se revisa tras una pausa corta (en la llegada, más larga: «no hay novedad, … excepto que el empaque…»)
+          if ((hayFinal || buf.trim()) && !interino) tFin = setTimeout(evaluarRespuesta, enLlegada ? 1200 : 280);
           return;
         }
         if (modo === "motivo") { if ((hayFinal || buf.trim()) && !interino) tFin = setTimeout(() => { if (vigente() && buf.trim()) motivoDicho(buf.trim()); }, 350); return; }
@@ -8952,13 +9027,15 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
          terminada (como haría Chrome). Si el iPhone sí marca el final, se usa ese. */
       if (modoIphone()) {
         const base = r.onresult; let tomado = [], tQuieto = null, kUlt = [], tCambio = 0, pegado = null;
-        const quietoMs = () => modo === "respuesta" ? 700 : modo === "motivo" ? 800 : 950;
+        // (2-nov-2026) en la llegada se espera más: «llegó bien… aunque el plátano está muy maduro»
+        const quietoMs = () => modo === "respuesta" ? (charla && charla.l === l && charla.paso !== "confirmar" ? 2000 : 700) : modo === "motivo" ? 800 : 950;
         const pasar = (txt, fin, c) => { const a = [{ transcript: txt, confidence: c }]; a.isFinal = fin; base({ resultIndex: 0, results: [a] }); };
         // ya se contestó con lo que se iba oyendo («sí, …»): eso queda tomado, y lo que siga sin pausa es la misma frase («sí, hazlo»), no una respuesta nueva
         r._consumir = dicho => { tomado = kUlt.slice(); clearTimeout(tQuieto); pegado = dicho ? { txt: String(dicho), t: Date.now() } : null; };
         r.onresult = ev => {
           if (!vigente()) return;
           const res = Array.from(ev.results || []); if (!res.length) return;
+          tOido = Date.now();
           const todo = res.map(x => (x[0] && x[0].transcript) || "").join(" ").replace(/\s+/g, " ").trim();
           const ult = res[res.length - 1], fin = !!ult.isFinal, c = Math.max(0.88, (ult[0] && ult[0].confidence) || 0);
           const pal = todo ? todo.split(" ") : [], k = pal.map(tokNorm);
