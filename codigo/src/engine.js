@@ -183,7 +183,9 @@
     const ls = st.lotes[l][p] || (st.lotes[l][p] = []);
     if (lotes && lotes.length) {
       let tot = 0;
-      lotes.forEach(lo => { if (!lo.sinLote) { ls.push({ q: lo.q, f: lo.f }); tot += lo.q; } });
+      // (3-nov-2026, simulación del negocio) nunca más lotes que lo que entra: si llegó solo una parte, o vuelve solo lo que faltó,
+      // se toman los lotes que salieron hasta completar esa cantidad (antes se ponían todos y los lotes sumaban más que el inventario)
+      lotes.forEach(lo => { if (lo.sinLote || tot >= q - 0.0005) return; const tom = r3(Math.min(lo.q, q - tot)); if (tom > 0.0005) { ls.push({ q: tom, f: lo.f }); tot = r3(tot + tom); } });
       if (q - tot > 0.0005) ls.push({ q: r3(q - tot), f: fechaHoy });
     } else ls.push({ q: r3(q), f: fechaHoy });
     // juntar lotes del mismo día
@@ -228,7 +230,23 @@
     }
     if (mov.tipo === "recepcion") {
       const tr = st.transito.find(x => x.id === mov.ref);
-      if (tr) { tr.estado = "pendiente"; tr.recibido = null; tr.tRec = null; }
+      // (3-nov-2026, simulación del negocio) si ya se decidió qué hacer con lo que faltó (volvió, sigue en camino, se perdió), eso va primero:
+      // si no, lo que volvió se contaba dos veces
+      if (tr && tr.revisada && tr.revisada.mov) { const rm = st.movs.find(x => x.id === tr.revisada.mov && !x.deshecho); if (rm) return { ok: false, msg: "Primero deshaz lo que se decidió con lo que faltó (" + (rm.titulo || rm.tipo) + ")." }; }
+      if (tr && tr.revisada && tr.revisada.nuevo) { const nv = st.transito.find(x => x.id === tr.revisada.nuevo && x.estado !== "anulado"); if (nv) return { ok: false, msg: "Primero deshaz lo que quedó en camino de ese envío." }; }
+      if (tr) { tr.estado = "pendiente"; tr.recibido = null; tr.tRec = null; tr.revisada = null; }
+    }
+    // (3-nov-2026) deshacer «no se acepta»: el envío vuelve a estar en camino y su pedido vuelve a como estaba
+    const repuesto = mov.pedidoNuevo ? st.pedidos.find(x => x.id === mov.pedidoNuevo) : null;
+    if (repuesto && repuesto.estado === "despachado") return { ok: false, msg: "Lo que se volvió a pedir ya se despachó otra vez. Deshaz primero ese envío." };
+    if (mov.tipo === "rechazo") {
+      const tr = st.transito.find(x => x.id === mov.ref);
+      if (tr && tr.estado !== "rechazado") return { ok: false, msg: "Ese envío ya cambió después. Deshaz primero lo último." };
+      const neg0 = (mov.deltas || []).filter(d => d.q > 0 && stockDe(st, d.l, d.p) - d.q < -0.0005);
+      if (neg0.length && !meta.forzar) { const d = neg0[0]; return { ok: false, sinStock: true, msg: "No se puede: parte de lo que volvió " + CAT.LUGARES[d.l].a + " ya se usó." }; }
+      if (tr) { tr.estado = "pendiente"; tr.rechazo = null; tr.repedido = null; }
+      if (repuesto && repuesto.estado === "pendiente") { repuesto.estado = "anulado"; repuesto.anuladoPor = mov.id; }
+      if (tr && tr.pedido && mov.pedidoAntes) { const pe = st.pedidos.find(x => x.id === tr.pedido); if (pe) { pe.estado = mov.pedidoAntes; pe.rechazado = null; } }
     }
     if (mov.tipo === "venta") { const v = st.ventas.find(x => x.mov === mov.id); if (v) v.deshecha = true; }
     // (3-nov-2026) listas limpias: deshacer «pedido quitado» lo vuelve a poner; deshacer lo que se decidió de un faltante lo vuelve a dejar en rojo
@@ -246,6 +264,8 @@
       }
     }
     // (después de revisar que se puede: si lo devuelto ya se usó, no se toca nada)
+    // deshacer «se perdió / no había» de un envío entero: vuelve a estar en camino
+    if (mov.tipo === "perdida") { const trp = st.transito.find(x => x.id === mov.ref); if (trp && trp.estado === "perdido") { trp.estado = "pendiente"; trp.perdida = null; trp.repedido = null; if (repuesto && repuesto.estado === "pendiente") { repuesto.estado = "anulado"; repuesto.anuladoPor = mov.id; } if (trp.pedido && mov.pedidoAntes) { const pe = st.pedidos.find(x => x.id === trp.pedido); if (pe) { pe.estado = mov.pedidoAntes; pe.rechazado = null; } } } }
     if (mov.tipo === "devolucion" || mov.tipo === "perdida" || mov.tipo === "sigue_en_camino") {
       const tr = st.transito.find(x => x.id === mov.ref);
       if (mov.tipo === "sigue_en_camino" && mov.nuevo) { const nv = st.transito.find(x => x.id === mov.nuevo); if (nv && nv.estado !== "pendiente") return { ok: false, msg: "Lo que seguía en camino ya llegó. Deshaz primero esa recepción." }; if (nv) nv.estado = "anulado"; }
@@ -376,6 +396,58 @@
        «perdido»:  se perdió o se dañó en el camino → queda anotado (el inventario ya no lo tenía)
        «dejar»:    se deja así (revisada)
      Cualquiera de las cuatro quita la diferencia de la franja roja. */
+  /* (3-nov-2026, Freddy: «no se acepta el pedido porque no llegó / no está completo… no hacer la contabilidad de aumentar, mandar igual a sí mismo»)
+     NO ACEPTAR un envío: el que recibe no suma nada y todo lo que salió vuelve al que lo mandó (con sus lotes). Queda el motivo y quién.
+     Si el envío era para un pedido, el pedido vuelve a quedar pendiente (marcado «rechazado»): el que despacha decide otra vez qué hacer. */
+  function rechazarEnvio(st, trId, o) {
+    o = o || {};
+    const tr = st.transito.find(x => x.id === trId);
+    if (!tr || tr.estado !== "pendiente") return null;
+    const L = CAT.LUGARES;
+    const mov = aplicar(st, { tipo: "rechazo", lugar: tr.a, de: tr.a, a: tr.de, ref: tr.id, por: o.por, via: o.via, frase: o.frase,
+      titulo: "No se aceptó " + L[tr.a].en + ": vuelve " + L[tr.de].a, info: itemsTexto(st, tr.items) + (o.motivo ? " · Motivo: " + o.motivo : ""),
+      nota: o.motivo ? "No se aceptó: " + o.motivo : "No se aceptó",
+      deltas: tr.items.map(it => ({ l: tr.de, p: it.p, q: it.q, lotes: tr.lotes && tr.lotes[it.p] })) });
+    tr.estado = "rechazado"; tr.rechazo = { motivo: o.motivo || null, por: o.por || null, t: ahora(st), mov: mov.id };
+    reponerPedido(st, tr, mov, o.motivo || null);
+    return mov;
+  }
+  /* No llegó NADA y se perdió en el camino («perdido»), o el que lo mandó en realidad no lo tenía («nohabia»): nadie suma ni recupera
+     (el inventario del que lo mandó ya se descontó al despachar). Queda anotado; el pedido, si había, vuelve a pendiente. */
+  /* (3-nov-2026, simulación del negocio) Si lo que no se aceptó (o se perdió) era para un pedido, lo que hacía falta se vuelve a pedir APARTE,
+     con lo mismo que salió: el pedido original queda despachado y su saldo (si salió a medias) sigue igual. Antes el pedido original volvía
+     entero a pendiente y, con el saldo, se pedía dos veces lo mismo. El nuevo lleva `repone` (de qué pedido viene) y `rechazado` (por qué). */
+  function reponerPedido(st, tr, mov, motivo) {
+    if (!tr.pedido) return null;
+    const pe = st.pedidos.find(x => x.id === tr.pedido); if (!pe) return null;
+    const nv = { id: id(st, "P"), de: pe.de, a: pe.a, items: tr.items.map(copiaItem), t: ahora(st), por: pe.por, estado: "pendiente", repone: pe.id, rechazado: { t: ahora(st), motivo: motivo || null, envio: tr.id } };
+    st.pedidos.push(nv); mov.pedidoNuevo = nv.id; tr.repedido = nv.id;
+    return nv;
+  }
+  function perderEnvio(st, trId, o) {
+    o = o || {};
+    const tr = st.transito.find(x => x.id === trId);
+    if (!tr || tr.estado !== "pendiente") return null;
+    const L = CAT.LUGARES, nohabia = o.accion === "nohabia";
+    const mov = aplicar(st, { tipo: "perdida", lugar: nohabia ? tr.de : tr.a, de: tr.de, a: tr.a, ref: tr.id, por: o.por, via: o.via, frase: o.frase, deltas: [],
+      titulo: nohabia ? "No había " + L[tr.de].en + " (el sistema decía que sí)" : "Se perdió en el camino " + L[tr.de].de + " " + L[tr.a].a,
+      info: itemsTexto(st, tr.items), nota: o.motivo || (nohabia ? "No había: el inventario del sistema tenía de más" : "No llegó: se perdió en el camino") });
+    tr.estado = "perdido"; tr.perdida = { accion: nohabia ? "nohabia" : "perdido", por: o.por || null, t: ahora(st), mov: mov.id };
+    reponerPedido(st, tr, mov, nohabia ? "no había" : "se perdió");
+    return mov;
+  }
+  /* Algo que se decidió DEJAR pendiente («se queda»): queda anotado con la observación y quién (sin tocar el inventario) */
+  function seguimiento(st, o) {
+    return aplicar(st, { tipo: "seguimiento", lugar: o.lugar, de: o.lugar, a: null, ref: o.ref || null, por: o.por, via: o.via, frase: o.frase, deltas: [],
+      titulo: o.titulo || "Se deja pendiente", info: o.info || "", nota: o.nota || null });
+  }
+  /* El motivo dicho después («¿Por qué no se aceptó?» → «porque las latas venían abiertas») */
+  function motivoRechazo(st, trId, motivo) {
+    const tr = st.transito.find(x => x.id === trId); if (!tr || !tr.rechazo || !motivo) return null;
+    tr.rechazo.motivo = motivo;
+    const m = st.movs.find(x => x.id === tr.rechazo.mov); if (m) { m.nota = "No se aceptó: " + motivo; m.info = itemsTexto(st, tr.items) + " · Motivo: " + motivo; }
+    return m;
+  }
   function resolverDiferencia(st, trId, o) {
     o = o || {};
     const tr = st.transito.find(x => x.id === trId);
@@ -806,7 +878,7 @@
   const API = { r3, r2, num, dinero, plural, fechaDe, horaDe, horaSeg, duracion, diasEntre, otro, LUGS, rutaDe, destino, origen, asegurarLugares, clone, U_TXT,
     crearEstado, configBase, catalogoBase, costearPreparados, ahora, P, stockDe, enTransito, fmtCant, fmtCantLargo, fmtBase, empaque,
     aplicar, deshacer, ultimoDeshacible, despachar, recibir, comprar, merma, vender, preparar, faltaParaPreparar, pedir, contar, noMovido, avisar,
-    abrirDia, cuadre, cerrarDia, horaSeg, duracion, cuadreCaja, kardex, sellar, verificar, enCajas, cuantosEmp, empEquiv, fmtComo, fmtDoble, marcarDifRevisada, quitarPedido, faltaDe, resolverDiferencia, fmtEn, setPeso, alertas, consumoDiario, consumoReceta, sugerido, compraSugerida, valorInventario, itemsTexto, toppingsDe, nf, lista, CAP };
+    abrirDia, cuadre, cerrarDia, horaSeg, duracion, cuadreCaja, kardex, sellar, verificar, enCajas, cuantosEmp, empEquiv, fmtComo, fmtDoble, marcarDifRevisada, quitarPedido, faltaDe, resolverDiferencia, rechazarEnvio, perderEnvio, seguimiento, motivoRechazo, fmtEn, setPeso, alertas, consumoDiario, consumoReceta, sugerido, compraSugerida, valorInventario, itemsTexto, toppingsDe, nf, lista, CAP };
   root.FRX_ENG = API;
   if (typeof module !== "undefined" && module.exports) module.exports = API;
 })(typeof window !== "undefined" ? window : globalThis);

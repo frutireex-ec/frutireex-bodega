@@ -246,9 +246,27 @@ INICIAR.bat usa el mismo puerto 8765. No se crean carpetas de versión nuevas si
    `.github/workflows/rex.yml` cada 30 min: junta aportes, corre `tests/correr.js`, y si cambió el código y todo pasa, rearma index.html;
    `rex-agente.yml` opcional con Claude y la suscripción del dueño; receta `.claude/skills/entrenar-rex/SKILL.md`).
    **Nombres**: el responsable puede ser cualquiera y cambiar cada día (`V.nombreResponsable`: nombres nuevos se aprenden; `COMUNES` evita confundir a Martha con María). Medir tiempos reales: Ajustes → «Copiar diagnóstico» (`diag.lat`).
+   **3-nov-2026, noche («no se acepta», stand-by y listas vacías; Freddy: «no hacer la contabilidad de aumentar, mandar igual a sí mismo… no debe quedar nada en lista»)**:
+   (a) **No se acepta** (`V.rechazoLlegada` → `{motivo, causa}`; `E.rechazarEnvio`, mov `rechazo`): en la llegada, «no se acepta el pedido porque no llegó completo», «no se recibe,
+   venía abierta una caja», «devuélvelo», «rechazado», «cancela el pedido porque no se envió» (y el botón «No se acepta» de la tarjeta y de «Viene…») → el que recibe NO suma nada,
+   todo vuelve al que lo mandó con sus lotes, queda el motivo (si no lo dijo: «¿Por qué no se acepta?»; sin «porque», el motivo es lo que contó en otra parte de la frase) y el
+   responsable (`registrarRechazo`). Al que lo mandó se le avisa. (b) **No llegó nada** → `preguntarNoLlego` (decide `nollego`): «¿No se acepta y vuelve…, lo seguimos esperando, o
+   se perdió?» (`E.perderEnvio` perdido/nohabia, sin sumar a nadie). (c) **Stand-by** (`recordarPendientes`, cada 20 s; con `?datos=prueba` solo con `&recordar` o llamándolo):
+   un envío sin confirmar después de 2 × `minutosViaje` → «Atención producción: todavía no se confirma lo que envió el local: … ¿Ya llegó, no llegó, o no se acepta?» (decide `envio`;
+   «lo esperamos» → `tr.esperaHasta` 15 min y después 30, mov `seguimiento`). (d) Un pedido cuyo envío no se aceptó o se perdió: el pedido original queda despachado y lo que no se aceptó
+   se vuelve a pedir APARTE (`reponerPedido`: `repone`, `rechazado`; deshacer el rechazo lo anula) y Rex le pregunta enseguida al que despacha «¿Lo despacho otra vez, lo dejo pendiente
+   o lo quito?». (e) **Se queda** («déjalo pendiente»): `despuesDecision` → `conObservacion` («¿Por qué se queda? Cuéntame la observación.», o la toma de la frase: `obsDe`) → mov
+   `seguimiento` con la nota → responsable; se vuelve a preguntar a las 3 h (`tocaRecordar`). También lo que está por preparar (decide `preparar`: «ya está», «déjalo», «quítalo»).
+   (f) Una respuesta corta que es una de las opciones («se perdió») y llega cuando Rex ya calló hace > 1,2 s no es eco (`opcionDicha` en `ecoDeRex`).
+   (g) Motor, por la **simulación del negocio** (`tests/negocio.sim.js`, 1 000 000 de operaciones por semilla: compras al proveedor que llega/no llega/a medias/tarde, pedidos y envíos en
+   las 6 direcciones, llegadas completas/a medias/rechazadas/perdidas/demoradas, ventas, preparaciones, mermas, deshacer; revisa después de cada operación inventario ≥ 0, que lo físico
+   cuadre, que «no se acepta» no sume y devuelva exacto, que nada quede pedido dos veces y los lotes; al cierre, listas vacías y sello): 3 arreglos — ya no se pide dos veces lo que no se
+   aceptó (pedido + saldo), no se puede deshacer una recepción si ya se decidió qué hacer con lo que faltó (primero eso), y `ponerLotes` nunca pone más lotes que lo que entra.
+   `tests/negocio.test.js` es la versión corta (60 000) de la batería. Prueba de voz: `tests/navegador/r108.py` (6 direcciones, botón, no llegó, stand-by, pedido que vuelve, se queda con
+   observación, por preparar, listas vacías; también `IOS=1`).
 9. **Modo rápido** (`st.config.modoRapido`): orden clara por voz → se registra sin «¿sí o no?» y se pregunta el
    responsable; «no/cancela» en ese momento la deshace (`deshacerRapido`).
-10. Antes de entregar corre las baterías: `tests/sino.test.js`, `tests/ordenes.test.js`, `tests/seguir.test.js`, `tests/entrenamiento.test.js` y `tests/entrenamiento2.test.js` (decenas de miles de órdenes generadas de todas las clases: deben dar 100 %), `tests/nombres.test.js`, `tests/movimientos.test.js`, `tests/pedidos.test.js`, `tests/esperar.test.js`, `tests/corregir.test.js`, `tests/despertar.test.js`, `tests/aplauso.test.js` y las conversaciones
+10. Antes de entregar corre las baterías: `tests/sino.test.js`, `tests/ordenes.test.js`, `tests/seguir.test.js`, `tests/entrenamiento.test.js` y `tests/entrenamiento2.test.js` (decenas de miles de órdenes generadas de todas las clases: deben dar 100 %), `tests/nombres.test.js`, `tests/movimientos.test.js`, `tests/pedidos.test.js`, `tests/esperar.test.js`, `tests/corregir.test.js`, `tests/despertar.test.js`, `tests/aplauso.test.js`, `tests/listas.test.js`, `tests/rechazos.test.js`, `tests/negocio.test.js` (todo: `node tests/correr.js`) y las conversaciones
     simuladas con Rex (micrófono simulado con eco), incluida la de la ventana tipo Siri. Una falla de voz se arregla con una prueba que la repita.
 
 ## La voz de Rex

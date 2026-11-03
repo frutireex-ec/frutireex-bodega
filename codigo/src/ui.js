@@ -582,7 +582,7 @@
     if (llegan.length || pedidos.length || preparar.length) {
       h += '<h3>Por atender <small>' + (llegan.length ? llegan.length + " por recibir" : "") + (llegan.length && pedidos.length ? " · " : "") + (pedidos.length ? pedidos.length + " " + (pedidos.length === 1 ? "pedido" : "pedidos") : "") + "</small></h3><div class=\"lista\">";
       pedidos.forEach(pe => {
-        h += '<div class="item aviso alto"><div class="t">Pedido ' + LUG[pe.de].de + ": " + esc(A.txtItemsCorto(st, pe.items, pe.de)) + "<small>" + hora(pe.t) + " · hace " + Math.max(0, Math.round((ahora - pe.t) / 60000)) + ' min</small></div><div class="fila-b"><button class="b lima peq" data-despachar="' + pe.id + '">Despachar</button><button class="b peq" data-pedido-quitar="' + pe.id + '">Quitar</button></div></div>';
+        h += '<div class="item aviso alto"><div class="t">Pedido ' + LUG[pe.de].de + ": " + esc(A.txtItemsCorto(st, pe.items, pe.de)) + "<small>" + (pe.rechazado ? "Volvió: " + esc(pe.rechazado.motivo === "se perdió" ? "se perdió en el camino" : pe.rechazado.motivo === "no había" ? "no había" : "no se aceptó" + (pe.rechazado.motivo ? " (" + pe.rechazado.motivo + ")" : "")) + " · " : "") + hora(pe.t) + " · hace " + Math.max(0, Math.round((ahora - pe.t) / 60000)) + ' min</small></div><div class="fila-b"><button class="b lima peq" data-despachar="' + pe.id + '">Despachar</button><button class="b peq" data-pedido-quitar="' + pe.id + '">Quitar</button></div></div>';
       });
       preparar.forEach(x => {
         h += '<div class="item aviso medio"><div class="t">Por preparar: ' + esc(E.fmtBase(P(x.p), x.q)) + " de " + esc(E.nf(P(x.p))) + "<small>Ya llegaron los insumos</small></div>" +
@@ -590,7 +590,7 @@
       });
       llegan.forEach(tr => {
         const min = Math.max(0, Math.round((ahora - tr.t) / 60000));
-        h += '<div class="item aviso ' + (min >= st.config.minutosTransito ? "alto" : "medio") + '"><div class="t">Viene ' + LUG[tr.de].de + ": " + esc(A.txtItemsCorto(st, tr.items, l)) + "<small>Salió " + hora(tr.t) + " · hace " + min + ' min</small></div><div class="fila-b"><button class="b lima peq" data-recibir="' + tr.id + '">Llegó todo</button><button class="b peq" data-distinto="' + tr.id + '">Llegó distinto</button></div></div>';
+        h += '<div class="item aviso ' + (min >= st.config.minutosTransito ? "alto" : "medio") + '"><div class="t">Viene ' + LUG[tr.de].de + ": " + esc(A.txtItemsCorto(st, tr.items, l)) + "<small>Salió " + hora(tr.t) + " · hace " + min + ' min</small></div><div class="fila-b"><button class="b lima peq" data-recibir="' + tr.id + '">Llegó todo</button><button class="b peq" data-distinto="' + tr.id + '">Llegó distinto</button><button class="b peq rojo" data-rechazar="' + tr.id + '">No se acepta</button></div></div>';
         if (hoja[l] && hoja[l].distinto === tr.id) h += hojaDistinto(tr);
       });
       h += "</div>";
@@ -848,7 +848,8 @@
     if (!plan && decide[l]) {
       const dd = decide[l];
       cont.innerHTML = '<div class="tarjeta resp decide" role="group" aria-label="Qué hago"><p class="t-titulo">' + esc(dd.corta || dd.pregunta) + (Oido.modo === "motivo" && Oido.lugar === l ? ' <span class="oyendo"><i></i><i></i><i></i>te escucho</span>' : "") + "</p>" +
-        (dd.resumen ? '<p class="dicho">' + esc(dd.resumen) + "</p>" : "") +
+        // (en el iPhone Rex no habla: lo que dijo antes de la pregunta también queda escrito)
+        (dd.antes ? '<p class="dicho">' + esc(dd.antes) + "</p>" : "") + (dd.resumen ? '<p class="det">' + esc(dd.resumen) + "</p>" : "") +
         (dd.duda ? '<p class="det duda">No entendí «' + esc(dd.duda) + '». Dilo con otras palabras o toca una opción.</p>' : "") +
         '<div class="chips">' + opcionesDecide(dd).map(x => '<button class="chip" data-decide="' + x[0] + '">' + esc(x[1]) + "</button>").join("") + "</div>" +
         '<div class="acc"><button class="b" data-decide-saltar>Después</button></div><p class="det pie">Lo que elijas queda en Movimientos, con el responsable.</p></div>';
@@ -1012,13 +1013,17 @@
      decide[l] = { tipo: diferencia|saldo|pedido, ref, pregunta, corta, resumen, luego(accion, res) } */
   const decide = porLugar(null);
   function opcionesDecide(d) {
-    if (d.tipo === "diferencia") { const tr = st.transito.find(x => x.id === d.ref); const de = LUG[tr ? tr.de : "B"]; return [["devolver", "Volvió " + de.a], ["camino", "Sigue en camino"], ["perdido", "Se perdió"], ["nohabia", "No había " + de.en], ["dejar", "Dejar así"]]; }
+    const tr = d.ref ? st.transito.find(x => x.id === d.ref) : null, de = LUG[tr ? tr.de : "B"];
+    if (d.tipo === "diferencia") return [["devolver", "Volvió " + de.a], ["camino", "Sigue en camino"], ["perdido", "Se perdió"], ["nohabia", "No había " + de.en], ["dejar", "Dejar así"]];
+    if (d.tipo === "envio") return [["llego", "Ya llegó"], ["rechazar", "No se acepta"], ["esperar", "Lo esperamos"], ["perdido", "Se perdió"]];
+    if (d.tipo === "nollego") return [["rechazar", "No se acepta (vuelve " + de.a + ")"], ["esperar", "Lo esperamos"], ["perdido", "Se perdió"], ["nohabia", "No había " + de.en]];
+    if (d.tipo === "preparar") return [["listo", "Ya está"], ["dejar", "Dejar pendiente"], ["quitar", "Quitar"]];
     if (d.tipo === "saldo") return [["dejar", "Dejar pendiente"], ["quitar", "Quitar"]];
     return [["despachar", "Despachar"], ["dejar", "Dejar pendiente"], ["quitar", "Quitar"]];
   }
   function preguntarDecision(l, d, antes) {
     cancelarCuenta(l); motivo[l] = null; cantPend[l] = null;
-    decide[l] = Object.assign({ t: Date.now(), dudas: 0 }, d);
+    decide[l] = Object.assign({ t: Date.now(), dudas: 0, antes: antes || "" }, d);
     logVoz("pregunta qué hacer", d.pregunta, l);
     renderDisp(l);
     hablar(paraVoz((antes ? antes + " " : "") + d.pregunta), () => escucharDecision(l), { entero: true });
@@ -1028,16 +1033,24 @@
     Oido.esperarTexto(l, txt => { if (decide[l] !== d) return; if (txt == null) { sinDecision(l, d); return; } responderDecision(l, txt, "voz"); }, () => decide[l] === d,
       "<b>Te escucho: " + esc(d.corta || d.pregunta) + "</b>Di, por ejemplo: «" + esc(opcionesDecide(d).map(x => x[1].toLowerCase()).slice(0, 2).join("» o «")) + "».");
   }
-  // nadie contestó: queda en la lista (Rex lo recuerda una vez más tarde) y sigue con lo demás (el responsable)
+  // nadie contestó: queda en la lista (Rex lo vuelve a recordar más tarde) y sigue con lo demás (el responsable)
   function sinDecision(l, d) {
     if (decide[l] !== d) return;
     decide[l] = null; renderDisp(l); logVoz("no contestó qué hacer: queda pendiente", d.pregunta, l);
     if (d.luego) d.luego(null, null);
   }
+  const NO_LLEGO_RE = /^(no|nop|nada|todavia no|aun no)$|\bno (llego|llegaron|ha llegado|han llegado|vino|vinieron|ha venido|esta aqui|estan aqui|lo tenemos|lo veo|aparece|aparecen)\b|\bno (ha )?llegado nada\b|\bnada (llego|vino)\b|\bno hay nada\b/;
   function responderDecision(l, txt, via) {
     const d = decide[l]; if (!d) return;
     if (via === "voz" && ecoDeRex(txt)) { logVoz("se ignora: era la voz de Rex", txt, l); escucharDecision(l); return; }
     const acc = V.decision(txt, d.tipo);
+    // a «¿Ya llegó, no llegó, o no se acepta?»: «no llegó» / «no» → «¿No se acepta, lo esperamos, o se perdió?»
+    if (!acc && d.tipo === "envio" && NO_LLEGO_RE.test(V.normalizar(String(txt || "")).replace(/[,.;:!¡¿?]/g, " ").replace(/\s+/g, " ").trim())) {
+      const tr = st.transito.find(x => x.id === d.ref && x.estado === "pendiente");
+      decide[l] = null; logVoz("no llegó: se pregunta qué hacer", txt, l);
+      if (tr) preguntarNoLlego(tr, txt); else renderDisp(l);
+      return;
+    }
     if (!acc) {
       if (via === "voz" && (esOrdenClara(txt, l) || seguimiento(txt, l))) { logVoz("era una orden nueva (no la respuesta)", txt, l); decide[l] = null; renderDisp(l); ordenTexto(l, txt, via); return; }
       d.duda = txt; d.dudas++; renderTarjeta(l); logVoz("no entendí qué hacer: se vuelve a preguntar", txt, l);
@@ -1046,12 +1059,41 @@
     }
     decide[l] = null;
     logVoz("decidió", acc + " · «" + txt + "»", l);
-    const res = aplicarDecision(l, d, acc, txt, via);
+    despuesDecision(l, d, acc, aplicarDecision(l, d, acc, txt, via), txt, via);
+  }
+  // lo que sigue a la decisión: si «se queda», primero la observación (por qué se queda); después el responsable (d.luego o el de siempre)
+  function despuesDecision(l, d, acc, res, frase, via) {
     if (!res) return;
-    if (d.luego) d.luego(acc, res); else if (res.dicho) hablar(res.dicho, null, { entero: true });
+    const sigue = () => { if (d.luego) d.luego(acc, res); else if (res.mov) responsableDeDecision(l, res); else if (res.dicho) hablar(res.dicho, null, { entero: true }); };
+    if (res.pedirObs) conObservacion(l, d, res, frase, via, sigue); else sigue();
+  }
+  /* (3-nov-2026, Freddy: «si se queda, que se quede, pero que quede las observaciones de por qué se queda y el encargado de eso»)
+     Lo que se deja pendiente queda en Movimientos («Se deja pendiente») con la observación; si no la dijo, Rex la pregunta. */
+  function obsDe(frase) {
+    const f = String(frase || "").trim().replace(/[.!]+$/, ""); if (!f) return "";
+    const m = f.match(/\b(porque|por que|ya que|hasta que|hasta|cuando|mientras|para)\s+(.+)$/i);
+    if (m && m[2].trim()) return E.CAP((/^(hasta|cuando|mientras|para)/i.test(m[1]) ? m[1].toLowerCase() + " " : "") + m[2].trim());
+    return V.normalizar(f).replace(/[,.;:!¡¿?]/g, " ").trim().split(/\s+/).length >= 7 ? E.CAP(f) : "";
+  }
+  function conObservacion(l, d, res, frase, via, sigue) {
+    const crear = obs => {
+      res.mov = E.seguimiento(st, { lugar: l, ref: d.ref, titulo: res.titulo || "Se deja pendiente", info: d.resumen || "", nota: obs ? "Se queda: " + obs : "Se queda (sin observación)", por: quien[l], via, frase });
+      guardar(); renderTodo();
+    };
+    const dada = obsDe(frase);
+    if (dada) { crear(dada); res.dicho = (res.dicho ? res.dicho + " " : "") + "Anotado: " + dada.charAt(0).toLowerCase() + dada.slice(1) + "."; sigue(); return; }
+    hablar(paraVoz((res.dicho ? res.dicho + " " : "") + "¿Por qué se queda? Cuéntame la observación."), () => {
+      if (!Oido.disponible || !st.config.escucharRespuesta) { crear(""); res.dicho = ""; sigue(); return; }
+      Oido.esperarTexto(l, txt => {
+        let m = String(txt || "").trim();
+        if (m && ecoDeRex(m)) m = "";
+        if (/^(no se|nada|ninguna|ninguno|sin observacion|no hay|ninguna observacion)$/.test(V.normalizar(m).replace(/[,.;:!¡¿?]/g, "").trim())) m = "";
+        crear(m ? E.CAP(m.replace(/[.!]+$/, "")) : ""); res.dicho = m ? "Anotado." : ""; sigue();
+      }, () => true, "<b>¿Por qué se queda?</b>Por ejemplo: «todavía no hay frutilla» o «lo mandamos mañana».");
+    }, { entero: true });
   }
   function aplicarDecision(l, d, acc, frase, via) {
-    let mov = null, dicho = "";
+    let mov = null, dicho = "", pedirObs = false, titulo = "";
     if (d.tipo === "diferencia") {
       const r = E.resolverDiferencia(st, d.ref, { accion: acc, por: quien[l], via, frase });
       if (!r) dicho = "Eso ya estaba resuelto.";
@@ -1062,10 +1104,55 @@
           nohabia: "Anotado: no había " + que + " " + LUG[r.tr.de].en + ". El inventario ya quedó corregido; conviene contar " + LUG[r.tr.de].art + "." }[acc] || "Listo.";
         toast(dicho);
       }
+    } else if (d.tipo === "envio" || d.tipo === "nollego") {
+      // (3-nov-2026, Freddy: «se quedó ahí en stand-by… ¿qué se hace?») un envío que nadie confirma, o que no llegó
+      const tr = st.transito.find(x => x.id === d.ref);
+      if (!tr || tr.estado !== "pendiente") { dicho = "Ese envío ya se había resuelto."; }
+      else {
+        const its = A.txtItemsCorto(st, tr.items, tr.a), varios = tr.items.length > 1 || !/^(1|un|una|medio|media)\s/.test(its);
+        if (acc === "llego") {
+          // llegó: se sigue como una llegada normal («¿Está correcto el pedido, o hay alguna observación?»); si ya contó cómo llegó, se toma eso
+          envioAviso = tr.id; charla = { tr: tr.id, l: tr.a, paso: "llego", obs: [], propuesta: null, t: Date.now() }; renderEnvio();
+          const nF = V.normalizar(String(frase || ""));
+          const an = frase ? V.analizarLlegada(frase, tr.items, { lugar: tr.a, cat: st.cat }) : { entendido: false, cambios: [] };
+          if (frase && (/\b(bien|complet\w*|correct\w*|en orden|sin novedad\w*|ninguna novedad)\b/.test(nF) || (an.entendido && (an.cambios.length || an.obs)))) { seguirCharla(frase, via); return null; }
+          decirCharla("Bueno. ¿Llegó bien " + its + ", o hay alguna observación?");
+          return null;
+        }
+        if (acc === "rechazar") {
+          const rj = frase ? V.rechazoLlegada(frase) : null;
+          const mot = rj && rj.motivo ? rj.motivo : /\b(no se envio|no lo (enviaron|mandaron)|nunca salio|no salio)\b/.test(V.normalizar(String(frase || ""))) ? "No se envió" : d.tipo === "nollego" ? "No llegó" : null;
+          decide[l] = null; registrarRechazo(tr, mot, via, frase || "no se acepta");
+          return null;
+        }
+        if (acc === "esperar") {
+          tr.esperas = (tr.esperas || 0) + 1; tr.esperaHasta = Date.now() + (tr.esperas > 1 ? 30 : 15) * 60000;
+          const nota = obsDe(frase) || (tr.esperas > 1 ? "Todavía no llega (" + tr.esperas + ".ª vez)" : "Todavía no llega: lo seguimos esperando");
+          mov = E.seguimiento(st, { lugar: tr.a, ref: tr.id, titulo: "Lo seguimos esperando (" + LUG[tr.de].nombre + " → " + LUG[tr.a].nombre + ")", info: A.txtItemsCorto(st, tr.items, tr.a), nota, por: quien[l], via, frase });
+          dicho = "Bueno, lo seguimos esperando. Te vuelvo a preguntar en " + (tr.esperas > 1 ? 30 : 15) + " minutos.";
+          if (charla && charla.tr === tr.id) { charla = null; envioAviso = null; renderEnvio(); }
+        } else if (acc === "perdido" || acc === "nohabia") {
+          mov = E.perderEnvio(st, tr.id, { accion: acc, por: quien[l], via, frase });
+          if (charla && charla.tr === tr.id) { charla = null; envioAviso = null; renderEnvio(); }
+          dicho = acc === "perdido" ? "Anotado: " + its + (varios ? " se perdieron" : " se perdió") + " en el camino. Nadie lo suma."
+            : "Anotado: no había " + its + " " + LUG[tr.de].en + ". El inventario ya quedó corregido; conviene contar " + LUG[tr.de].art + ".";
+          toast(dicho);
+          if (tr.pedido) setTimeout(() => conCalma(() => recordarPendientes()), 2500);
+        }
+      }
+    } else if (d.tipo === "preparar") {
+      const x = (st.porPreparar || []).find(y => y.id === d.ref);
+      if (!x) dicho = "Eso ya no está por preparar.";
+      else if (acc === "listo") { prepararReceta(x.l, x, via, frase || undefined); return null; }
+      else if (acc === "quitar") {
+        st.porPreparar = st.porPreparar.filter(y => y.id !== x.id);
+        mov = E.seguimiento(st, { lugar: l, ref: x.id, titulo: "Se quitó de «por preparar»", info: E.fmtBase(P(x.p), x.q) + " de " + E.nf(P(x.p)), nota: obsDe(frase) || "No se va a preparar (los insumos siguen " + LUG[l].en + ")", por: quien[l], via, frase });
+        dicho = "Listo, lo quité. Los insumos siguen " + LUG[l].en + ".";
+      } else { x.decidido = Date.now(); pedirObs = true; titulo = "Se deja pendiente: preparar " + E.nf(P(x.p)); dicho = "Bueno, queda por preparar."; }
     } else {
       const pe = st.pedidos.find(x => x.id === d.ref);
       if (!pe || pe.estado !== "pendiente") dicho = "Ese pedido ya no está pendiente.";
-      else if (acc === "quitar") { mov = E.quitarPedido(st, pe.id, { por: quien[l], via, frase, lugar: l }); dicho = "Listo, quité " + (pe.saldoDe ? "lo que faltaba del pedido " : "el pedido ") + LUG[pe.de].de + "."; toast(dicho); }
+      else if (acc === "quitar") { mov = E.quitarPedido(st, pe.id, { por: quien[l], via, frase, lugar: l, motivo: obsDe(frase) || null }); dicho = "Listo, quité " + (pe.saldoDe ? "lo que faltaba del pedido " : "el pedido ") + LUG[pe.de].de + "."; toast(dicho); }
       else if (acc === "despachar") {
         guardar(); renderTodo();
         const pd = A.planDespacho(st, pe.id, { lugar: l });
@@ -1073,37 +1160,86 @@
         pd.anuncio = pe.id; pd.frase = frase; pd.via = via; pd.tPend = Date.now(); pend[l] = pd; hoja[l] = null; resultado[l] = null; renderDisp(l);
         if (pd.ajustado) { pd.hablarPregunta = true; preguntar(l, pd, fraseSoloHay(pd)); } else confirmar(l, null, via);
         return null;
-      } else { pe.decidido = Date.now(); dicho = pe.saldoDe ? "Bueno, queda pendiente." : "Bueno, lo dejo pendiente."; }
+      } else { pe.decidido = Date.now(); pedirObs = true; titulo = (pe.saldoDe ? "Saldo pendiente" : "Pedido pendiente") + " (" + LUG[pe.de].nombre + " → " + LUG[pe.a].nombre + ")"; dicho = pe.saldoDe ? "Bueno, queda pendiente." : "Bueno, lo dejo pendiente."; }
     }
     guardar(); renderTodo();
-    return { mov, dicho, acc };
+    return { mov, dicho, acc, pedirObs, titulo };
   }
-  // lo que se resolvió (devolver, quitar…) también lleva responsable; si no hubo movimiento («dejar») solo se dice
+  // lo que se resolvió (devolver, quitar…) también lleva responsable; si no hubo movimiento solo se dice
   function responsableDeDecision(l, res, pregunta) {
     const pide = res && res.mov && pedirResponsable(l, { mov: res.mov }, { tipo: res.mov.tipo, resumen: res.mov.titulo }, pregunta || "¿Quién es el responsable?");
     hablar(((res && res.dicho) || "") + (pide ? " " + (pregunta || "¿Quién es el responsable?") : ""), pide ? () => escucharResponsable(l) : null, { entero: true });
   }
-  // Rex recuerda UNA vez lo que se quedó colgado: un pedido que espera hace rato, o una diferencia que nadie revisó
+  /* (3-nov-2026, Freddy: «no debe quedar nada en lista… si hay algo, tienes que enseguida notificarlo donde se encuentre y decir qué se hace con esto»)
+     Rex recuerda lo que se quedó colgado, en el lugar donde está, y pregunta qué hacer:
+       · un pedido que volvió porque no se aceptó (o se perdió) → enseguida, al que lo despacha
+       · un envío en «stand-by» (nadie confirma que llegó) → «¿Ya llegó, no llegó, o no se acepta?»
+       · un pedido que espera, una diferencia en rojo, algo por preparar que nadie preparó
+     Si se decidió dejarlo, se vuelve a preguntar después de unas horas (con la observación ya anotada). */
+  const MIN = 60000;
+  function tocaRecordar(x, base, primera, otraVez) {
+    if (x.decidido && Date.now() - x.decidido < (otraVez || 180 * MIN)) return false;
+    if (x.recordado && Date.now() - x.recordado < (otraVez || 180 * MIN)) return false;
+    return base >= primera;
+  }
   function recordarPendientes() {
-    if (ocupadoParaAvisos() || modalOk) return;
-    const ahora = E.ahora(st), minP = (st.config.minutosRecordarPedido || 30) * 60000, minD = (st.config.minutosRecordarDif || 10) * 60000;
-    const pe = st.pedidos.find(x => x.estado === "pendiente" && !x.recordado && !x.decidido && ahora - x.t >= minP && !preguntaEn(x.a));
+    if (ocupadoParaAvisos() || modalOk) return false;
+    const ahora = E.ahora(st), cfg = st.config;
+    const minP = (cfg.minutosRecordarPedido || 15) * MIN, minD = (cfg.minutosRecordarDif || 5) * MIN, viaje = (cfg.minutosViaje || 5) * MIN, minPrep = (cfg.minutosRecordarPreparar || 45) * MIN;
+    // 1) un pedido que volvió: «producción no aceptó lo que le mandaste… ¿Lo despacho otra vez, lo dejo pendiente o lo quito?»
+    const pr = st.pedidos.find(x => x.estado === "pendiente" && x.rechazado && !x.rechazado.preguntado && !preguntaEn(x.a));
+    if (pr) {
+      pr.rechazado.preguntado = Date.now(); pr.recordado = Date.now(); guardar();
+      const its = A.txtItemsCorto(st, pr.items, pr.de), mot = pr.rechazado.motivo;
+      const motTxt = mot ? mot.charAt(0).toLowerCase() + mot.slice(1).replace(/[.!]+$/, "") : "";
+      const intro = "Oye, " + LUG[pr.de].art + (mot === "se perdió" ? " no recibió " + its + ": se perdió en el camino" : mot === "no había" ? " no recibió " + its + ": no había" : " no aceptó " + its + (motTxt ? ": " + motTxt : "")) + ". El pedido volvió a quedar pendiente.";
+      preguntarDecision(pr.a, { tipo: "pedido", ref: pr.id, resumen: "Pedido " + LUG[pr.de].de + ": " + its + " · volvió", pregunta: "¿Lo despacho otra vez, lo dejo pendiente o lo quito?", corta: "¿Lo despacho otra vez, lo dejo o lo quito?",
+        luego: (acc, res) => { if (acc && res) responsableDeDecision(pr.a, res, acc === "quitar" ? "¿Quién lo quitó?" : undefined); } },
+        intro);
+      return true;
+    }
+    // 2) un envío que nadie confirma (stand-by): pasó el doble del tiempo de viaje y no está esperando
+    const sb = st.transito.find(x => x.estado === "pendiente" && ahora - x.t >= 2 * viaje && !(x.esperaHasta > Date.now()) && !(x.standby && Date.now() - x.standby < 30 * MIN) && !preguntaEn(x.a) && !(charla && charla.tr === x.id));
+    if (sb) {
+      sb.standby = Date.now(); guardar();
+      const its = A.txtItemsCorto(st, sb.items, sb.a), mins = Math.round((ahora - sb.t) / MIN);
+      preguntarDecision(sb.a, { tipo: "envio", ref: sb.id, resumen: LUG[sb.de].nombre + " te envió " + its + " hace " + mins + " min",
+        pregunta: "¿Ya llegó, no llegó, o no se acepta?", corta: "¿Ya llegó, no llegó, o no se acepta?",
+        luego: (acc, res) => { if (acc && res) responsableDeDecision(sb.a, res); } },
+        "Atención " + LUG[sb.a].corto + ": todavía no se confirma lo que envió " + LUG[sb.de].art + ": " + its + ".");
+      return true;
+    }
+    // 3) un pedido que espera
+    const pe = st.pedidos.find(x => x.estado === "pendiente" && tocaRecordar(x, ahora - x.t, minP) && !preguntaEn(x.a));
     if (pe) {
       pe.recordado = Date.now(); guardar();
       const its = A.txtItemsCorto(st, pe.items, pe.de);
       preguntarDecision(pe.a, { tipo: "pedido", ref: pe.id, resumen: "Pedido " + LUG[pe.de].de + ": " + its, pregunta: "¿Qué hago: lo despacho, lo dejo pendiente o lo quito?", corta: "¿Lo despacho, lo dejo o lo quito?",
-        luego: (acc, res) => { if (acc) responsableDeDecision(pe.a, res, "¿Quién lo quitó?"); } }, "Oye, todavía tengo el pedido " + LUG[pe.de].de + ": " + its + ".");
-      return;
+        luego: (acc, res) => { if (acc && res) responsableDeDecision(pe.a, res, acc === "quitar" ? "¿Quién lo quitó?" : undefined); } }, "Oye, todavía tengo el pedido " + LUG[pe.de].de + ": " + its + ".");
+      return true;
     }
-    const tr = st.transito.find(x => x.estado === "diferencia" && !x.revisada && !x.recordado && ahora - (x.tRec || x.t) >= minD && !preguntaEn(x.a) && E.faltaDe(st, x).length);
+    // 4) una diferencia en rojo que nadie revisó
+    const tr = st.transito.find(x => x.estado === "diferencia" && !x.revisada && tocaRecordar(x, ahora - (x.tRec || x.t), minD) && !preguntaEn(x.a) && E.faltaDe(st, x).length);
     if (tr) {
       tr.recordado = Date.now(); guardar();
       const its = A.txtItemsCorto(st, E.faltaDe(st, tr), tr.a);
       preguntarDecision(tr.a, { tipo: "diferencia", ref: tr.id, resumen: "Faltó " + its + " del envío " + LUG[tr.de].de, pregunta: "¿Qué hago: lo devuelvo " + LUG[tr.de].a + ", sigue en camino, se perdió, o no había?", corta: "¿Lo devuelvo " + LUG[tr.de].a + ", sigue en camino, se perdió, o no había?",
-        luego: (acc, res) => { if (acc) responsableDeDecision(tr.a, res); } }, "Oye, todavía está en rojo lo que faltó del envío " + LUG[tr.de].de + ": " + its + ".");
+        luego: (acc, res) => { if (acc && res) responsableDeDecision(tr.a, res); } }, "Oye, todavía está en rojo lo que faltó del envío " + LUG[tr.de].de + ": " + its + ".");
+      return true;
     }
+    // 5) algo por preparar que nadie preparó
+    const xp = (st.porPreparar || []).find(x => P(x.p) && tocaRecordar(x, Date.now() - (x.t || 0), minPrep) && !preguntaEn(x.l));
+    if (xp) {
+      xp.recordado = Date.now(); guardar();
+      const que = E.fmtBase(P(xp.p), xp.q) + " de " + E.nf(P(xp.p));
+      preguntarDecision(xp.l, { tipo: "preparar", ref: xp.id, resumen: "Por preparar: " + que, pregunta: "¿Ya está, lo dejo pendiente o lo quito?", corta: "¿Ya está, lo dejo o lo quito?",
+        luego: (acc, res) => { if (acc && res) responsableDeDecision(xp.l, res); } }, "Oye, todavía no se prepara " + que + ".");
+      return true;
+    }
+    return false;
   }
-  setInterval(() => { try { recordarPendientes(); } catch (e) {} }, 60000);
+  // en la página corre cada 20 s (con los datos de prueba, solo si la dirección trae &recordar: las pruebas viejas no lo esperan)
+  setInterval(() => { try { if (!/[?&]datos=prueba\b/.test(location.search) || /[?&]recordar\b/.test(location.search)) recordarPendientes(); } catch (e) {} }, 20000);
   /* «quita el pedido del local», «cancela lo que falta», «borra el pedido pendiente de frutilla» (sin pregunta abierta) */
   function quitarPedidoDicho(l, frase, R, via) {
     const n = V.normalizar(String(frase || "")).replace(/[,.;:!¡¿?]/g, " ").replace(/\s+/g, " ").trim();
@@ -1687,9 +1823,10 @@
     const prods = Object.values(st.cat.prods || {}).map(p => E.nf(p)).filter(Boolean);
     const prodsCorto = Array.from(new Set(prods.map(n => n.split(" ")[0]))).slice(0, 24).join(", ");
     if (ab && respons[ab]) return "Responsable: " + (nombres.length ? nombres.join(". ") : "Luis. Rosa. Andrés") + ".";
-    if (ab && decide[ab]) return { diferencia: "Devuélvelo a la bodega. Sigue en camino. Se perdió. No había en la bodega. Déjalo así.", saldo: "Déjalo pendiente. Quítalo.", pedido: "Despáchalo. Déjalo pendiente. Quítalo." }[decide[ab].tipo] || "";
+    if (ab && decide[ab]) return { diferencia: "Devuélvelo a la bodega. Sigue en camino. Se perdió. No había en la bodega. Déjalo así.", saldo: "Déjalo pendiente. Quítalo.", pedido: "Despáchalo. Déjalo pendiente. Quítalo.",
+      envio: "Sí, ya llegó. No llegó. No se acepta porque no llegó completo. Lo esperamos.", nollego: "No se acepta, que vuelva. Lo esperamos. Se perdió. No había.", preparar: "Ya está. Déjalo pendiente. Quítalo." }[decide[ab].tipo] || "";
     if (ab && cantPend[ab]) return "Cinco kilos. Dos kilos y medio. Diez.";
-    if (ab && charla && charla.l === ab) { const tr = trCharla(); return "Sí, llegó todo bien, ninguna observación. Faltó una caja. Llegaron solo dos. " + (tr ? E.CAP(A.txtItemsCorto(st, tr.items, tr.a)) + "." : ""); }
+    if (ab && charla && charla.l === ab) { const tr = trCharla(); return "Sí, llegó todo bien, ninguna observación. Faltó una caja. Llegaron solo dos. No se acepta porque no llegó. " + (tr ? E.CAP(A.txtItemsCorto(st, tr.items, tr.a)) + "." : ""); }
     if (ab && motivo[ab]) return "Me equivoqué. No hay. Está dañado. Lo hago después.";
     if (ab && pend[ab]) return "Sí, de acuerdo. Sí, correcto. No, cancela.";
     return "Oye Rex, lleva dos baldes de frutilla de la bodega a producción. Bodega, producción, local. " + prodsCorto + ".";
@@ -1786,7 +1923,7 @@
     const trs = st.transito.filter(t => t.estado === "pendiente" && t.a === l).sort((a, b) => a.t - b.t);
     const pes = st.pedidos.filter(p => p.estado === "pendiente" && p.a === l).sort((a, b) => a.t - b.t);
     const sn = V.siNo(frase);
-    const hablaLlegada = /\b(lleg\w*|vin(o|ieron)|recib\w*|falt\w*|complet\w*|abiert\w*|rot[oa]s?|huec\w*|golpe\w*|danad\w*|mitad|todo bien|bien todo|nada|novedad\w*)\b/.test(n);
+    const hablaLlegada = /\b(lleg\w*|vin(o|ieron)|recib\w*|falt\w*|complet\w*|abiert\w*|rot[oa]s?|huec\w*|golpe\w*|danad\w*|mitad|todo bien|bien todo|nada|novedad\w*|acept\w*|rechaz\w*|devuel\w*|regres\w*)\b/.test(n) || !!V.rechazoLlegada(frase);
     const hablaEnvio = /\b(envi\w*|mand\w*|despach\w*|lleva\w*|atiend\w*|pedidos?|pidi\w*|solicit\w*|pide)\b/.test(n);
     const respuesta = R.intent === "si" || R.intent === "no" || !!(sn && sn.limpio);
     const ordenClara = R.listo && R.intent && !["si", "no", "desconocido", "vacio", "despachar_pedido"].includes(R.intent);
@@ -2060,6 +2197,8 @@
     return E.lista(partes) + (pr.obs ? ". Novedad: " + pr.obs : "");
   }
   function proponer(tr, an, frase) {
+    // (3-nov-2026) no llegó NADA: no se registra una recepción en cero; se pregunta qué hacer (no se acepta / lo esperamos / se perdió)
+    if (tr.items.every(it => (an.cant && an.cant[it.p] != null ? an.cant[it.p] : it.q) <= 0.0005) && st.config.preguntarFaltante !== false) { preguntarNoLlego(tr, frase); return; }
     const obs = charla.obs.concat(an.obs ? [an.obs] : []).join(". ");
     charla.paso = "confirmar"; charla.propuesta = { cant: an.cant, obs, frase };
     logVoz("lo que entendí de la llegada", textoPropuesta(tr, charla.propuesta), tr.a);
@@ -2071,6 +2210,37 @@
     const o = pr.obs ? pr.obs.charAt(0).toLowerCase() + pr.obs.slice(1) : "";
     return completo ? (o ? "El pedido llegó completo, pero con esta observación: " + o + "." : "El pedido llegó completo.")
       : "Entendí: " + textoPropuesta(tr, Object.assign({}, pr, { obs: "" })) + (o ? ". Y esta observación: " + o : "") + ".";
+  }
+  /* (3-nov-2026, Freddy: «no se acepta el pedido… no hacer la contabilidad de aumentar, mandar igual a sí mismo») NO ACEPTAR lo que llegó:
+     el que recibe no suma; todo vuelve al que lo mandó; queda el motivo y quién. Si no dijo por qué, Rex lo pregunta; después, el responsable. */
+  function registrarRechazo(tr, motivo, via, frase) {
+    const l = tr.a, its = A.txtItemsCorto(st, tr.items, tr.de);
+    const mov = E.rechazarEnvio(st, tr.id, { motivo: motivo || null, por: quien[l], via, frase });
+    if (charla && charla.tr === tr.id) { charla = null; envioAviso = null; }
+    if (decide[l] && decide[l].ref === tr.id) decide[l] = null;
+    hoja[l] = null; guardar(); renderTodo(); Sonido.ok();
+    if (!mov) { hablar("Ese envío ya se había resuelto."); return; }
+    avisarResultado(l, true, "No se aceptó", "Vuelve " + LUG[tr.de].a + ": " + its + "." + (motivo ? " Motivo: " + motivo + "." : ""), mov.id, frase, via);
+    toast("No se aceptó: " + its + " vuelve " + LUG[tr.de].a + "." + (motivo ? " Motivo: " + motivo + "." : ""));
+    const dicho = "Listo, no se acepta. " + E.CAP(paraVoz(its)) + (tr.items.length > 1 || !/^(1|un|una|medio|media)\s/.test(its) ? " vuelven " : " vuelve ") + LUG[tr.de].a + ".";
+    const responsable = pre => { const pide = pedirResponsable(l, { mov }, { tipo: "rechazo", resumen: "No se aceptó " + LUG[tr.a].en }, "¿Quién es el responsable?"); const t2 = (pre ? pre + " " : "") + (pide ? "¿Quién es el responsable?" : ""); if (t2.trim()) hablar(t2, pide ? () => escucharResponsable(l) : null, { entero: true }); };
+    // al que lo mandó: si era un pedido, Rex le pregunta enseguida qué hacer con él (recordarPendientes); si no, solo se le avisa
+    if (!tr.pedido) setTimeout(() => conCalma(() => anunciar(tr.de, E.CAP(LUG[tr.a].art) + " no aceptó " + paraVoz(its) + (motivo ? ": " + motivo.charAt(0).toLowerCase() + motivo.slice(1) : "") + ". Volvió a tu inventario.")), 1500);
+    if (tr.pedido) setTimeout(() => conCalma(() => recordarPendientes()), 2500);
+    if (motivo) { responsable(dicho); return; }
+    hablar(dicho + " ¿Por qué no se acepta?", () => {
+      if (!Oido.disponible || !st.config.escucharRespuesta) { responsable(""); return; }
+      Oido.esperarTexto(l, txt => { const m = String(txt || "").trim(); if (m && !ecoDeRex(m)) { E.motivoRechazo(st, tr.id, m.charAt(0).toUpperCase() + m.slice(1)); guardar(); renderTodo(); } responsable(m ? "Anotado." : ""); }, () => true,
+        "<b>¿Por qué no se acepta?</b>Por ejemplo: «no llegó» o «venía abierta una caja».");
+    }, { entero: true });
+  }
+  // no llegó nada: «¿No se acepta y vuelve a la bodega, lo seguimos esperando, o se perdió?»
+  function preguntarNoLlego(tr, frase) {
+    if (charla && charla.tr === tr.id) { charla = null; envioAviso = null; renderEnvio(); }
+    const its = A.txtItemsCorto(st, tr.items, tr.a);
+    preguntarDecision(tr.a, { tipo: "nollego", ref: tr.id, frase, resumen: "No llegó: " + its + " " + LUG[tr.de].de,
+      pregunta: "¿Qué hago: no se acepta y vuelve " + LUG[tr.de].a + ", lo seguimos esperando, o se perdió?", corta: "¿No se acepta, lo esperamos, o se perdió?",
+      luego: (acc, res) => { if (res && res.mov) responsableDeDecision(tr.a, res); else if (res && res.dicho) hablar(res.dicho, null, { entero: true }); } }, "No llegó nada.");
   }
   function registrarLlegada(tr, cant, via, frase, obsDada) {
     const obs = obsDada != null ? obsDada : (charla ? charla.obs.join(". ") : ""), l = tr.a;
@@ -2111,6 +2281,8 @@
     const tr = trCharla(); if (!tr) { renderEnvio(); return false; }
     // (1-nov-2026, video 1446) lo que Rex se oye a sí mismo no es la respuesta: así se armaba el bucle «Entendí: no llegó frutilla…»
     if (via === "voz" && ecoDeRex(frase)) { logVoz("se ignora: era la voz de Rex", frase, tr.a); return true; }
+    // (3-nov-2026, Freddy) «no se acepta el pedido porque no llegó», «no se recibe porque venía abierto», «devuélvelo»: NO se acepta lo que llegó
+    { const rj = V.rechazoLlegada(frase); if (rj) { logVoz("no se acepta lo que llegó", String(frase) + (rj.motivo ? " · " + rj.motivo : ""), tr.a); registrarRechazo(tr, rj.motivo, via, frase); return true; } }
     // a «¿Llegó todo bien, o hay alguna novedad?»: «nada», «ninguna», «no pasó nada» = llegó bien
     const sn = V.siNo(frase, { llegada: charla.paso !== "confirmar" }), texto = sn && sn.resto ? sn.resto : String(frase || "");
     if (sn && sn.limpio) charla.vueltas = 0;
@@ -2176,7 +2348,7 @@
       (charla.obs.length && paso !== "confirmar" ? '<ul class="envio-obs">' + charla.obs.map(o => "<li>Novedad: " + esc(o) + "</li>").join("") + "</ul>" : "") + "</div>" +
       '<div class="envio-b">' + (paso === "confirmar"
         ? '<button class="b prim" data-envio-si>Sí, es correcto</button><button class="b" data-envio-no>No, corregir</button>'
-        : '<button class="b prim" data-envio-si>Sí, llegó todo bien</button><button class="b" data-envio-no>No, llegó distinto</button>') +
+        : '<button class="b prim" data-envio-si>Sí, llegó todo bien</button><button class="b" data-envio-no>No, llegó distinto</button><button class="b rojo" data-envio-rechazar="' + tr.id + '">No se acepta</button>') +
       '<form class="envio-nov" data-envio-nov><input name="nov" placeholder="Qué pasó: una lata abierta, faltó una caja…" aria-label="Qué pasó" autocomplete="off"><button class="b">Anotar</button></form></div></div>';
   }
   function cancelar(l, callado, via) {
@@ -2652,9 +2824,16 @@
     let d = ""; try { d = Oido.dichoReciente(10000); } catch (e) {}
     return (" " + d + " ").includes(" " + n + " ");
   }
+  // (3-nov-2026) a «¿…lo seguimos esperando, o se perdió?» la gente contesta con las mismas palabras («se perdió»): si es corto, es una de
+  // las opciones de la pregunta abierta y llega cuando Rex ya terminó de hablar hace rato (el eco llega mientras habla o justo después), es la respuesta
+  function opcionDicha(n) {
+    if (hablaActual || Date.now() - (TTS.fin || 0) < 1200 || n.split(" ").length > 4) return false;
+    return LUGS.some(x => decide[x] && !!V.decision(n, decide[x].tipo));
+  }
   function ecoDeRex(txt) {
     const n = V.normalizar(String(txt || "")).replace(/[,.;:!¡¿?«»]/g, " ").replace(/\s+/g, " ").trim();
     if (!n) return false;
+    if (opcionDicha(n)) return false;
     try { if (Oido.colaDeRex(txt)) return true; } catch (e) {}
     // 4 palabras o más seguidas, tal cual las dijo Rex hace poco («no llegó frutilla, salieron dos baldes»; el dictado a veces entrega su eco
     // varios segundos tarde y sin la primera palabra): es su eco
@@ -4459,6 +4638,18 @@
     cerrarModal();
     o.alListo(vals, aut, extra);
   }
+  /* (3-nov-2026, Freddy: «no debe quedar nada en lista») al cerrar, lo que todavía está en lista en los tres lugares */
+  function enListaTxt() {
+    const cam = st.transito.filter(x => x.estado === "pendiente"), rojo = st.transito.filter(x => x.estado === "diferencia" && !x.revisada);
+    const ped = st.pedidos.filter(x => x.estado === "pendiente"), prep = (st.porPreparar || []).filter(x => P(x.p));
+    const sinObs = ped.filter(pe => !st.movs.some(m => m.tipo === "seguimiento" && m.ref === pe.id && !m.deshecho));
+    const partes = [];
+    if (cam.length) partes.push(cam.length + (cam.length > 1 ? " envíos sin confirmar" : " envío sin confirmar") + " (" + cam.slice(0, 3).map(x => LUG[x.de].nombre + " → " + LUG[x.a].nombre).join(", ") + ")");
+    if (rojo.length) partes.push(rojo.length + (rojo.length > 1 ? " diferencias en rojo" : " diferencia en rojo"));
+    if (sinObs.length) partes.push(sinObs.length + (sinObs.length > 1 ? " pedidos pendientes sin observación" : " pedido pendiente sin observación"));
+    if (prep.length) partes.push(prep.length + " por preparar");
+    return partes.length ? "Antes de cerrar, todavía hay en lista: " + E.lista(partes) + ". Resuélvelo desde cada lugar (Rex pregunta qué hacer) o queda para mañana. " : "";
+  }
   /* Cerrar caja: quién cierra, efectivo contado, cobros con tarjeta y PIN del supervisor */
   function abrirCierreCaja(lugarVoz) {
     if (!st.abierto) { toast("La caja ya está cerrada."); return; }
@@ -4466,7 +4657,7 @@
     const quienDef = lugarVoz ? quien[lugarVoz] : quien[verMovil] || quien.B;
     const cuerpo = '<label class="campo">Quién cierra<span><select data-cierra>' + personas().map(x => "<option" + (x === quienDef ? " selected" : "") + ">" + esc(x) + "</option>").join("") + "</select></span></label>";
     abrirModal({ titulo: "Cerrar caja", pin: true, boton: "Cerrar caja", cuerpo,
-      texto: (r.sinContar ? "Faltan " + r.sinContar + " productos por contar (se cierran sin ajuste). " : "") + "El inventario queda igual al conteo físico. Cuenta el efectivo: debería haber " + E.dinero(cj.esperado) +
+      texto: enListaTxt() + (r.sinContar ? "Faltan " + r.sinContar + " productos por contar (se cierran sin ajuste). " : "") + "El inventario queda igual al conteo físico. Cuenta el efectivo: debería haber " + E.dinero(cj.esperado) +
         " (inicial " + E.dinero(cj.fondo) + " + ventas registradas " + E.dinero(cj.ventas) + "), menos lo que se cobró con tarjeta o transferencia.",
       campos: [{ k: "efectivo", nombre: "Efectivo contado ($)", valor: "" }, { k: "otros", nombre: "Cobrado con tarjeta o transferencia ($)", valor: "" }],
       leer: m => ({ por: ($("[data-cierra]", m) || {}).value || quienDef }),
@@ -4661,6 +4852,7 @@
       // abrir la hoja para escribir lo que llegó (y seguir pudiendo contarlo por voz)
       const tr = trCharla(); if (!tr) return; charla.paso = "detalle"; hoja[tr.a] = { distinto: tr.id, obs: charla.obs.join(". ") }; renderTodo(); return;
     }
+    if (t.dataset.envioRechazar || t.dataset.rechazar) { const tr = st.transito.find(x => x.id === (t.dataset.envioRechazar || t.dataset.rechazar) && x.estado === "pendiente"); if (!tr) return; if (decide[tr.a] && decide[tr.a].ref === tr.id) { Oido.soltar(tr.a); decide[tr.a] = null; } Oido.soltar(tr.a); return registrarRechazo(tr, null, "toque", "No se acepta (botón)"); }
     if (t.dataset.difAccion) { const [trId, acc] = t.dataset.difAccion.split("|"); const tr = st.transito.find(x => x.id === trId); if (!tr) return; const lt = tr.a; if (decide[lt] && decide[lt].ref === trId) { Oido.soltar(lt); decide[lt] = null; }
       const res = aplicarDecision(lt, { tipo: "diferencia", ref: trId }, acc, "", "toque"); if (res) responsableDeDecision(lt, res); return renderTodo(); }
     if (t.dataset.difRevisar) { E.marcarDifRevisada(st, t.dataset.difRevisar, { por: quienHace() }); guardar(); toast("Diferencia marcada como revisada."); return renderTodo(); }
@@ -4680,7 +4872,7 @@
     if (t.dataset.avisoVisto) { const m = st.movs.find(x => x.id === t.dataset.avisoVisto); if (m) { m.vistos = m.vistos || {}; m.vistos[l] = Date.now(); guardar(); } return renderDisp(l); }
     if (t.dataset.prepararQuitar) { st.porPreparar = (st.porPreparar || []).filter(y => y.id !== t.dataset.prepararQuitar); guardar(); return renderDisp(l); }
     if (t.hasAttribute("data-cant-saltar")) { Oido.soltar(l); cantPend[l] = null; return renderDisp(l); }
-    if (t.dataset.decide) { const dd = decide[l]; if (!dd) return; Oido.soltar(l); decide[l] = null; const res = aplicarDecision(l, dd, t.dataset.decide, "", "toque"); if (res && dd.luego) dd.luego(t.dataset.decide, res); else if (res && res.dicho) hablar(res.dicho, null, { entero: true }); return; }
+    if (t.dataset.decide) { const dd = decide[l]; if (!dd) return; Oido.soltar(l); decide[l] = null; return despuesDecision(l, dd, t.dataset.decide, aplicarDecision(l, dd, t.dataset.decide, "", "toque"), "", "toque"); }
     if (t.hasAttribute("data-decide-saltar")) { const dd = decide[l]; Oido.soltar(l); if (dd) sinDecision(l, dd); return; }
     if (t.dataset.pedidoQuitar) { const pe = st.pedidos.find(x => x.id === t.dataset.pedidoQuitar); if (!pe || pe.estado !== "pendiente") return; const mov = E.quitarPedido(st, pe.id, { por: quien[l], via: "toque", lugar: l }); guardar(); renderTodo(); toast("Pedido quitado."); return responsableDeDecision(l, { mov, dicho: "Listo, quité el pedido " + LUG[pe.de].de + "." }, "¿Quién lo quitó?"); }
     if (t.hasAttribute("data-cambiar-resp")) { const ra = resultado[l] && resultado[l].respAuto; if (!ra) return; resultado[l].respAuto = null; respUltT[l] = 0; respons[l] = { movs: ra.movs, peds: ra.peds, trs: ra.trs, t: Date.now(), resumen: ra.resumen, pregunta: "¿Quién es el responsable?" }; renderTarjeta(l); renderFranja(l); return escucharResponsable(l); }
@@ -4960,5 +5152,5 @@
     setTimeout(revisarVersion, 2500); setInterval(revisarVersion, 5 * 60 * 1000);
   }
   setInterval(() => { try { vivo(); } catch (e) {} }, 1000);
-  window.FRX_UI = { get estado() { return st; }, OidoPC, get IOS() { return modoIphone(); }, Rex, Aplauso, Sonido, charlaRex, esOrdenClara, BUILD, rexEncender, rexLugar, lugarConPregunta, get vozUsada() { return ultimaVoz; }, Oido, ordenTexto, confirmar, ir, revisarVoz, leerNum, Vigilia, recordarPendientes, entregarAprendizaje, get decide() { return decide; } };
+  window.FRX_UI = { get estado() { return st; }, OidoPC, get IOS() { return modoIphone(); }, Rex, Aplauso, Sonido, charlaRex, esOrdenClara, BUILD, rexEncender, rexLugar, lugarConPregunta, get vozUsada() { return ultimaVoz; }, Oido, ordenTexto, confirmar, ir, revisarVoz, leerNum, Vigilia, recordarPendientes, entregarAprendizaje, avisarEnvio, get decide() { return decide; }, get charla() { return charla; } };
 })();

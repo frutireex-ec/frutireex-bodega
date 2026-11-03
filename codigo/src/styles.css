@@ -66,6 +66,8 @@ main{max-width:1380px;margin:0 auto;padding:22px 28px 90px}
 .b.lima{background:var(--lima);color:var(--hondo);border-color:var(--hondo);box-shadow:var(--sombra-dura)}
 .b.lima:hover{background:#DAF07A}
 .b.prim:active,.b.lima:active{transform:translateY(3px);box-shadow:0 1px 0 var(--hondo)}
+.b.rojo{background:var(--blanco);color:var(--flama-t);border-color:var(--flama-t)}
+.b.rojo:hover{background:#FDE7DD}
 .b.peq{padding:5px 13px;font-size:13.5px;min-height:36px}
 .b.peligro{border-color:var(--flama-t);color:var(--flama-t)}
 .b.peligro:hover{background:var(--flama-t);color:#fff;border-color:var(--flama-t)}

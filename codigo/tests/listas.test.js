@@ -73,6 +73,49 @@ st = nuevo(); x = E.despachar(st, { de: "B", a: "L", items: [{ p: "leche", q: 12
 r = E.resolverDiferencia(st, x.transito.id, { accion: "dejar", por: "Ana" });
 eq("5 sin movimiento", r.mov, null); eq("5 revisada", x.transito.revisada.por, "Ana");
 
+// 5b) NO ACEPTAR un envío, en las 6 direcciones: el que recibe no suma, todo vuelve al que lo mandó; deshacer lo deja como estaba
+for (const [de, a, p, q] of [["B", "P", "frutilla", 22.68], ["B", "L", "leche", 24], ["P", "L", "durazno", 6], ["P", "B", "azucar", 2], ["L", "P", "leche", 12], ["L", "B", "durazno", 3]]) {
+  st = nuevo(); E.stockSet && 0;
+  st.stock[de][p] = Math.max(st.stock[de][p] || 0, 100); st.lotes[de][p] = [{ q: st.stock[de][p], f: st.dia }];
+  const d0 = E.stockDe(st, de, p), a0 = E.stockDe(st, a, p);
+  const pe2 = E.pedir(st, { de: a, a: de, items: [{ p, q }] });
+  const x2 = E.despachar(st, { de, a, items: [{ p, q }], pedido: pe2.id });
+  eq(de + a + " salió", E.stockDe(st, de, p), d0 - q);
+  const m2 = E.rechazarEnvio(st, x2.transito.id, { por: "Ana", motivo: "no llegó" });
+  eq(de + a + " rechazo registrado", m2 && m2.tipo, "rechazo");
+  eq(de + a + " el que recibe NO suma", E.stockDe(st, a, p), a0);
+  eq(de + a + " vuelve al que lo mandó", E.stockDe(st, de, p), d0);
+  eq(de + a + " ya no está en camino", E.enTransito(st, p, a), 0);
+  eq(de + a + " envío rechazado", x2.transito.estado, "rechazado");
+  eq(de + a + " el pedido original queda despachado", st.pedidos.find(y => y.id === pe2.id).estado, "despachado");
+  const rp2 = st.pedidos.find(y => y.repone === pe2.id);
+  eq(de + a + " lo que no se aceptó se vuelve a pedir aparte", rp2 && rp2.estado === "pendiente" && rp2.items[0].q, q);
+  eq(de + a + " … marcado como rechazado", !!(rp2 && rp2.rechazado), true);
+  eq(de + a + " no se rechaza dos veces", E.rechazarEnvio(st, x2.transito.id, {}), null);
+  eq(de + a + " no se puede recibir algo rechazado", E.recibir(st, x2.transito.id, {}), null);
+  E.motivoRechazo(st, x2.transito.id, "las latas venían abiertas");
+  eq(de + a + " motivo después", /abiertas/.test(m2.nota), true);
+  eq(de + a + " deshacer", E.deshacer(st, m2.id).ok, true);
+  eq(de + a + " otra vez en camino", x2.transito.estado, "pendiente");
+  eq(de + a + " el que lo mandó vuelve a tener lo que salió", E.stockDe(st, de, p), d0 - q);
+  eq(de + a + " el pedido vuelve a despachado", st.pedidos.find(y => y.id === pe2.id).estado, "despachado");
+  eq(de + a + " lo que se volvió a pedir se anula", rp2.estado, "anulado");
+  eq(de + a + " sello", (E.sellar(st), E.verificar(st).ok), true);
+}
+// 5c) no llegó NADA: se perdió en el camino / no había (nadie suma ni recupera); el pedido vuelve a pendiente; deshacer
+for (const acc of ["perdido", "nohabia"]) {
+  st = nuevo(); const pB = E.stockDe(st, "B", "leche"), pP = E.stockDe(st, "P", "leche");
+  const pe3 = E.pedir(st, { de: "P", a: "B", items: [{ p: "leche", q: 12 }] });
+  const x3 = E.despachar(st, { de: "B", a: "P", items: [{ p: "leche", q: 12 }], pedido: pe3.id });
+  const m3 = E.perderEnvio(st, x3.transito.id, { accion: acc, por: "Luis" });
+  eq(acc + " anotado", m3.tipo, "perdida"); eq(acc + " lugar", m3.lugar, acc === "nohabia" ? "B" : "P");
+  eq(acc + " bodega no recupera", E.stockDe(st, "B", "leche"), pB - 12); eq(acc + " producción no suma", E.stockDe(st, "P", "leche"), pP);
+  eq(acc + " ya no está en camino", E.enTransito(st, "leche", "P"), 0); eq(acc + " se vuelve a pedir aparte", (st.pedidos.find(y => y.repone === pe3.id) || {}).estado, "pendiente");
+  eq(acc + " deshacer", E.deshacer(st, m3.id).ok, true); eq(acc + " otra vez en camino", x3.transito.estado, "pendiente");
+  eq(acc + " pedido despachado otra vez", st.pedidos.find(y => y.id === pe3.id).estado, "despachado");
+  eq(acc + " lo que se volvió a pedir se anula", st.pedidos.find(y => y.repone === pe3.id).estado, "anulado");
+}
+{ st = nuevo(); const ms = E.seguimiento(st, { lugar: "B", titulo: "Se deja pendiente", nota: "llega el proveedor el jueves", por: "Ana" }); eq("seguimiento sin inventario", (ms.deltas || []).length, 0); eq("seguimiento con quién", ms.por, "Ana"); }
 // 6) la respuesta a «¿qué hago?» (como la dice la gente y como la escribe Whisper)
 const C = {
   diferencia: {
@@ -87,6 +130,19 @@ const C = {
     quitar: ["quítalo", "Quítalos.", "bórralo", "cancélalo", "anúlalo", "ya no hace falta", "ya no", "no lo necesitan", "elimínalo", "sácalo de la lista", "olvídalo", "ya se mandó", "ya lo mandamos", "ya no lo necesitamos", "quita eso"],
     dejar: ["déjalo pendiente", "déjalos", "que quede pendiente", "mantenlo", "para después", "luego lo mando", "mañana", "cuando llegue", "todavía no", "no lo quites", "no lo borres", "guárdalo", "que se quede"],
     "null": ["sí", "no", "Rosa", "gracias", "hola"]
+  },
+  envio: {
+    llego: ["sí llegó", "ya llegó", "llegó", "sí", "llegó todo bien", "llegaron solo dos cajas", "ya está aquí", "ya lo recibimos", "sí, ya llegaron"],
+    rechazar: ["no se acepta", "no llegó, no se acepta", "no se acepta porque no llegó", "devuélvelo", "no se envió", "nunca salió de la bodega", "recházalo"],
+    esperar: ["todavía no llega", "sigue en camino", "ya mismo llega", "lo esperamos", "espera un rato", "déjalo, ya viene", "aún no"],
+    perdido: ["se perdió", "se cayeron en el camino"], nohabia: ["no había en la bodega"],
+    "null": ["no llegó", "Andrés", "gracias"]
+  },
+  nollego: {
+    rechazar: ["no se acepta", "devuélvelo a la bodega", "que vuelva", "no se envió", "no se acepta, nunca salió"],
+    esperar: ["lo esperamos", "sigue en camino", "todavía no llega", "ya mismo llega"],
+    perdido: ["se perdió", "se lo robaron"], nohabia: ["no había", "no había en la bodega"],
+    "null": ["sí", "no"]
   },
   pedido: {
     despachar: ["despáchalo", "Despáchalo.", "mándalo", "envíalo", "manda lo que hay", "envía lo que tengas", "llévalo"],

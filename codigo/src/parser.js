@@ -383,6 +383,8 @@
     // (2-nov-2026, Freddy: «sí, despachemos rápido», «sí, despachemos») a «¿Despacho / envío eso?»: despachar es decir que sí
     // (en el iPhone el «sí» del comienzo a veces se pierde al reabrir el micrófono y llega solo «despachemos»)
     if (/^(si |dale |ya |claro |listo |bueno |ok |de una )*(despach(?!ar\b)\w*|enviemos|mandemos|envialo|mandalo|enviala|mandala|envialos|mandalos|envialas|mandalas|enviale|mandale|envia|manda)( (rapido|rapidito|nomas|no mas|ya|de una|ahora|ahorita|eso|lo que (hay|haya|tengas|tenga|tenemos|se tiene|alcance|alcanza)|todo|eso mismo))*( rex| porfa| por favor)?$/.test(t)) return { r: "si", resto: "", limpio: true };
+    // (3-nov-2026) «se acepta», «sí, se acepta el pedido», «aceptado», «se recibe»: aceptar lo que llegó es un sí (no aceptar lo ve V.rechazoLlegada antes)
+    if (/^(si |claro |ok |bueno |listo )*(se acepta|lo acepto|la acepto|los acepto|las acepto|acepto|aceptado|aceptada|aceptamos|lo aceptamos|se recibe|lo recibo|lo recibimos|recibido)( el pedido| el envio| todo| completo| conforme| asi| nomas| rex)*$/.test(t)) return { r: "si", resto: "", limpio: true };
     // (1-nov-2026, Freddy: «cualquier respuesta afirmativa») más formas de decir que sí
     if (/^(si |pues |claro |ya )?(me parece bien|conforme|fijo|de ley|todo normal|en orden|todo en orden|bien|muy bien|okey dokey|concuerdo|estoy de acuerdo|coincido|asi esta bien|esta bien asi|exacto concuerdo|si concuerdo|lo confirmo|confirmadisimo|eso mismo es)( rex| pues| nomas| gracias| contigo)?$/.test(t)) return { r: "si", resto: "", limpio: true };
     if (opc && opc.llegada && /^(si )?(normal|todo normal|sin novedad\w*|todo en orden|en orden|llegaron (todos|todas|completos|completas|bien)( completos| completas| bien)?|llego (todo|completo|bien|correcto|perfecto)( todo)?)( gracias| rex)?$/.test(t)) return { r: "si", resto: "", limpio: true };
@@ -426,6 +428,7 @@
   const AV_LISTO = /\b((ya )?(esta|estan|quedo|quedaron) list[oa]s?|ya (va|van|sale|salen|salio|salieron) (en camino|para (el |la )?(local|bodega|produccion)|al local|a produccion|a la bodega)|(va|van) en camino|esta(n)? (por|a punto de) (terminar|salir|estar)|ya casi (esta|estan|termin\w*|sale|salen|listo|lista))\b/;
   const AV_ALARMA = /\b(hay (un |una )?(problema|inconveniente|emergencia|alarma|fuga|incendio|accidente|daño|dano|derrame|cortocircuito)|se (daño|dano|danaron|rompio|rompieron|quemo|quemaron|apago|apagaron|fue la luz|fue el agua|fue el gas|fue el internet|corto (la luz|el agua|el gas|el internet))|no hay (luz|agua|gas|internet|energia|senal|sistema)|se (fue|corto) (la luz|el agua|el gas|el internet|la energia)|(la |el )?(refri|refrigeradora|refrigerador|congeladora|congelador|frigorifico|nevera|licuadora|batidora|maquina|cocina|horno|balanza|caja registradora|computadora|impresora|vitrina|cuarto frio|camara de frio|freezer|frizer|tablet|telefono|celular) (no (funciona|enfria|congela|prende|sirve|anda|carga)|se (daño|dano|apago|rompio|quemo)|esta (danad[oa]|mal|fallando|rot[oa]|apagad[oa])))\b/;
   /* El aviso dicho por voz, o null. { para: ["L"] | "todos", texto, nivel: normal|alto|alarma, clase: verbo|quedando|preparando|listo|alarma, items } */
+  const AV_PROVEEDOR = /\b(proveedor\w*|distribuidor\w*)\b.*\b(no (llego|llegaron|vino|vinieron|ha (llegado|venido)|han (llegado|venido)|viene|vienen|va a (venir|llegar)|van a (venir|llegar)|trajo|aparece|aparecio|contesta)|se (demora|demoro|demoran|atraso|atrasa|retrasa|retraso)|esta (atrasado|demorado|retrasado)|(llega|llegan|llegara|viene|vienen|vendra) (mas )?tarde|todavia no (llega|llegan|viene|vienen)|aun no (llega|llegan|viene|vienen)|cancel\w*|(llega|viene) manana|manana (llega|viene)|(llego|vino) tarde)\b|\b(todavia no|aun no|no) (llega|llego|vino|viene|ha llegado|ha venido|llegan|llegaron|vinieron) (el |la |los )?(proveedor\w*|distribuidor\w*)\b/;
   function detectarAviso(frase, t, ctx) {
     const cat = ctx.cat || null;
     const q = t.replace(/[¿?¡!,.;:«»"]/g, " ").replace(/\s+/g, " ").trim();
@@ -455,7 +458,10 @@
     }
     // «se dañó un kilo de frutilla», «se rompieron 2 cajas de leche»: es una merma de un producto, no una alarma (salvo que se pida avisarlo)
     const deProducto = () => { const R3 = interpretar(resto, Object.assign({}, ctx, { sinAviso: true })); return (R3.items || []).some(x => x.p); };
-    if (AV_ALARMA.test(resto) && (conVerbo || !deProducto())) clase = "alarma";
+    // (3-nov-2026, Freddy: «que el proveedor sí llegue, que no llegue, que haya demoras») el proveedor no llegó / se demora: aviso para todos
+    const mp = resto.match(AV_PROVEEDOR);
+    if (mp) clase = /\b(no (llego|llegaron|vino|vinieron|ha (llegado|venido)|han (llegado|venido)|viene|vienen|va a (venir|llegar)|van a (venir|llegar)|trajo|aparece|aparecio|contesta)|cancel\w*)\b/.test(resto) && !/\b(se demora|tarde|todavia|aun no|manana)\b/.test(resto) ? "proveedor_no" : "proveedor";
+    else if (AV_ALARMA.test(resto) && (conVerbo || !deProducto())) clase = "alarma";
     else if (AV_QUEDANDO.test(resto)) clase = "quedando";
     else if (AV_PREPARANDO.test(resto)) clase = "preparando";
     else if (AV_LISTO.test(resto)) clase = "listo";
@@ -464,7 +470,7 @@
     // sin verbo: solo frases que son claramente un aviso (no una orden con cantidad: «se cayó un balde de frutilla» es una merma)
     if (!conVerbo && (clase === "quedando" || clase === "listo" || clase === "preparando") && /^(lleva|llevar|manda|mandar|mueve|mover|pasa|pasar|envia|enviar|trae|traer|saca|sacar|despacha|despachar)\b/.test(resto)) return null;
     const texto0 = original(resto), texto = texto0.charAt(0).toUpperCase() + texto0.slice(1);
-    return { para: para || "todos", texto, nivel: clase === "alarma" ? "alarma" : clase === "quedando" ? "alto" : "normal", clase, items: prodsDe(resto) };
+    return { para: para || "todos", texto, nivel: clase === "alarma" ? "alarma" : clase === "quedando" || clase === "proveedor_no" ? "alto" : "normal", clase, items: prodsDe(resto) };
   }
   function interpretar(frase, ctx) {
     ctx = ctx || {}; const cat = ctx.cat || null;
@@ -495,7 +501,7 @@
     const R = { crudo, texto: t, intent: null, lugar: ctx.lugar || "L", de: null, a: null, items: [], issues: [], conf: 1 };
     if (!t) { R.intent = "vacio"; R.conf = 0; return R; }
     // «avisa a la bodega que necesitamos leche»: con el verbo de avisar va antes que las preguntas («que necesitamos» no es «¿qué necesitamos?»)
-    if (!ctx.sinAviso && AV_VERBO.test(t.replace(/[¿?¡!,.;:«»"]/g, " ").replace(/\s+/g, " ").trim() + " ")) { const av = detectarAviso(frase, t, ctx); if (av) { R.intent = "aviso"; R.aviso = av; R.items = av.items; R.conf = 1; R.listo = true; return R; } }
+    if (!ctx.sinAviso && (AV_VERBO.test(t.replace(/[¿?¡!,.;:«»"]/g, " ").replace(/\s+/g, " ").trim() + " ") || (AV_PROVEEDOR.test(t.replace(/[¿?¡!,.;:«»"]/g, " ")) && !/\?/.test(frase)))) { const av = detectarAviso(frase, t, ctx); if (av) { R.intent = "aviso"; R.aviso = av; R.items = av.items; R.conf = 1; R.listo = true; return R; } }
     // preguntas al asistente sobre cómo está todo: «qué falta», «qué viene en camino», «cómo vamos», «qué hay que preparar»
     {
       const q = " " + t.replace(/[¿?¡!,.]/g, " ").replace(/\s+/g, " ") + " ";
@@ -1332,6 +1338,24 @@
       if (noQuita || /^asi$|^(dejalo|dejala|dejalos|dejalas|deja|dejemos|dejemoslo|dejemosla|dejarlo)( (asi|nomas|como esta|como estan|ahi|tal cual|pendiente|nada mas))*$|\b(dejalo asi|dejala asi|dejalos asi|deja asi|dejemos asi|ya lo revisamos|ya revisamos|lo revisamos|ya se reviso|esta bien asi|asi esta bien|no hagas nada|no hay que hacer nada|nada que hacer|asi nomas|tal cual)\b/.test(t)) return "dejar";
       return null;
     }
+    // (3-nov-2026) un envío que no se confirma («¿Llegó, no llegó, o no se acepta?») y cuando no llegó nada («¿No se acepta, lo esperamos, o se perdió?»)
+    if (tipo === "envio" || tipo === "nollego") {
+      if (/\b(no habia|ya no habia|no teniamos|no existia|no quedaba|se habia acabado|estaba en cero|nunca hubo|no hubo)\b/.test(t)) return "nohabia";
+      if (/\b(se perdio|se perdieron|perdid[oa]s?|se lo robaron|robaron|desaparec\w*|se extravi\w*|se cayo|se cayeron)\b/.test(t)) return "perdido";
+      if (rechazoLlegada(frase) || /\b(no se envio|no lo (enviaron|mandaron)|nunca salio|no salio)\b/.test(t)) return "rechazar";
+      if (/\b(todavia no|aun no|sigue en camino|siguen en camino|en camino|ya mismo llega\w*|ya (mismo )?llega(n|ra|ran)?\b|ya viene\w*|lo esperamos|los esperamos|esperemos|espera\w*|mas tarde|despues|luego|dejalo|dejalos|ahorita llega\w*|ya mismo)\b/.test(t)) return "esperar";
+      if (tipo === "envio" && /^(si|sip|ya|claro)( (si|ya))?$|\b(ya llego|ya llegaron|si llego|si llegaron|llego|llegaron|ya esta aqui|ya estan aqui|ya lo recibimos|ya lo tenemos|aqui esta|aqui estan|lo recibimos|recibimos)\b/.test(t) && !/^no\b/.test(t)) return "llego";
+      return null;
+    }
+    // (3-nov-2026) algo por preparar que nadie preparó: «¿Ya está, lo dejo pendiente o lo quito?»
+    if (tipo === "preparar") {
+      if (noQuita) return "dejar";
+      if (/\b(quit\w*|borr\w*|cancel\w*|anul\w*|elimin\w*|ya no (se )?(va|hace|prepara|necesit)\w*|no (se )?va a (preparar|hacer)|no hace falta|olvid\w*)\b/.test(t)) return "quitar";
+      if (/\b(todavia no|aun no|ahorita no|no esta|no estan|no la hice|no lo hice|no hemos)\b/.test(t)) return "dejar";
+      if (/^(si|ya|listo|lista|listos|listas|hecho|hecha)( (ya|si|esta|estan|listo|lista))*$|\b(ya esta|ya estan|ya (la|lo|las|los) (hice|hicimos|prepare|preparamos|termine|terminamos)|ya (se )?(hizo|preparo|termino)|esta (lista|listo|hecha|hecho)|estan (listas|listos|hechas|hechos)|ya quedo|ya quedaron|terminamos|termine)\b/.test(t)) return "listo";
+      if (/\b(despues|luego|mas tarde|manana|dej\w*|pendiente|que quede|que se quede|espera\w*|mant\w*)\b/.test(t)) return "dejar";
+      return null;
+    }
     if (tipo === "saldo" || tipo === "pedido") {
       if (noQuita) return "dejar";
       if (/\b(quit\w*|borr\w*|cancel\w*|anul\w*|elimin\w*|sac\w* de la lista|ya no (hace falta|hacen falta|lo necesit\w*|los necesit\w*|necesit\w*|quier\w*|va|van|hay que|se necesita)|no hace falta|no hacen falta|no lo necesit\w*|no los necesit\w*|ya no|olvid\w*|ya fue|ya se mando|ya lo mande|ya lo mandamos|ya se envio|ya lo llevaron|ya lo llevamos|ya se hizo|ya esta (atendido|hecho|resuelto))\b/.test(t)) return "quitar";
@@ -1342,7 +1366,48 @@
     }
     return null;
   }
-  const API = { decision, empateNombre: () => EMPATE, pareceSiNo, fraseAprendible, normalizar, fon, lev, numeroEn, buscarProducto, interpretar: interpretarConCorreccion, interpretarSimple: interpretar, interpretarMejor, seguir, siNo, analizarLlegada, ponerAprendido, claveFrase, nombreResponsable, olvidarIndice: () => { INDICE = null; INDICE_DE = null; } };
+  /* (3-nov-2026, Freddy: «no se acepta el pedido porque no llegó / no está completo… devolver, no se registra, no se acepta, no se recibe porque…»)
+     ¿La persona NO ACEPTA lo que llegó? → { motivo, causa } (causa: no_llego | incompleto | mal_estado | no_enviado | otro) o null.
+     «sí se acepta», «se acepta aunque…», «lo acepto» NO son rechazo. Un «no» suelto tampoco (eso es «¿qué pasó?»). */
+  const RECHAZO = new RegExp("\\b(no (se )?(lo |la |los |las |le )?(acept\\w*|recib(e|o|imos|en|ir)\\b|registr\\w*)|no (lo |la |los |las )?(queremos|quiero|aceptamos)|" +
+    "(se |lo |la |los |las )?rechaz\\w*|devuel(v|b)\\w*|devolver\\w*|regres(a|e|alo|ala|alos|alas|arlo|en)\\b|que (se )?(regrese|devuelva|vuelva)\\w*|" +
+    "(cancel|anul)\\w* (el |ese |este )?(pedido|envio|despacho)|(cancel|anul)\\w*\\b.*\\b(porque|por que|ya que|no llego|no se envio|no vino|no se recibio|incomplet))");
+  function rechazoLlegada(frase) {
+    let t = normalizar(String(frase || "")).replace(/[,.;:!¡¿?«»]/g, " ").replace(/\s+/g, " ").trim();
+    if (!t) return null;
+    t = t.replace(/^((oye|hey|ok|pues|bueno|mira|eh|ah)\s+)*((rex|rexito)\s+)?/, "");
+    if (/^(si |claro |ok |bueno )*(se acepta|lo acepto|la acepto|los acepto|acepto|aceptado|aceptamos|si se acepta|se recibe|lo recibo|recibido)\b/.test(t)) return null;
+    if (/\bno (hay|tengo|tenemos) (ningun|ninguna)? ?(problema|novedad|observacion)/.test(t) && !/\b(no (se )?acept|rechaz)/.test(t)) return null;
+    const m = t.match(RECHAZO);
+    if (!m) return null;
+    // «devuélveme el recibo», «no recibí la llamada»: devolver/recibir de otra cosa no es esto
+    if (/\bdevuel\w* (la llamada|el recibo|el dinero|la plata)\b/.test(t)) return null;
+    // la causa se busca en lo que se cuenta, no en el verbo con que se rechaza («no recibimos esto porque…»), y sin el «no,» del comienzo
+    const mp = t.match(/\b(porque|por que|ya que|debido a que|puesto que|pues)\b (.+)$/);
+    let base = (mp ? mp[2] : t.replace(m[0], " ")).replace(/\bpor favor\b/g, " ");
+    if (!mp && /^\s*no\s*[,.;]/.test(String(frase || "").toLowerCase().replace(/^\s*(oye|mira|bueno|pues)?[\s,]*(rex)?[\s,]*/, ""))) base = base.replace(/^\s*no\b/, " ");
+    base = base.replace(/\s+/g, " ").trim();
+    let causa = "otro";
+    if (/\b(no (se )?(envio|mando|despacho|salio)|no lo (enviaron|mandaron|despacharon)|no se ha enviado|nunca salio|no salieron|no se despacho)\b/.test(base)) causa = "no_enviado";
+    else if (/\b(incomplet\w*|no esta completo|no llego completo|no llego todo|falt\w*|llego (la )?mitad|llego menos|solo llego|llegaron solo|llego solo)\b/.test(base)) causa = "incompleto";
+    else if (/\b(danad\w*|dano|abiert\w*|rot[oa]s?|golpead\w*|mojad\w*|podrid\w*|mal estado|malogrado|aplastad\w*|regad\w*|derramad\w*|vencid\w*|caducad\w*|maduro|madura|feo|fea)\b/.test(base)) causa = "mal_estado";
+    else if (/\b(no (llego|llegaron|vino|vinieron|aparece|aparecio|se recibio)|nunca llego|no ha llegado|no han llegado|nada llego|no llego nada|todavia no llega|no vino nada)\b/.test(base)) causa = "no_llego";
+    let motivo = "";
+    // el motivo como se dijo (con tildes): se busca la misma parte en la frase original
+    const mo = String(frase || "").match(/(?:^|[\s,;])(?:porque|por qu[eé]|ya que|debido a que|puesto que|pues)\s+(.+?)[\s.!?]*$/i);
+    if (mp && mp[2].split(" ").length >= 2) motivo = (mo && mo[1].split(/\s+/).length >= 2 ? mo[1].trim() : mp[2]).replace(/[,\s]*por favor$/i, "");
+    else {
+      // sin «porque»: lo que se contó en otra parte de la frase, como se dijo («devuélvelo, las latas llegaron golpeadas» → «Las latas llegaron golpeadas»)
+      const resto = String(frase || "").split(/[,.;:!?¿¡]+/).map(x => x.trim()).filter(x => {
+        const nx = normalizar(x).replace(/\s+/g, " ").trim();
+        return nx && !RECHAZO.test(nx) && !/^((oye|mira|bueno|pues|ok)\s*)*(rex)?$|^(no|si|por favor|gracias)$|^(en|a|para) (la |el )?(bodega|produccion|local|tienda|cocina)$/.test(nx);
+      }).join(", ").replace(/[,\s]*por favor$/i, "").trim();
+      motivo = resto.split(/\s+/).length >= 2 ? resto : ({ no_llego: "no llegó", incompleto: "llegó incompleto", mal_estado: "llegó en mal estado", no_enviado: "no se envió" }[causa] || "");
+    }
+    if (motivo) motivo = motivo.charAt(0).toUpperCase() + motivo.slice(1);
+    return { motivo, causa };
+  }
+  const API = { decision, rechazoLlegada, empateNombre: () => EMPATE, pareceSiNo, fraseAprendible, normalizar, fon, lev, numeroEn, buscarProducto, interpretar: interpretarConCorreccion, interpretarSimple: interpretar, interpretarMejor, seguir, siNo, analizarLlegada, ponerAprendido, claveFrase, nombreResponsable, olvidarIndice: () => { INDICE = null; INDICE_DE = null; } };
   root.FRX_VOZ = API;
   if (typeof module !== "undefined" && module.exports) module.exports = API;
 })(typeof window !== "undefined" ? window : globalThis);
