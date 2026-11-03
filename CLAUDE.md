@@ -2,21 +2,23 @@
 
 Este repositorio publica la página de Fruti Reex (GitHub Pages: `index.html`) y guarda el **cerebro compartido** de Rex.
 
-## El ciclo, sin costo
-1. Cada equipo exporta lo que aprendió Rex (Catálogo → Voz → «Exportar lo que aprendió Rex») y lo sube a `rex/aprendizaje/`.
-2. La acción **«Entrenar a Rex»** (`.github/workflows/rex.yml`) corre sola cada 30 minutos (y cada vez que se sube algo):
-   - junta los aportes en `rex/cerebro.json` (la página lo lee al abrir: aprende sin cambiar el HTML) y escribe `rex/PENDIENTES.md`;
-   - corre **todas** las pruebas de `codigo/tests` y escribe `rex/RESULTADOS.md` y la curva de aprendizaje `rex/curva.json`;
-   - si cambió el código (`codigo/`) y **todas** las pruebas pasan, vuelve a armar `index.html` y `version.json`: la página se actualiza sola.
-     Si una prueba falla, la página NO se toca.
-3. Para que Rex entienda frases nuevas de verdad, alguien (una persona o un agente: Claude Code, Codex) sigue la receta
-   `.claude/skills/entrenar-rex/SKILL.md`: toma `rex/PENDIENTES.md`, enseña cada frase en `codigo/src/parser.js` y la agrega a una prueba.
-   La acción `rex-agente.yml` lo hace sola con Claude **si** el dueño agregó el secreto `CLAUDE_CODE_OAUTH_TOKEN` (usa su suscripción de Claude).
+## El ciclo, todos los días y sin que nadie haga pruebas
+1. **En la PC de la tienda**, la página le pasa al oído de Rex (cada 30 min) lo que entendió y lo que NO entendió. El oído lo guarda en la
+   carpeta `V8\aprendizaje-rex` de esa PC (con nombres: es privado y no sale de ahí).
+2. **Una vez al día, una tarea programada de Claude** (con la suscripción del dueño):
+   - toma esos archivos de la PC y les quita los nombres con `rex/anonimizar.py` → `rex/aprendizaje/`;
+   - corre `rex/entrenar.py` (junta todo en `rex/cerebro.json` y escribe `rex/PENDIENTES.md`);
+   - sigue la receta `.claude/skills/entrenar-rex/SKILL.md`: le enseña a Rex las frases pendientes en `codigo/src/parser.js`, con pruebas;
+   - si TODAS las pruebas pasan, sube los cambios aquí; después copia la página nueva a la PC (guardando la anterior).
+3. **La acción «Entrenar a Rex»** (`.github/workflows/rex.yml`, gratis) corre cada 30 min y con cada cambio: vuelve a pasar todas las pruebas de
+   `codigo/tests` y, si cambió el código y todo pasa, arma `index.html` y lo publica. Si una prueba falla, la página NO se toca.
+   Deja `rex/RESULTADOS.md` y la curva de aprendizaje `rex/curva.json`.
 
 ## Reglas que no se rompen
-- Nunca nombres reales del personal ni claves (API, GitHub) en ningún archivo: el repositorio es público. Usa nombres de ejemplo (Ana, Rosa, Luis, Saúl, Marcela).
-- Nunca se borra ni se baja una prueba para que pase: se arregla el intérprete.
-- `rex/cerebro.json` y `rex/aprendizaje/` los escribe la acción; no se editan a mano.
+- Nunca nombres reales del personal ni claves (API, GitHub) en ningún archivo: el repositorio es público. Usa nombres de ejemplo (Ana, Rosa, Luis, Saúl, Marcela)
+  o «[nombre]». Nada de la PC llega aquí sin pasar por `rex/anonimizar.py`.
+- Nunca se borra ni se ablanda una prueba para que pase: se arregla el intérprete.
+- `rex/cerebro.json`, `rex/PENDIENTES.md`, `rex/RESULTADOS.md` y `rex/curva.json` los escriben las herramientas; no se editan a mano.
 
 
 ---

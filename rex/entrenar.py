@@ -26,6 +26,10 @@ for a in archivos:
     except Exception as e:
         print("no se pudo leer", a, e); continue
     if d.get("tipo") != "rex-aprendizaje": continue
+    if d.get("personas"):   # (3-nov-2026) un aporte sin limpiar: se le quitan los nombres antes de usarlo (y se avisa)
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("anonimizar", os.path.join(AQUI, "anonimizar.py")); an = importlib.util.module_from_spec(spec); spec.loader.exec_module(an)
+        d = an.anonimizar(d); print("AVISO: " + os.path.basename(a) + " traía nombres; se usó sin ellos. Bórralo y sube la versión limpia (rex/anonimizar.py).")
     for r in ("si", "no"):
         for f in (d.get("aprendido") or {}).get(r, []) or []:
             k = clave(f)

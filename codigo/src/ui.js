@@ -2283,13 +2283,28 @@
       if (tab === "catalogo") renderCatalogo();
     }).catch(e => { Cerebro.error = String(e && e.message || e); });
   }
-  function exportarAprendizaje() {
-    const noEntendidas = vozLog.filter(v => /no entendí|no era una respuesta|Repite|sin nada pendiente|se ignora \(no empezó/i.test(v.ev)).map(v => ({ t: new Date(v.t).toISOString(), lugar: v.l, frase: v.txt }));
-    const data = { tipo: "rex-aprendizaje", version: 1, fecha: new Date().toISOString(), equipo: (navigator.userAgent || "").slice(0, 80),
-      aprendido: st.aprendido || { si: [], no: [] }, reescritas: st.reescritas || {}, personas: personasDet().map(x => x.nombre),
-      noEntendidas: noEntendidas.slice(-400), ordenes: vozLog.filter(v => /orden entendida|respuesta entendida/.test(v.ev)).slice(-400).map(v => ({ lugar: v.l, frase: v.txt.replace(/\s*\(\d+ ms.*\)$/, "") })) };
-    descargar(new Blob([JSON.stringify(data, null, 1)], { type: "application/json" }), "rex-aprendizaje-" + st.dia + "-" + Date.now().toString(36).slice(-4) + ".json");
+  // un nombre corto y al azar para este equipo (los aportes de cada computadora no se mezclan; no dice nada de la persona)
+  function idEquipo() {
+    let id = ""; try { id = localStorage.getItem(CLAVE + "-equipo") || ""; } catch (e) {}
+    if (!/^[a-z0-9]{6,12}$/.test(id)) { id = "pc" + Math.random().toString(36).slice(2, 8); try { localStorage.setItem(CLAVE + "-equipo", id); } catch (e) {} }
+    return id;
   }
+  function datosAprendizaje() {
+    const noEntendidas = vozLog.filter(v => /no entendí|no era una respuesta|Repite|sin nada pendiente|se ignora \(no empezó/i.test(v.ev)).map(v => ({ t: new Date(v.t).toISOString(), lugar: v.l, frase: v.txt }));
+    return { tipo: "rex-aprendizaje", version: 2, fecha: new Date().toISOString(), dia: st.dia, equipo: idEquipo(),
+      aprendido: st.aprendido || { si: [], no: [] }, reescritas: st.reescritas || {}, personas: personasDet().map(x => x.nombre),   // «personas» solo sirve para quitar los nombres antes de publicar (rex/anonimizar.py)
+      noEntendidas: noEntendidas.slice(-400), ordenes: vozLog.filter(v => /orden entendida|respuesta entendida/.test(v.ev)).slice(-400).map(v => ({ t: new Date(v.t).toISOString(), lugar: v.l, frase: v.txt.replace(/\s*\(\d+ ms.*\)$/, "") })) };
+  }
+  function exportarAprendizaje() {
+    descargar(new Blob([JSON.stringify(datosAprendizaje(), null, 1)], { type: "application/json" }), "rex-aprendizaje-" + st.dia + "-" + Date.now().toString(36).slice(-4) + ".json");
+  }
+  /* (3-nov-2026, Freddy: «que aprenda solo todos los días, sin que yo esté haciendo pruebas») Rex entrega solo lo que aprendió:
+     cada 30 min, 2 min después de que se conecta el oído y al esconder la página, se lo pasa al oído de esta PC (OidoPC), que lo guarda
+     en la carpeta V8\aprendizaje-rex. De ahí lo toma la tarea diaria de entrenamiento (le quita los nombres antes de publicar nada). */
+  function entregarAprendizaje() { try { if (OidoPC.usar()) OidoPC.entregar(datosAprendizaje()); } catch (e) {} }
+  setInterval(entregarAprendizaje, 30 * 60000);
+  setTimeout(entregarAprendizaje, 2 * 60000);
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") entregarAprendizaje(); });
 
   /* ===== Asistente con IA (opcional) =====
      Cuando el intérprete de aquí no entiende una frase, se la pasa a Claude con el contexto del lugar
@@ -2815,7 +2830,9 @@
     // se busca al abrir la página y cada 15 s mientras no esté (cuando se prende INICIAR-OIDO.bat, Rex lo empieza a usar solo)
     function vigilar() { if (!quiere() || usar() || conectando || Date.now() < tReintento) return; tReintento = Date.now() + 15000; conectar(4000); }
     setTimeout(vigilar, 300); setInterval(vigilar, 3000);
-    return { SR: SRpc, usar, conectar, estadoTxt, enviarPista, get est() { return est; }, probar() { tReintento = 0; return conectar(1500).then(ok => { pintar(); return ok; }); } };
+    // lo que aprendió Rex hoy: el oído lo guarda en la PC (no sale a internet desde aquí)
+    function entregar(datos) { if (!ws || ws.readyState !== 1 || !listo) return false; try { ws.send(JSON.stringify({ tipo: "aprendizaje", datos })); est.entregado = Date.now(); return true; } catch (e) { return false; } }
+    return { SR: SRpc, usar, conectar, estadoTxt, enviarPista, entregar, get est() { return est; }, probar() { tReintento = 0; return conectar(1500).then(ok => { pintar(); return ok; }); } };
   })();
   const Oido = (function () {
     const SRnativo = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -4943,5 +4960,5 @@
     setTimeout(revisarVersion, 2500); setInterval(revisarVersion, 5 * 60 * 1000);
   }
   setInterval(() => { try { vivo(); } catch (e) {} }, 1000);
-  window.FRX_UI = { get estado() { return st; }, OidoPC, get IOS() { return modoIphone(); }, Rex, Aplauso, Sonido, charlaRex, esOrdenClara, BUILD, rexEncender, rexLugar, lugarConPregunta, get vozUsada() { return ultimaVoz; }, Oido, ordenTexto, confirmar, ir, revisarVoz, leerNum, Vigilia, recordarPendientes, get decide() { return decide; } };
+  window.FRX_UI = { get estado() { return st; }, OidoPC, get IOS() { return modoIphone(); }, Rex, Aplauso, Sonido, charlaRex, esOrdenClara, BUILD, rexEncender, rexLugar, lugarConPregunta, get vozUsada() { return ultimaVoz; }, Oido, ordenTexto, confirmar, ir, revisarVoz, leerNum, Vigilia, recordarPendientes, entregarAprendizaje, get decide() { return decide; } };
 })();
