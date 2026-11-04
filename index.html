@@ -6408,7 +6408,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
   let tToast = null;
   function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("ver"); clearTimeout(tToast); tToast = setTimeout(() => t.classList.remove("ver"), 3800); }
   // Rex: el asistente (sesion/act: la ventana tipo Siri; dijo: lo último que dijo; oyendo: lo último que oyó)
-  const BUILD = { id: "41ea20f7", fecha: "2026-11-03 19:02" };
+  const BUILD = { id: "2e584f32", fecha: "2026-11-03 20:07" };
   const Rex = { lugar: "B", ultimo: null, despierto: 0, sesion: 0, act: 0, dijo: "", tDijo: 0, oyendo: "", tOyendo: 0 };
   /* La conversación con Rex (la ventana tipo Siri) se cierra sola cuando nadie dice nada durante 5 s. */
   const SESION_MS = 8000;   // 31-oct-2026: con 5 s Rex se cerraba mientras la persona pensaba («se corta de golpe»)
@@ -6536,7 +6536,7 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     const [t, cb, o] = colaVoz.shift();
     if (o && o.vigente && !o.vigente()) { siguienteVoz(); return; }   // ya no hace falta decirlo
     // una pausa natural entre una frase y la siguiente (antes 120 ms: sonaba todo pegado)
-    setTimeout(() => hablar(t, cb, Object.assign({}, o, { cola: false, yaEspero: ocupado })), Math.max(120, 450 - (Date.now() - (TTS.fin || 0))));
+    setTimeout(() => hablar(t, cb, Object.assign({}, o, { cola: false, yaEspero: ocupado })), Math.max(120, 500 - (Date.now() - (TTS.fin || 0))));
   }
   function callarVoz() { colaVoz.length = 0; if (hablaActual) { const f = hablaActual.fin; hablaActual = null; f.cortado = true; f.callado = true; } cortarTTS(); try { Oido.mudo(null, true); } catch (e) {} }
   /* Avisos en voz alta en el lugar que tiene que hacer algo («cantar»): «Atención bodega: producción pide…» */
@@ -7343,8 +7343,9 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
       res.mov = E.seguimiento(st, { lugar: l, ref: d.ref, titulo: res.titulo || "Se deja pendiente", info: d.resumen || "", nota: obs ? "Se queda: " + obs : "Se queda (sin observación)", por: quien[l], via, frase });
       guardar(); renderTodo();
     };
-    const dada = obsDe(frase);
-    if (dada) { crear(dada); res.dicho = (res.dicho ? res.dicho + " " : "") + "Anotado: " + dada.charAt(0).toLowerCase() + dada.slice(1) + "."; sigue(); return; }
+    // lo que faltó de un despacho a medias ya tiene su porqué (no alcanzó): no se pregunta otra vez
+    const dicha = obsDe(frase), dada = dicha || (d.tipo === "saldo" ? "No alcanzó lo que había " + LUG[l].en : "");
+    if (dada) { crear(dada); if (dicha) res.dicho = (res.dicho ? res.dicho + " " : "") + "Anotado: " + dada.charAt(0).toLowerCase() + dada.slice(1) + "."; sigue(); return; }
     hablar(paraVoz((res.dicho ? res.dicho + " " : "") + "¿Por qué se queda? Cuéntame la observación."), () => {
       if (!Oido.disponible || !st.config.escucharRespuesta) { crear(""); res.dicho = ""; sigue(); return; }
       Oido.esperarTexto(l, txt => {
@@ -7446,7 +7447,8 @@ body.rex-despierto .rex-dock .rex-boton{box-shadow:0 0 0 5px rgba(34,197,94,.55)
     return base >= primera;
   }
   function recordarPendientes() {
-    if (ocupadoParaAvisos() || modalOk) return false;
+    // con la caja cerrada (de noche) Rex no le habla a un cuarto vacío: lo recuerda al abrir
+    if (ocupadoParaAvisos() || modalOk || !st.abierto) return false;
     const ahora = E.ahora(st), cfg = st.config;
     const minP = (cfg.minutosRecordarPedido || 15) * MIN, minD = (cfg.minutosRecordarDif || 5) * MIN, viaje = (cfg.minutosViaje || 5) * MIN, minPrep = (cfg.minutosRecordarPreparar || 45) * MIN;
     // 1) un pedido que volvió: «producción no aceptó lo que le mandaste… ¿Lo despacho otra vez, lo dejo pendiente o lo quito?»
