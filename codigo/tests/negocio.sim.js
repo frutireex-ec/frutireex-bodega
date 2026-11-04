@@ -199,9 +199,21 @@ function correrMundo(nOps, mundo) {
   }
   const quedan = { camino: st.transito.filter(x => x.estado === "pendiente").length, rojo: st.transito.filter(x => x.estado === "diferencia" && !x.revisada).length, pedidos: st.pedidos.filter(x => x.estado === "pendiente").length };
   if (quedan.camino || quedan.rojo || quedan.pedidos) falla(mundo + ": al cerrar quedó algo en lista: " + JSON.stringify(quedan));
-  E.sellar(st); const v = E.verificar(st); if (!v || v.ok === false) falla(mundo + ": la cadena de movimientos no verifica: " + JSON.stringify(v).slice(0, 120));
-  // cerrar el día no se cae
+  // conteo físico al cierre (a veces con diferencias: merma que nadie registró, o algo que sobró) y «Cerrar caja»: el inventario queda igual a lo contado
+  const contados = new Map();
+  for (let k = 0; k < 15; k++) {
+    const l = una(L3), p = una(prods), sis = E.stockDe(st, l, p); if (sis < 0.01) continue;
+    const real = E.r3(Math.max(0, rnd() < 0.7 ? sis : sis * (0.85 + rnd() * 0.25)));
+    E.contar(st, { lugar: l, p, q: real, por: "Sim" }); contados.set(l + "|" + p, { l, p, real, sis });
+  }
   try { E.cerrarDia(st, { por: "Sim" }); } catch (e) { falla(mundo + ": cerrarDia se cayó: " + e.message); }
+  for (const c of contados.values()) {
+    if (Math.abs(E.stockDe(st, c.l, c.p) - c.real) > EPS) falla(mundo + ": al cerrar, " + c.l + " " + c.p + " no quedó igual a lo contado (" + E.stockDe(st, c.l, c.p) + " de " + c.real + ")");
+    esperado[c.p] += c.real - c.sis;
+  }
+  revisar("cierre: conteo físico");
+  if (contados.size) conteo("cierre con conteo físico");
+  E.sellar(st); const v = E.verificar(st); if (!v || v.ok === false) falla(mundo + ": la cadena de movimientos no verifica: " + JSON.stringify(v).slice(0, 120));
   return st.movs.length;
 }
 

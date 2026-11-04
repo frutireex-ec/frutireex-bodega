@@ -221,7 +221,7 @@ INICIAR.bat usa el mismo puerto 8765. No se crean carpetas de versión nuevas si
    «¿Envío eso?» (planDespacho); al que pidió le dice dónde está; dicho en otro micrófono se contesta por el lugar del pedido. «envía lo que tengas», «manda lo que hay»,
    «sí, despachemos» = despachar. (d) **Responsable sin lista**: la tarjeta ya no muestra los nombres; «Dorias» (parecido a dos) se anota tal cual, sin «¿Dorian o Tobías?».
    (e) **Más rápido**: orden adelantada 550 ms (antes 800), nombre conocido se toma a los 380 ms de quedarse quieto (`tNom`) y con el final a los 120 ms, llegada
-   1,4 s (antes 2 s; lo que se agregue tarde lo toma `novedadTardia`), pausa entre frases 450 ms. Medir: `tests/navegador/tiempos105.py`.
+   1,4 s (antes 2 s; lo que se agregue tarde lo toma `novedadTardia`), pausa entre frases 450 ms (500 desde el 3-nov). Medir: `tests/navegador/tiempos105.py`.
    (f) **Aprende de las correcciones** (`aprenderDeCorreccion`): frase no entendida + la misma idea dicha bien ≤40 s después (mismo producto o número) → `st.reescritas`.
    (g) «oye Rex» con más formas («ojo Rex», «hoy es Rex», «oye que Rex», «oye rei»). (h) «los chicos de la cocina» = producción.
    Pruebas: `tests/avisos.test.js` (miles de frases), `tests/despacho.test.js`, `tests/navegador/r106.py`. Investigación: `docs/RUIDO-Y-APRENDIZAJE.md`.

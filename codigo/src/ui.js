@@ -273,7 +273,7 @@
     const [t, cb, o] = colaVoz.shift();
     if (o && o.vigente && !o.vigente()) { siguienteVoz(); return; }   // ya no hace falta decirlo
     // una pausa natural entre una frase y la siguiente (antes 120 ms: sonaba todo pegado)
-    setTimeout(() => hablar(t, cb, Object.assign({}, o, { cola: false, yaEspero: ocupado })), Math.max(120, 450 - (Date.now() - (TTS.fin || 0))));
+    setTimeout(() => hablar(t, cb, Object.assign({}, o, { cola: false, yaEspero: ocupado })), Math.max(120, 500 - (Date.now() - (TTS.fin || 0))));
   }
   function callarVoz() { colaVoz.length = 0; if (hablaActual) { const f = hablaActual.fin; hablaActual = null; f.cortado = true; f.callado = true; } cortarTTS(); try { Oido.mudo(null, true); } catch (e) {} }
   /* Avisos en voz alta en el lugar que tiene que hacer algo («cantar»): «Atención bodega: producción pide…» */
@@ -1080,8 +1080,9 @@
       res.mov = E.seguimiento(st, { lugar: l, ref: d.ref, titulo: res.titulo || "Se deja pendiente", info: d.resumen || "", nota: obs ? "Se queda: " + obs : "Se queda (sin observación)", por: quien[l], via, frase });
       guardar(); renderTodo();
     };
-    const dada = obsDe(frase);
-    if (dada) { crear(dada); res.dicho = (res.dicho ? res.dicho + " " : "") + "Anotado: " + dada.charAt(0).toLowerCase() + dada.slice(1) + "."; sigue(); return; }
+    // lo que faltó de un despacho a medias ya tiene su porqué (no alcanzó): no se pregunta otra vez
+    const dicha = obsDe(frase), dada = dicha || (d.tipo === "saldo" ? "No alcanzó lo que había " + LUG[l].en : "");
+    if (dada) { crear(dada); if (dicha) res.dicho = (res.dicho ? res.dicho + " " : "") + "Anotado: " + dada.charAt(0).toLowerCase() + dada.slice(1) + "."; sigue(); return; }
     hablar(paraVoz((res.dicho ? res.dicho + " " : "") + "¿Por qué se queda? Cuéntame la observación."), () => {
       if (!Oido.disponible || !st.config.escucharRespuesta) { crear(""); res.dicho = ""; sigue(); return; }
       Oido.esperarTexto(l, txt => {
@@ -1183,7 +1184,8 @@
     return base >= primera;
   }
   function recordarPendientes() {
-    if (ocupadoParaAvisos() || modalOk) return false;
+    // con la caja cerrada (de noche) Rex no le habla a un cuarto vacío: lo recuerda al abrir
+    if (ocupadoParaAvisos() || modalOk || !st.abierto) return false;
     const ahora = E.ahora(st), cfg = st.config;
     const minP = (cfg.minutosRecordarPedido || 15) * MIN, minD = (cfg.minutosRecordarDif || 5) * MIN, viaje = (cfg.minutosViaje || 5) * MIN, minPrep = (cfg.minutosRecordarPreparar || 45) * MIN;
     // 1) un pedido que volvió: «producción no aceptó lo que le mandaste… ¿Lo despacho otra vez, lo dejo pendiente o lo quito?»
